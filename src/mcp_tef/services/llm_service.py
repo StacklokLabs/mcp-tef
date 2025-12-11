@@ -28,7 +28,7 @@ from pydantic_ai.tools import Tool
 from pydantic_ai.toolsets.abstract import AbstractToolset
 
 from mcp_tef.api.errors import LLMProviderAPIKeyError, LLMProviderError
-from mcp_tef.config.settings import Settings
+from mcp_tef.config.settings import DEFAULT_OLLAMA_BASE_URL, Settings
 from mcp_tef.models.llm_models import ConfidenceLevel, LLMResponse, LLMToolCall
 
 logger = structlog.get_logger(__name__)
@@ -324,7 +324,7 @@ class LLMService:
                 if not api_key and self.settings:
                     api_key = self.settings.openai_api_key or ""
                 # Ensure base_url is set for Ollama - required!
-                ollama_base_url = self.base_url or "http://localhost:11434/v1"
+                ollama_base_url = self.base_url or DEFAULT_OLLAMA_BASE_URL
                 logger.info(f"Using Ollama with base_url: {ollama_base_url}, model: {self.model}")
                 provider = OpenAIProvider(api_key=api_key, base_url=ollama_base_url)
                 model = OpenAIChatModel(self.model, provider=provider)
