@@ -77,10 +77,10 @@ check_thv() {
     return 0
 }
 
-# Check that mcp-tef-cli is installed
+# Check that mtef is installed
 check_mcp_tef_cli() {
-    if ! command -v mcp-tef-cli &> /dev/null; then
-        log_error "mcp-tef-cli not found. Install with: uv tool install mcp-tef-cli"
+    if ! command -v mtef &> /dev/null; then
+        log_error "mtef not found. Install with: uv tool install mcp-tef-cli"
         return 1
     fi
 
@@ -91,13 +91,13 @@ check_mcp_tef_cli() {
 # CLI Installation
 # ============================================================================
 
-# Install mcp-tef-cli from source
+# Install mtef from source
 # Usage: install_mcp_tef_cli_from_source
 install_mcp_tef_cli_from_source() {
     local cli_dir
     cli_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-    log_info "Installing mcp-tef-cli from source: ${cli_dir}"
+    log_info "Installing mtef from source: ${cli_dir}"
 
     if ! check_uv; then
         return 1
@@ -105,12 +105,12 @@ install_mcp_tef_cli_from_source() {
 
     (cd "$cli_dir" && uv tool install --editable . --force)
 
-    if ! command -v mcp-tef-cli &> /dev/null; then
-        log_error "mcp-tef-cli not found in PATH after installation"
+    if ! command -v mtef &> /dev/null; then
+        log_error "mtef not found in PATH after installation"
         return 1
     fi
 
-    log_success "mcp-tef-cli installed: $(mcp-tef-cli --version)"
+    log_success "mtef installed: $(mtef --version)"
     return 0
 }
 
@@ -227,7 +227,7 @@ deploy_mcp_tef() {
     cmd_args+=("${extra_args[@]}")
 
     # Deploy using CLI
-    mcp-tef-cli deploy "${cmd_args[@]}"
+    mtef deploy "${cmd_args[@]}"
 
     # Verify deployment
     if ! is_mcp_tef_deployed "$container_name"; then
@@ -252,7 +252,7 @@ stop_mcp_tef() {
 
     log_info "Stopping mcp-tef container: ${container_name}"
 
-    mcp-tef-cli stop --name "$container_name"
+    mtef stop --name "$container_name"
 
     # Verify container is removed
     if docker inspect "$container_name" &> /dev/null; then

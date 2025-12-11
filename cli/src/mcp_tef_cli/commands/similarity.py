@@ -420,18 +420,18 @@ def analyze(
 
       \b
       # Basic similarity analysis
-      mcp-tef-cli similarity analyze \\
+      mtef similarity analyze \\
         --server-urls http://localhost:3000/sse
 
       \b
       # With custom threshold and recommendations
-      mcp-tef-cli similarity analyze \\
+      mtef similarity analyze \\
         --server-urls http://localhost:3000/sse \\
         --threshold 0.90 --include-recommendations
 
       \b
       # Output as JSON
-      mcp-tef-cli similarity analyze \\
+      mtef similarity analyze \\
         --server-urls http://localhost:3000/sse --format json
     """
     # Validate threshold
@@ -555,17 +555,17 @@ def matrix(
 
       \b
       # Generate similarity matrix
-      mcp-tef-cli similarity matrix \\
+      mtef similarity matrix \\
         --server-urls http://localhost:3000/sse
 
       \b
       # With custom threshold
-      mcp-tef-cli similarity matrix \\
+      mtef similarity matrix \\
         --server-urls http://localhost:3000/sse --threshold 0.90
 
       \b
       # Output as JSON
-      mcp-tef-cli similarity matrix \\
+      mtef similarity matrix \\
         --server-urls http://localhost:3000/sse --format json
     """
     # Validate threshold
@@ -669,12 +669,12 @@ def overlap(
 
       \b
       # Generate overlap matrix
-      mcp-tef-cli similarity overlap \\
+      mtef similarity overlap \\
         --server-urls http://localhost:3000/sse
 
       \b
       # Output as JSON
-      mcp-tef-cli similarity overlap \\
+      mtef similarity overlap \\
         --server-urls http://localhost:3000/sse --format json
     """
     # Parse server URLs
@@ -770,12 +770,12 @@ def recommend(
 
       \b
       # Get recommendations for two tools
-      mcp-tef-cli similarity recommend \\
+      mtef similarity recommend \\
         --server-urls http://localhost:3000/sse
 
       \b
       # Output as JSON
-      mcp-tef-cli similarity recommend \\
+      mtef similarity recommend \\
         --server-urls http://localhost:3000/sse --format json
     """
     # Parse server URLs

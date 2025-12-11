@@ -7,7 +7,7 @@
 #
 # Prerequisites:
 #   - thv (ToolHive CLI) installed and configured
-#   - mcp-tef-cli installed (or will be installed from source)
+#   - mtef installed (or will be installed from source)
 #   - Docker running
 #   - TEF_API_KEY or --api-key for LLM provider
 #
@@ -83,7 +83,7 @@ log_info "Checking prerequisites..."
 check_docker || exit 1
 check_thv || exit 1
 
-# Install mcp-tef-cli from source if not available
+# Install mtef from source if not available
 if ! check_mcp_tef_cli 2>/dev/null; then
     install_mcp_tef_cli_from_source || exit 1
 fi
@@ -132,7 +132,7 @@ log_info "MCP_SERVER_URL: ${MCP_SERVER_URL}"
 # Step 5: Create test cases from file (batch import) with --set for variable substitution
 # The CLI now supports ${VAR} substitution natively via --set
 log_info "Step 5: Creating test cases via --from-file with --set..."
-TEST_CASES_OUTPUT=$(mcp-tef-cli test-case create \
+TEST_CASES_OUTPUT=$(mtef test-case create \
     --container-name "${TEF_CONTAINER_NAME}" \
     --from-file "${TEST_CASES_TEMPLATE}" \
     --set "MCP_SERVER_URL=${MCP_SERVER_URL}" \
@@ -151,7 +151,7 @@ done
 log_info "Step 6: Verifying test cases retrieved correctly..."
 for i in "${!TEST_CASE_IDS[@]}"; do
     tc_id="${TEST_CASE_IDS[$i]}"
-    GET_TC_OUTPUT=$(mcp-tef-cli test-case get "${tc_id}" \
+    GET_TC_OUTPUT=$(mtef test-case get "${tc_id}" \
         --container-name "${TEF_CONTAINER_NAME}" \
         --format json \
         --insecure)
@@ -163,7 +163,7 @@ log_success "test-case verification: OK"
 
 # Step 7: Verify test case list shows both
 log_info "Step 7: Verifying test-case list..."
-LIST_TC_OUTPUT=$(mcp-tef-cli test-case list \
+LIST_TC_OUTPUT=$(mtef test-case list \
     --container-name "${TEF_CONTAINER_NAME}" \
     --format json \
     --insecure)
@@ -173,7 +173,7 @@ log_success "test-case list: OK"
 # Step 8: Execute test run on first test case (positive test)
 log_info "Step 8: Executing test run on first test case..."
 FIRST_TC_ID="${TEST_CASE_IDS[0]}"
-TEST_RUN_OUTPUT=$(mcp-tef-cli test-run execute "${FIRST_TC_ID}" \
+TEST_RUN_OUTPUT=$(mtef test-run execute "${FIRST_TC_ID}" \
     --container-name "${TEF_CONTAINER_NAME}" \
     --model-provider "${MODEL_PROVIDER}" \
     --model-name "${MODEL_NAME}" \
@@ -203,7 +203,7 @@ while [[ "${STATUS}" == "pending" || "${STATUS}" == "running" ]]; do
     sleep ${POLL_INTERVAL}
     POLL_WAITED=$((POLL_WAITED + POLL_INTERVAL))
 
-    POLL_OUTPUT=$(mcp-tef-cli test-run get "${TEST_RUN_ID}" \
+    POLL_OUTPUT=$(mtef test-run get "${TEST_RUN_ID}" \
         --container-name "${TEF_CONTAINER_NAME}" \
         --format json \
         --insecure)

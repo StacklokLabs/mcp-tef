@@ -28,7 +28,7 @@ from pydantic_ai.tools import Tool
 from pydantic_ai.toolsets.abstract import AbstractToolset
 
 from mcp_tef.api.errors import LLMProviderAPIKeyError, LLMProviderError
-from mcp_tef.config.settings import Settings
+from mcp_tef.config.settings import DEFAULT_OLLAMA_BASE_URL, Settings
 from mcp_tef.models.llm_models import ConfidenceLevel, LLMResponse, LLMToolCall
 
 logger = structlog.get_logger(__name__)
@@ -319,10 +319,14 @@ class LLMService:
                 model = OpenAIChatModel(self.model, provider=provider)
             elif self.provider.lower() == "ollama":
                 # Ollama uses OpenAIProvider with custom base_url
-                api_key = self.api_key or os.getenv("OPENAI_API_KEY")
+                # Ollama doesn't require an API key, but OpenAIProvider needs one (use empty string)
+                api_key = self.api_key or os.getenv("OPENAI_API_KEY") or ""
                 if not api_key and self.settings:
-                    api_key = self.settings.openai_api_key
-                provider = OpenAIProvider(api_key=api_key, base_url=self.base_url)
+                    api_key = self.settings.openai_api_key or ""
+                # Ensure base_url is set for Ollama - required!
+                ollama_base_url = self.base_url or DEFAULT_OLLAMA_BASE_URL
+                logger.info(f"Using Ollama with base_url: {ollama_base_url}, model: {self.model}")
+                provider = OpenAIProvider(api_key=api_key, base_url=ollama_base_url)
                 model = OpenAIChatModel(self.model, provider=provider)
             else:
                 raise LLMProviderError(self.provider, "Unsupported provider")

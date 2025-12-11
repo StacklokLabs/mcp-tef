@@ -384,7 +384,7 @@ def create(
 
       \b
       # Create test case with expected tool
-      mcp-tef-cli test-case create \\
+      mtef test-case create \\
         --name "Weather test" \\
         --query "What is the weather in San Francisco?" \\
         --expected-server "http://localhost:3000/sse" \\
@@ -393,18 +393,18 @@ def create(
 
       \b
       # Create negative test case (no tool should be selected)
-      mcp-tef-cli test-case create \\
+      mtef test-case create \\
         --name "No tool needed" \\
         --query "What is 2 + 2?" \\
         --servers "http://localhost:3000/sse"
 
       \b
       # Create from JSON file (single or multiple test cases)
-      mcp-tef-cli test-case create --from-file test-cases.json
+      mtef test-case create --from-file test-cases.json
 
       \b
       # Create from JSON file with variable substitution
-      mcp-tef-cli test-case create \\
+      mtef test-case create \\
         --from-file test-cases.json \\
         --set MCP_SERVER_URL=http://localhost:3000/sse
     """
@@ -588,15 +588,15 @@ def list_cmd(
 
       \b
       # List all test cases
-      mcp-tef-cli test-case list
+      mtef test-case list
 
       \b
       # With pagination
-      mcp-tef-cli test-case list --offset 10 --limit 25
+      mtef test-case list --offset 10 --limit 25
 
       \b
       # Output as JSON
-      mcp-tef-cli test-case list --format json
+      mtef test-case list --format json
     """
     url = resolve_tef_url(tef_url, container_name, output_format)
 
@@ -673,11 +673,11 @@ def get(
 
       \b
       # Get test case by ID
-      mcp-tef-cli test-case get a1b2c3d4-e5f6-7890-abcd-ef1234567890
+      mtef test-case get a1b2c3d4-e5f6-7890-abcd-ef1234567890
 
       \b
       # Output as JSON
-      mcp-tef-cli test-case get a1b2c3d4-e5f6-7890-abcd-ef1234567890 --format json
+      mtef test-case get a1b2c3d4-e5f6-7890-abcd-ef1234567890 --format json
     """
     url = resolve_tef_url(tef_url, container_name, output_format)
 
@@ -763,11 +763,11 @@ def delete(
 
       \b
       # Delete test case
-      mcp-tef-cli test-case delete a1b2c3d4-e5f6-7890-abcd-ef1234567890
+      mtef test-case delete a1b2c3d4-e5f6-7890-abcd-ef1234567890
 
       \b
       # Skip confirmation
-      mcp-tef-cli test-case delete a1b2c3d4-e5f6-7890-abcd-ef1234567890 --yes
+      mtef test-case delete a1b2c3d4-e5f6-7890-abcd-ef1234567890 --yes
     """
     # Confirm deletion
     if not yes:

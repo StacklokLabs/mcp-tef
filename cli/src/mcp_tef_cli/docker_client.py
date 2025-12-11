@@ -334,7 +334,7 @@ def discover_tef_url(container_name: str = "mcp-tef") -> str:
         container = client.containers.get(container_name)
     except NotFound as e:
         raise click.ClickException(
-            f"Container '{container_name}' not found. Deploy mcp-tef first with: mcp-tef-cli deploy"
+            f"Container '{container_name}' not found. Deploy mcp-tef first with: mtef deploy"
         ) from e
 
     if container.status != "running":

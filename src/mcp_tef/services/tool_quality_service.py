@@ -103,7 +103,16 @@ class ToolQualityService:
         self, tool_definitions: list[ToolDefinition]
     ) -> AsyncIterator[ToolQualityResult]:
         for tool in tool_definitions:
-            yield await self.evaluate_tool(tool)
+            try:
+                yield await self.evaluate_tool(tool)
+            except Exception as e:
+                self._logger.error(
+                    f"Failed to evaluate tool {tool.name}",
+                    error=str(e),
+                    exc_info=True,
+                )
+                # Skip tools that fail evaluation - they'll be reported in errors
+                continue
 
     async def evaluate_tool(self, tool_definition: ToolDefinition) -> ToolQualityResult:
         prompt = f"""
@@ -117,10 +126,23 @@ class ToolQualityService:
             if tool_definition.input_schema
             else "{}"
         }
+
+        IMPORTANT: Return ONLY valid JSON in the exact format specified.
+        Do not include markdown code blocks, extra text, or comments.
         """
-        evaluation_result = await self._agent.run(user_prompt=prompt, output_type=EvaluationResult)
-        return ToolQualityResult(
-            tool_name=tool_definition.name,
-            tool_description=tool_definition.description,
-            evaluation_result=evaluation_result.output,
-        )
+        try:
+            evaluation_result = await self._agent.run(
+                user_prompt=prompt, output_type=EvaluationResult
+            )
+            return ToolQualityResult(
+                tool_name=tool_definition.name,
+                tool_description=tool_definition.description,
+                evaluation_result=evaluation_result.output,
+            )
+        except Exception as e:
+            self._logger.error(
+                f"LLM failed to evaluate tool {tool_definition.name}",
+                error=str(e),
+                exc_info=True,
+            )
+            raise

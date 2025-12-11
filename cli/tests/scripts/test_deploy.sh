@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# End-to-end test for mcp-tef-cli deploy and stop commands.
+# End-to-end test for mtef deploy and stop commands.
 # This script installs the CLI from source and validates basic functionality.
 #
 
@@ -44,7 +44,7 @@ log_info "Step 1: Building local Docker image..."
 LOCAL_IMAGE=$(build_mcp_tef_image) || exit 1
 
 # Step 2: Install CLI from source
-log_info "Step 2: Installing mcp-tef-cli from source..."
+log_info "Step 2: Installing mtef from source..."
 
 if ! install_mcp_tef_cli_from_source; then
     exit 1

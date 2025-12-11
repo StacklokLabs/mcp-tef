@@ -10,6 +10,9 @@ from pydantic_settings import (
 
 from mcp_tef.models.enums import EmbeddingModelType
 
+# Default Ollama base URL
+DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434/v1"
+
 # Default system prompt for tool selection agents
 DEFAULT_SYSTEM_PROMPT = """
 You are a tool selection agent designed to identify the most appropriate tool for solving user
@@ -109,7 +112,7 @@ class Settings(BaseSettings):
         default=ModelSettings(
             name="ebdm/gemma3-enhanced:12b",
             provider="ollama",
-            base_url="http://localhost:11434/v1",
+            base_url=DEFAULT_OLLAMA_BASE_URL,
             timeout=30,
             max_retries=3,
         ),
@@ -269,7 +272,7 @@ class Settings(BaseSettings):
             # Use default_model's base_url if it's an ollama provider, otherwise use default
             if self.default_model.provider.lower() == "ollama":
                 return self.default_model.base_url
-            return "http://localhost:11434/v1"
+            return DEFAULT_OLLAMA_BASE_URL
         # OpenRouter has built-in support in Pydantic AI - no base_url needed
         # OpenAI and Anthropic also have built-in defaults
         return None

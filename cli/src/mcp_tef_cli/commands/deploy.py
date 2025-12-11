@@ -149,19 +149,19 @@ def deploy(
 
       \b
       # Deploy latest version
-      mcp-tef-cli deploy
+      mtef deploy
 
       \b
       # Deploy specific version with API key
-      mcp-tef-cli deploy --version v0.2.1 --env OPENROUTER_API_KEY=sk-xxx
+      mtef deploy --version v0.2.1 --env OPENROUTER_API_KEY=sk-xxx
 
       \b
       # Deploy with environment file and health check
-      mcp-tef-cli deploy --env-file .env.prod --health-check
+      mtef deploy --env-file .env.prod --health-check
 
       \b
       # Deploy local test image
-      mcp-tef-cli deploy --image my-test-image:dev --port 9000
+      mtef deploy --image my-test-image:dev --port 9000
     """
     try:
         # Parse environment variables

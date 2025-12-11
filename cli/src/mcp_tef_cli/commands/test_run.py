@@ -147,7 +147,7 @@ def format_test_run_table(tr: TestRunResponse, show_pending_hint: bool = False) 
 
     if show_pending_hint and tr.status in ("pending", "running"):
         console.print()
-        print_info(f"Test run submitted. Use 'mcp-tef-cli test-run get {tr.id}' to check status.")
+        print_info(f"Test run submitted. Use 'mtef test-run get {tr.id}' to check status.")
 
 
 def format_test_run_json(tr: TestRunResponse) -> None:
@@ -342,21 +342,21 @@ def execute(
 
       \b
       # Execute test case with OpenRouter
-      mcp-tef-cli test-run execute a1b2c3d4-... \\
+      mtef test-run execute a1b2c3d4-... \\
         --model-provider openrouter \\
         --model-name anthropic/claude-sonnet-4-5-20250929 \\
         --api-key sk-xxx
 
       \b
       # Execute with local Ollama (no API key required)
-      mcp-tef-cli test-run execute a1b2c3d4-... \\
+      mtef test-run execute a1b2c3d4-... \\
         --model-provider ollama \\
         --model-name llama3.2 \\
         --base-url http://localhost:11434
 
       \b
       # Don't wait for completion
-      mcp-tef-cli test-run execute a1b2c3d4-... \\
+      mtef test-run execute a1b2c3d4-... \\
         --model-provider openrouter \\
         --model-name anthropic/claude-sonnet-4-5-20250929 \\
         --no-wait
@@ -512,19 +512,19 @@ def list_cmd(
 
       \b
       # List all test runs
-      mcp-tef-cli test-run list
+      mtef test-run list
 
       \b
       # Filter by test case
-      mcp-tef-cli test-run list --test-case-id a1b2c3d4-...
+      mtef test-run list --test-case-id a1b2c3d4-...
 
       \b
       # Filter by tool name
-      mcp-tef-cli test-run list --tool-name get_weather
+      mtef test-run list --tool-name get_weather
 
       \b
       # Output as JSON
-      mcp-tef-cli test-run list --format json
+      mtef test-run list --format json
     """
     url = resolve_tef_url(tef_url, container_name, output_format)
 
@@ -607,15 +607,15 @@ def get(
 
       \b
       # Get test run by ID
-      mcp-tef-cli test-run get b2c3d4e5-f6a7-8901-bcde-f23456789012
+      mtef test-run get b2c3d4e5-f6a7-8901-bcde-f23456789012
 
       \b
       # Show raw LLM response
-      mcp-tef-cli test-run get b2c3d4e5-... --verbose
+      mtef test-run get b2c3d4e5-... --verbose
 
       \b
       # Output as JSON
-      mcp-tef-cli test-run get b2c3d4e5-... --format json
+      mtef test-run get b2c3d4e5-... --format json
     """
     url = resolve_tef_url(tef_url, container_name, output_format)
 

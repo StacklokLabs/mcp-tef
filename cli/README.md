@@ -25,7 +25,7 @@ uv tool install https://github.com/StacklokLabs/mcp-tef/releases/download/cli-v0
 
 Replace `0.1.0` with the desired version. See [releases](https://github.com/StacklokLabs/mcp-tef/releases) for available versions.
 
-This installs the CLI in an isolated environment and makes it available globally as `mcp-tef-cli`.
+This installs the CLI in an isolated environment and makes it available globally as `mtef`.
 
 ### Alternative: Install from Git Repository
 
@@ -53,23 +53,23 @@ uv tool install --editable .
 
 ```bash
 # Deploy latest version
-mcp-tef-cli deploy
+mtef deploy
 
 # Deploy with API keys and health check
-mcp-tef-cli deploy \
+mtef deploy \
   --env OPENROUTER_API_KEY=sk-xxx \
   --env ANTHROPIC_API_KEY=sk-xxx \
   --health-check
 
 # Deploy specific version
-mcp-tef-cli deploy --version v0.2.1
+mtef deploy --version v0.2.1
 ```
 
 ### Evaluate Tool Quality
 
 ```bash
 # Evaluate tool description quality from an MCP server
-mcp-tef-cli tool-quality \
+mtef tool-quality \
   --server-urls http://localhost:3000/sse \
   --model-provider openrouter \
   --model-name anthropic/claude-sonnet-4-5-20250929
@@ -79,7 +79,7 @@ mcp-tef-cli tool-quality \
 
 ```bash
 # Create a test case
-mcp-tef-cli test-case create \
+mtef test-case create \
   --name "Weather lookup" \
   --query "What is the weather in San Francisco?" \
   --expected-server "http://localhost:3000/sse" \
@@ -97,46 +97,46 @@ mcp-tef-cli test-case create \
 #       "expected_tool_name": "get_weather"
 #     }
 #   ]
-mcp-tef-cli test-case create \
+mtef test-case create \
   --from-file test-cases.json \
   --set MCP_SERVER_URL=http://localhost:3000/sse
 
 # List all test cases
-mcp-tef-cli test-case list
+mtef test-case list
 
 # Get test case details
-mcp-tef-cli test-case get <test-case-id>
+mtef test-case get <test-case-id>
 ```
 
 ### Execute Test Runs
 
 ```bash
 # Execute a test case with an LLM
-mcp-tef-cli test-run execute <test-case-id> \
+mtef test-run execute <test-case-id> \
   --model-provider openrouter \
   --model-name anthropic/claude-sonnet-4-5-20250929 \
   --api-key sk-xxx
 
 # List test runs
-mcp-tef-cli test-run list
+mtef test-run list
 
 # Get test run results
-mcp-tef-cli test-run get <test-run-id>
+mtef test-run get <test-run-id>
 ```
 
 ### Analyze Tool Similarity
 
 ```bash
 # Run similarity analysis across MCP servers
-mcp-tef-cli similarity analyze \
+mtef similarity analyze \
   --server-urls http://localhost:3000/sse
 
 # Generate similarity matrix
-mcp-tef-cli similarity matrix \
+mtef similarity matrix \
   --server-urls http://localhost:3000/sse
 
 # Get differentiation recommendations for similar tools
-mcp-tef-cli similarity recommend \
+mtef similarity recommend \
   --server-urls http://localhost:3000/sse
 ```
 
@@ -144,17 +144,17 @@ mcp-tef-cli similarity recommend \
 
 ```bash
 # Stop and remove the container
-mcp-tef-cli stop
+mtef stop
 ```
 
 ## Usage
 
-### `mcp-tef-cli deploy`
+### `mtef deploy`
 
 Deploy mcp-tef as a Docker container from GitHub Container Registry.
 
 ```bash
-mcp-tef-cli deploy [OPTIONS]
+mtef deploy [OPTIONS]
 ```
 
 #### Options
@@ -176,12 +176,12 @@ mcp-tef-cli deploy [OPTIONS]
 | `--restart TEXT` | `no` | Restart policy: `no`, `always`, `on-failure`, `unless-stopped` |
 | `--insecure` | False | Skip SSL certificate verification for health checks (for self-signed certs) |
 
-### `mcp-tef-cli stop`
+### `mtef stop`
 
 Stop and remove a deployed mcp-tef container.
 
 ```bash
-mcp-tef-cli stop [OPTIONS]
+mtef stop [OPTIONS]
 ```
 
 #### Options
@@ -197,16 +197,16 @@ mcp-tef-cli stop [OPTIONS]
 
 ```bash
 # Stop the default mcp-tef container
-mcp-tef-cli stop
+mtef stop
 
 # Stop a named container
-mcp-tef-cli stop --name mcp-tef-dev
+mtef stop --name mcp-tef-dev
 
 # Stop and remove the image to free disk space
-mcp-tef-cli stop --remove-image
+mtef stop --remove-image
 
 # Force stop (immediate kill)
-mcp-tef-cli stop --force
+mtef stop --force
 ```
 
 ## Usage Examples
@@ -216,7 +216,7 @@ mcp-tef-cli stop --force
 Deploy for local development with debug logging:
 
 ```bash
-mcp-tef-cli deploy \
+mtef deploy \
   --env LOG_LEVEL=DEBUG \
   --env OPENROUTER_API_KEY=sk-xxx \
   --health-check
@@ -227,7 +227,7 @@ mcp-tef-cli deploy \
 Deploy on a different port:
 
 ```bash
-mcp-tef-cli deploy --port 9000
+mtef deploy --port 9000
 ```
 
 ### Environment File
@@ -245,7 +245,7 @@ DATABASE_URL=sqlite:///./data/mcp-tef.db
 Deploy with environment file:
 
 ```bash
-mcp-tef-cli deploy --env-file .env --health-check
+mtef deploy --env-file .env --health-check
 ```
 
 ### Volume Mounting
@@ -253,7 +253,7 @@ mcp-tef-cli deploy --env-file .env --health-check
 Mount a local database directory:
 
 ```bash
-mcp-tef-cli deploy \
+mtef deploy \
   --volume ./data:/app/data:rw \
   --env DATABASE_URL=sqlite:///./data/mcp-tef.db
 ```
@@ -263,7 +263,7 @@ mcp-tef-cli deploy \
 Deploy with restart policy and health check:
 
 ```bash
-mcp-tef-cli deploy \
+mtef deploy \
   --name mcp-tef-production \
   --port 8000 \
   --env-file .env.prod \
@@ -281,7 +281,7 @@ Deploy a locally built image for testing:
 docker build -t mcp-tef:test .
 
 # Deploy local image
-mcp-tef-cli deploy --image mcp-tef:test --port 9000
+mtef deploy --image mcp-tef:test --port 9000
 ```
 
 ## CI/CD Integration
@@ -313,7 +313,7 @@ jobs:
 
       - name: Deploy mcp-tef server
         run: |
-          mcp-tef-cli deploy \
+          mtef deploy \
             --version latest \
             --port 8000 \
             --env OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }} \
@@ -346,7 +346,7 @@ Create environment file from secrets:
 
 - name: Deploy mcp-tef server
   run: |
-    mcp-tef-cli deploy \
+    mtef deploy \
       --version latest \
       --port 8000 \
       --env-file .env.ci \
@@ -371,7 +371,7 @@ test:
     - uv tool install "mcp-tef-cli @ git+https://github.com/StacklokLabs/mcp-tef.git#subdirectory=cli"
   script:
     - |
-      mcp-tef-cli deploy \
+      mtef deploy \
         --env OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
         --env ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
         --health-check
@@ -424,7 +424,7 @@ See the [main documentation](https://github.com/StacklokLabs/mcp-tef) for comple
 ```
 
 **Solution:**
-1. Use a different port: `mcp-tef-cli deploy --port 9000`
+1. Use a different port: `mtef deploy --port 9000`
 2. Or stop the conflicting container: `docker ps` and `docker stop <container>`
 
 ### Image Not Found
@@ -475,7 +475,7 @@ By default, containers are deployed in detached mode (`--detach`). In this mode:
 
 - Containers are **not** automatically removed when stopped
 - Stopped containers persist and can accumulate over time
-- Use `mcp-tef-cli stop` to clean up containers when done
+- Use `mtef stop` to clean up containers when done
 
 To manually list and clean up stopped containers:
 ```bash
@@ -495,7 +495,7 @@ When mounting host directories that don't exist, Docker creates them with root o
 **Best practice:** Create host directories before mounting:
 ```bash
 mkdir -p ./data
-mcp-tef-cli deploy --volume ./data:/app/data:rw
+mtef deploy --volume ./data:/app/data:rw
 ```
 
 ## Development

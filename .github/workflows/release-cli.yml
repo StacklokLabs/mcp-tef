@@ -120,10 +120,10 @@ jobs:
 
             ```bash
             # Deploy latest mcp-tef server
-            mcp-tef-cli deploy
+            mtef deploy
 
             # Deploy with API keys
-            mcp-tef-cli deploy \
+            mtef deploy \
               --env OPENROUTER_API_KEY=sk-xxx \
               --health-check
             ```
