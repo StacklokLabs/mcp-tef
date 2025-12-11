@@ -4,7 +4,7 @@
 #
 # Prerequisites:
 #   - thv (ToolHive CLI) installed and configured
-#   - mcp-tef-cli installed
+#   - mtef installed
 #   - Docker running
 #
 # Usage:
@@ -104,7 +104,7 @@ fi
 
 log_info "=== Test: similarity analyze (basic) ==="
 
-RESULT=$(mcp-tef-cli similarity analyze \
+RESULT=$(mtef similarity analyze \
     --container-name "${TEF_CONTAINER_NAME}" \
     --server-urls "${MCP_SERVER_URL}" \
     --threshold 0.85 \
@@ -161,7 +161,7 @@ log_success "similarity analyze (basic) passed"
 
 log_info "=== Test: similarity matrix ==="
 
-RESULT=$(mcp-tef-cli similarity matrix \
+RESULT=$(mtef similarity matrix \
     --container-name "${TEF_CONTAINER_NAME}" \
     --server-urls "${MCP_SERVER_URL}" \
     --threshold 0.80 \
@@ -203,7 +203,7 @@ log_success "similarity matrix passed"
 
 log_info "=== Test: similarity overlap ==="
 
-RESULT=$(mcp-tef-cli similarity overlap \
+RESULT=$(mtef similarity overlap \
     --container-name "${TEF_CONTAINER_NAME}" \
     --server-urls "${MCP_SERVER_URL}" \
     --insecure \
@@ -248,7 +248,7 @@ log_success "similarity overlap passed"
 
 log_info "=== Test: similarity analyze (table output) ==="
 
-RESULT=$(mcp-tef-cli similarity analyze \
+RESULT=$(mtef similarity analyze \
     --container-name "${TEF_CONTAINER_NAME}" \
     --server-urls "${MCP_SERVER_URL}" \
     --threshold 0.85 \
@@ -280,7 +280,7 @@ log_success "similarity analyze (table output) passed"
 
 log_info "=== Test: similarity analyze (verbose) ==="
 
-RESULT=$(mcp-tef-cli similarity analyze \
+RESULT=$(mtef similarity analyze \
     --container-name "${TEF_CONTAINER_NAME}" \
     --server-urls "${MCP_SERVER_URL}" \
     --threshold 0.85 \
@@ -307,7 +307,7 @@ if [[ "${SKIP_RECOMMENDATIONS}" != "true" ]]; then
     log_info "This test requires LLM API access (TEF_API_KEY must be set)"
 
     # The time MCP server has exactly 2 tools, which is perfect for recommend
-    RESULT=$(mcp-tef-cli similarity recommend \
+    RESULT=$(mtef similarity recommend \
         --container-name "${TEF_CONTAINER_NAME}" \
         --server-urls "${MCP_SERVER_URL}" \
         --insecure \
@@ -359,7 +359,7 @@ fi
 
 log_info "=== Test: Error handling - invalid threshold ==="
 
-RESULT=$(mcp-tef-cli similarity analyze \
+RESULT=$(mtef similarity analyze \
     --container-name "${TEF_CONTAINER_NAME}" \
     --server-urls "${MCP_SERVER_URL}" \
     --threshold 1.5 \

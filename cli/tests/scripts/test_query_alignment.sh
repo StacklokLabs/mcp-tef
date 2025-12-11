@@ -4,7 +4,7 @@
 #
 # Prerequisites:
 #   - thv (ToolHive CLI) installed and configured
-#   - mcp-tef-cli installed (or will be installed from source)
+#   - mtef installed (or will be installed from source)
 #   - Docker running
 #   - TEF_API_KEY or --api-key for LLM provider
 #
@@ -34,7 +34,7 @@ cleanup() {
 
     # Delete test case if created
     if [[ -n "${TEST_CASE_ID}" ]]; then
-        mcp-tef-cli test-case delete "${TEST_CASE_ID}" \
+        mtef test-case delete "${TEST_CASE_ID}" \
             --container-name "${TEF_CONTAINER_NAME}" \
             --yes --insecure 2>/dev/null || true
     fi
@@ -84,7 +84,7 @@ log_info "Checking prerequisites..."
 check_docker || exit 1
 check_thv || exit 1
 
-# Install mcp-tef-cli from source if not available
+# Install mtef from source if not available
 if ! check_mcp_tef_cli 2>/dev/null; then
     install_mcp_tef_cli_from_source || exit 1
 fi
@@ -127,7 +127,7 @@ deploy_mcp_tef "${TEF_CONTAINER_NAME}" "${IMAGE_TAG}" \
 
 # Step 4: Create test case
 log_info "Step 4: Creating test case..."
-TEST_CASE_OUTPUT=$(mcp-tef-cli test-case create \
+TEST_CASE_OUTPUT=$(mtef test-case create \
     --container-name "${TEF_CONTAINER_NAME}" \
     --name "E2E Fetch Test" \
     --query "Fetch the content from https://example.com" \
@@ -142,7 +142,7 @@ log_success "Created test case: ${TEST_CASE_ID}"
 
 # Step 5: Verify test case retrieval
 log_info "Step 5: Verifying test-case get..."
-GET_TC_OUTPUT=$(mcp-tef-cli test-case get "${TEST_CASE_ID}" \
+GET_TC_OUTPUT=$(mtef test-case get "${TEST_CASE_ID}" \
     --container-name "${TEF_CONTAINER_NAME}" \
     --format json \
     --insecure)
@@ -156,7 +156,7 @@ log_success "test-case get: OK"
 
 # Step 6: Verify test case list
 log_info "Step 6: Verifying test-case list..."
-LIST_TC_OUTPUT=$(mcp-tef-cli test-case list \
+LIST_TC_OUTPUT=$(mtef test-case list \
     --container-name "${TEF_CONTAINER_NAME}" \
     --format json \
     --insecure)
@@ -170,7 +170,7 @@ log_success "test-case list: OK (${LIST_TC_COUNT} total)"
 
 # Step 7: Execute test run (with --no-wait to demonstrate polling)
 log_info "Step 7: Executing test run..."
-TEST_RUN_OUTPUT=$(mcp-tef-cli test-run execute "${TEST_CASE_ID}" \
+TEST_RUN_OUTPUT=$(mtef test-run execute "${TEST_CASE_ID}" \
     --container-name "${TEF_CONTAINER_NAME}" \
     --model-provider "${MODEL_PROVIDER}" \
     --model-name "${MODEL_NAME}" \
@@ -200,7 +200,7 @@ while [[ "${STATUS}" == "pending" || "${STATUS}" == "running" ]]; do
     sleep ${POLL_INTERVAL}
     POLL_WAITED=$((POLL_WAITED + POLL_INTERVAL))
 
-    POLL_OUTPUT=$(mcp-tef-cli test-run get "${TEST_RUN_ID}" \
+    POLL_OUTPUT=$(mtef test-run get "${TEST_RUN_ID}" \
         --container-name "${TEF_CONTAINER_NAME}" \
         --format json \
         --insecure)
@@ -236,7 +236,7 @@ log_success "Test run validation: OK"
 
 # Step 10: Verify test-run get
 log_info "Step 10: Verifying test-run get..."
-GET_OUTPUT=$(mcp-tef-cli test-run get "${TEST_RUN_ID}" \
+GET_OUTPUT=$(mtef test-run get "${TEST_RUN_ID}" \
     --container-name "${TEF_CONTAINER_NAME}" \
     --format json \
     --insecure)
@@ -250,7 +250,7 @@ log_success "test-run get: OK"
 
 # Step 11: Verify test-run list
 log_info "Step 11: Verifying test-run list..."
-LIST_OUTPUT=$(mcp-tef-cli test-run list \
+LIST_OUTPUT=$(mtef test-run list \
     --container-name "${TEF_CONTAINER_NAME}" \
     --test-case-id "${TEST_CASE_ID}" \
     --format json \

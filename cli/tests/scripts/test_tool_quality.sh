@@ -4,7 +4,7 @@
 #
 # Prerequisites:
 #   - thv (ToolHive CLI) installed and configured
-#   - mcp-tef-cli installed
+#   - mtef installed
 #   - Docker running
 #   - TEF_API_KEY or --api-key for LLM provider
 #
@@ -118,7 +118,7 @@ fi
 log_info "Step 5: Evaluating tool quality for ${MCP_SERVER_NAME}..."
 
 # Capture both stdout and stderr, allowing non-zero exit
-RESULT=$(mcp-tef-cli tool-quality \
+RESULT=$(mtef tool-quality \
     --container-name "${TEF_CONTAINER_NAME}" \
     --server-urls "${MCP_SERVER_URL}" \
     --model-provider "${MODEL_PROVIDER}" \
