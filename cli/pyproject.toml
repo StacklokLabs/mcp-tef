@@ -27,6 +27,7 @@ dependencies = [
 
 [project.scripts]
 mcp-tef-cli = "mcp_tef_cli:main"
+mtef = "mcp_tef_cli:main"
 
 [project.urls]
 Homepage = "https://github.com/StacklokLabs/mcp-tef"
