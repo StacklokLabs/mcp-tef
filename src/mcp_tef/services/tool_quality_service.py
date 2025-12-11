@@ -127,10 +127,13 @@ class ToolQualityService:
             else "{}"
         }
 
-        IMPORTANT: Return ONLY valid JSON in the exact format specified. Do not include markdown code blocks, extra text, or comments.
+        IMPORTANT: Return ONLY valid JSON in the exact format specified.
+        Do not include markdown code blocks, extra text, or comments.
         """
         try:
-            evaluation_result = await self._agent.run(user_prompt=prompt, output_type=EvaluationResult)
+            evaluation_result = await self._agent.run(
+                user_prompt=prompt, output_type=EvaluationResult
+            )
             return ToolQualityResult(
                 tool_name=tool_definition.name,
                 tool_description=tool_definition.description,
