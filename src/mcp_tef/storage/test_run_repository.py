@@ -78,7 +78,7 @@ class TestRunRepository:
             query = f"""
                 INSERT INTO test_runs ({", ".join(fields)})
                 VALUES ({", ".join(placeholders)})
-            """
+            """  # nosec: "B608" Safe: fields/placeholders are internally controlled, values parameterized
 
             await self.db.execute(query, tuple(values))
             await self.db.commit()
@@ -226,7 +226,7 @@ class TestRunRepository:
     SELECT *
     FROM test_runs
     WHERE {where_clause}
-)"""
+)"""  # nosec: "B608" Safe: where_clause built from controlled conditions, values parameterized
             if test_run_id:
                 args.append(test_run_id)
             if status:
@@ -254,7 +254,7 @@ class TestRunRepository:
     SELECT *
     FROM tool_definitions
     INNER JOIN test_run_ids trids ON trids.test_run_id = tool_definitions.test_run_id
-)"""
+)"""  # nosec: "B608" Safe: conditional clause is controlled, values parameterized
             args.append(tool_name)
             if mcp_server_url:
                 args.append(mcp_server_url)
@@ -321,7 +321,7 @@ LEFT JOIN {model_settings} ms ON tr.model_settings_id = ms.id
 GROUP BY {", ".join([str(i) for i in range(1, 27)])}
 ORDER BY tr.created_at DESC
 LIMIT ? OFFSET ?
-"""
+"""  # nosec: "B608" Safe: updates list is internally controlled, values parameterized
 
         return query, tuple(args)
 
@@ -550,7 +550,7 @@ LIMIT ? OFFSET ?
                 UPDATE test_runs
                 SET {", ".join(updates)}
                 WHERE id = ?
-            """
+            """  # nosec: "B608" Safe: updates list is internally controlled, values parameterized
 
             await self.db.execute(query, tuple(values))
             await self.db.commit()

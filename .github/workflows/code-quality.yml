@@ -33,3 +33,6 @@ jobs:
       
       - name: Run Tests
         run: task test
+
+      - name: Run Security Scanning
+        run: task security

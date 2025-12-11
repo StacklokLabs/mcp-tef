@@ -261,7 +261,7 @@ class TestCaseRepository:
                 SELECT test_case_id, mcp_server_url
                 FROM test_case_mcp_servers
                 WHERE test_case_id IN ({placeholders})
-                """,
+                """,  # nosec: "B608" Safe: placeholders is internally generated, values are parameterized
                 test_case_ids,
             )
             server_associations = await servers_cursor.fetchall()

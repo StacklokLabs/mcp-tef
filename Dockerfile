@@ -2,7 +2,7 @@
 FROM python:3.13-slim AS sqlite-vec-builder
 
 # Install build dependencies for compiling sqlite-vec
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
     make \
@@ -12,14 +12,16 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Build sqlite-vec extension with cache mount for git and build artifacts
+WORKDIR /tmp
 RUN --mount=type=cache,target=/var/cache/git \
     --mount=type=cache,target=/tmp/sqlite-vec-build \
-    cd /tmp \
-    && git clone --depth 1 --branch v0.1.6 https://github.com/asg017/sqlite-vec.git \
-    && cd sqlite-vec \
-    && make loadable \
-    && mkdir -p /sqlite-vec-dist \
-    && cp dist/vec0.* /sqlite-vec-dist/
+    git clone --depth 1 --branch v0.1.6 https://github.com/asg017/sqlite-vec.git
+
+WORKDIR /tmp/sqlite-vec
+RUN --mount=type=cache,target=/tmp/sqlite-vec-build \
+    make loadable && \
+    mkdir -p /sqlite-vec-dist && \
+    cp dist/vec0.* /sqlite-vec-dist/
 
 # Main builder stage
 FROM python:3.13-slim AS builder
