@@ -45,19 +45,19 @@ def stop(
 
       \b
       # Stop the default mcp-tef container
-      mcp-tef-cli stop
+      mtef stop
 
       \b
       # Stop a named container
-      mcp-tef-cli stop --name mcp-tef-dev
+      mtef stop --name mcp-tef-dev
 
       \b
       # Stop container and remove the image
-      mcp-tef-cli stop --remove-image
+      mtef stop --remove-image
 
       \b
       # Force stop (immediate kill)
-      mcp-tef-cli stop --force
+      mtef stop --force
     """
     try:
         client = docker.from_env()

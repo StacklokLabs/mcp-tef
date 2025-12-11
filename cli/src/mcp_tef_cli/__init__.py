@@ -19,7 +19,7 @@ __version__ = "0.1.0"
 
 
 @click.group()
-@click.version_option(version=__version__, prog_name="mcp-tef-cli")
+@click.version_option(version=__version__, prog_name="mtef")
 def cli() -> None:
     """mcp-tef CLI - MCP Tool Evaluation System.
 

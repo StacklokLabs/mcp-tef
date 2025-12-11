@@ -250,25 +250,25 @@ def tool_quality(
     clarity, completeness, and conciseness.
 
     The mcp-tef server URL is automatically discovered from the running Docker
-    container (deployed via 'mcp-tef-cli deploy').
+    container (deployed via 'mtef deploy').
 
     Examples:
 
       \b
       # Evaluate tools from a single MCP server
-      mcp-tef-cli tool-quality --server-urls http://localhost:3000/sse \\
+      mtef tool-quality --server-urls http://localhost:3000/sse \\
         --model-provider openrouter --model-name anthropic/claude-sonnet-4-5-20250929
 
       \b
       # Evaluate multiple servers with verbose output
-      mcp-tef-cli tool-quality \\
+      mtef tool-quality \\
         --server-urls http://localhost:3000/sse,http://localhost:3001/mcp \\
         --model-provider anthropic --model-name claude-sonnet-4-5-20250929 \\
         --verbose
 
       \b
       # Output as JSON for scripting
-      mcp-tef-cli tool-quality --server-urls http://localhost:3000/sse \\
+      mtef tool-quality --server-urls http://localhost:3000/sse \\
         --model-provider openrouter --model-name anthropic/claude-sonnet-4-5-20250929 \\
         --format json
     """
