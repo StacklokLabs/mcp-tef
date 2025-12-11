@@ -1,0 +1,540 @@
+[
+  {
+    "name": "AgentQL",
+    "description": "Enable AI agents to get structured data from unstructured web with AgentQL.",
+    "url": "https://github.com/tinyfish-io/agentql-mcp",
+    "readme_file": "official/AgentQL.md",
+    "summary": "A Model Context Protocol (MCP) server that integrates AgentQL's data extraction capabilities, allowing users to extract structured data from web pages.",
+    "tools": [
+      {
+        "name": "extract-web-data",
+        "description": "Extracts structured data from a given URL using a prompt to describe the data and fields to extract.",
+        "parameter": {
+          "url": "(string) The URL of the web page to extract data from.",
+          "prompt": "(string) A description of the actual data and its fields to extract."
+        }
+      }
+    ]
+  },
+  {
+    "name": "Aiven",
+    "description": "Navigate your Aiven projects and interact with the PostgreSQL\u00ae, Apache Kafka\u00ae, ClickHouse\u00ae and OpenSearch\u00ae services",
+    "url": "https://github.com/Aiven-Open/mcp-aiven",
+    "readme_file": "official/Aiven.md",
+    "summary": "A Model Context Protocol (MCP) server for Aiven, providing access to various Aiven services such as PostgreSQL, Kafka, ClickHouse, Valkey, and OpenSearch, enabling LLMs to build full stack solutions.",
+    "tools": [
+      {
+        "name": "list_projects",
+        "description": "List all projects on your Aiven account.",
+        "parameter": {}
+      },
+      {
+        "name": "list_services",
+        "description": "List all services in a specific Aiven project.",
+        "parameter": {}
+      },
+      {
+        "name": "get_service_details",
+        "description": "Get the detail of your service in a specific Aiven project.",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "Alibaba Cloud AnalyticDB for MySQL",
+    "description": "Connect to a AnalyticDB for MySQL cluster for getting database or table metadata, querying and analyzing data.It will be supported to add the openapi for cluster operation in the future.",
+    "url": "https://github.com/aliyun/alibabacloud-adb-mysql-mcp-server",
+    "readme_file": "official/Alibaba_Cloud_AnalyticDB_for_MySQL.md",
+    "summary": "A universal interface between AI Agents and AnalyticDB for MySQL databases, enabling seamless communication for retrieving database metadata and executing SQL operations.",
+    "tools": [
+      {
+        "name": "execute_sql",
+        "description": "Execute a SQL query in the AnalyticDB for MySQL Cluster",
+        "parameter": {}
+      },
+      {
+        "name": "get_query_plan",
+        "description": "Get the query plan for a SQL query",
+        "parameter": {}
+      },
+      {
+        "name": "get_execution_plan",
+        "description": "Get the actual execution plan with runtime statistics for a SQL query",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "Apache IoTDB",
+    "description": "MCP Server for Apache IoTDB database and its tools",
+    "url": "https://github.com/apache/iotdb-mcp-server",
+    "readme_file": "official/Apache_IoTDB.md",
+    "summary": "A Model Context Protocol (MCP) server implementation that provides database interaction and business intelligence capabilities through IoTDB. It enables running SQL queries.",
+    "tools": [
+      {
+        "name": "metadata_query",
+        "description": "Execute SHOW/COUNT queries to read metadata from the database",
+        "parameter": {
+          "query_sql": "(string) The SHOW/COUNT SQL query to execute"
+        }
+      },
+      {
+        "name": "select_query",
+        "description": "Execute SELECT queries to read data from the database",
+        "parameter": {
+          "query_sql": "(string) The SELECT SQL query to execute"
+        }
+      },
+      {
+        "name": "read_query",
+        "description": "Execute SELECT queries to read data from the database",
+        "parameter": {
+          "query": "(string) The SELECT SQL query to execute"
+        }
+      },
+      {
+        "name": "list_tables",
+        "description": "Get a list of all tables in the database",
+        "parameter": {}
+      },
+      {
+        "name": "describe-table",
+        "description": "View schema information for a specific table",
+        "parameter": {
+          "table_name": "(string) Name of table to describe"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Apify",
+    "description": "Actors MCP Server: Use 3,000+ pre-built cloud tools to extract data from websites, e-commerce, social media, search engines, maps, and more",
+    "url": "https://github.com/apify/actors-mcp-server",
+    "readme_file": "official/Apify.md",
+    "summary": "The Apify MCP Server enables interaction with Apify Actors as tools for performing various tasks, such as data extraction, web searching, and more. It supports both HTTP server (SSE) and local server (stdio) modes, and can be integrated with various MCP clients.",
+    "tools": [
+      {
+        "name": "get-actor-details",
+        "description": "Retrieves documentation, input schema, and details about a specific Actor.",
+        "parameter": {}
+      },
+      {
+        "name": "discover-actors",
+        "description": "Searches for relevant Actors using keywords and returns their details.",
+        "parameter": {}
+      },
+      {
+        "name": "add-actor-as-tool",
+        "description": "Adds an Actor by name to the available tools list without executing it, requiring user consent to run later.",
+        "parameter": {}
+      },
+      {
+        "name": "remove-actor-from-tool",
+        "description": "Removes an Actor by name from the available tools list when it's no longer needed.",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "APIMatic MCP",
+    "description": "APIMatic MCP Server is used to validate OpenAPI specifications using APIMatic. The server processes OpenAPI files and returns validation summaries by leveraging APIMatic\u2019s API.",
+    "url": "https://github.com/apimatic/apimatic-validator-mcp",
+    "readme_file": "official/APIMatic_MCP.md",
+    "summary": "A Model Context Protocol (MCP) Server for validating OpenAPI specifications using APIMatic. It supports OpenAPI 2.0 and 3.0 files in both JSON and YAML formats, leveraging APIMatic\u2019s API for comprehensive validation.",
+    "tools": [
+      {
+        "name": "validate-openapi-using-apimatic",
+        "description": "Validates an OpenAPI file using APIMatic\u2019s API and returns a validation summary.",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "Arize Phoenix",
+    "description": "Inspect traces, manage prompts, curate datasets, and run experiments using Arize Phoenix, an open-source AI and LLM observability tool.",
+    "url": "https://github.com/Arize-ai/phoenix/tree/main/js/packages/phoenix-mcp",
+    "readme_file": "official/Arize_Phoenix.md",
+    "summary": "An open-source AI observability platform designed for experimentation, evaluation, and troubleshooting. It provides tracing, evaluation, dataset management, experiment tracking, a playground for optimizing prompts, and prompt management.",
+    "tools": [
+      {
+        "name": "arize-phoenix-otel",
+        "description": "Provides a lightweight wrapper around OpenTelemetry primitives with Phoenix-aware defaults",
+        "parameter": {}
+      },
+      {
+        "name": "arize-phoenix-client",
+        "description": "Lightweight client for interacting with the Phoenix server via its OpenAPI REST interface",
+        "parameter": {}
+      },
+      {
+        "name": "arize-phoenix-evals",
+        "description": "Tooling to evaluate LLM applications including RAG relevance, answer relevance, and more",
+        "parameter": {}
+      },
+      {
+        "name": "@arizeai/phoenix-client",
+        "description": "Client for the Arize Phoenix API",
+        "parameter": {}
+      },
+      {
+        "name": "@arizeai/phoenix-mcp",
+        "description": "MCP server implementation for Arize Phoenix providing a unified interface to Phoenix's capabilities",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "Astra DB",
+    "description": "Comprehensive tools for managing collections and documents in a DataStax Astra DB NoSQL database with a full range of operations such as create, update, delete, find, and associated bulk actions.",
+    "url": "https://github.com/datastax/astra-db-mcp",
+    "readme_file": "official/Astra_DB.md",
+    "summary": "A Model Context Protocol (MCP) server for interacting with Astra DB, extending the capabilities of Large Language Models (LLMs) by allowing them to interact with external systems as agents.",
+    "tools": [
+      {
+        "name": "GetCollections",
+        "description": "Get all collections in the database",
+        "parameter": {}
+      },
+      {
+        "name": "CreateCollection",
+        "description": "Create a new collection in the database",
+        "parameter": {}
+      },
+      {
+        "name": "UpdateCollection",
+        "description": "Update an existing collection in the database",
+        "parameter": {}
+      },
+      {
+        "name": "DeleteCollection",
+        "description": "Delete a collection from the database",
+        "parameter": {}
+      },
+      {
+        "name": "ListRecords",
+        "description": "List records from a collection in the database",
+        "parameter": {}
+      },
+      {
+        "name": "GetRecord",
+        "description": "Get a specific record from a collection by ID",
+        "parameter": {}
+      },
+      {
+        "name": "CreateRecord",
+        "description": "Create a new record in a collection",
+        "parameter": {}
+      },
+      {
+        "name": "UpdateRecord",
+        "description": "Update an existing record in a collection",
+        "parameter": {}
+      },
+      {
+        "name": "DeleteRecord",
+        "description": "Delete a record from a collection",
+        "parameter": {}
+      },
+      {
+        "name": "FindRecord",
+        "description": "Find records in a collection by field value",
+        "parameter": {}
+      },
+      {
+        "name": "BulkCreateRecords",
+        "description": "Create multiple records in a collection at once",
+        "parameter": {}
+      },
+      {
+        "name": "BulkUpdateRecords",
+        "description": "Update multiple records in a collection at once",
+        "parameter": {}
+      },
+      {
+        "name": "BulkDeleteRecords",
+        "description": "Delete multiple records from a collection at once",
+        "parameter": {}
+      },
+      {
+        "name": "OpenBrowser",
+        "description": "Open a web browser for authentication and setup",
+        "parameter": {}
+      },
+      {
+        "name": "HelpAddToClient",
+        "description": "Get assistance with adding Astra DB client to your MCP client",
+        "parameter": {}
+      },
+      {
+        "name": "EstimateDocumentCount",
+        "description": "Get estimate of the number of documents in a collection",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "Audiense Insights",
+    "description": "Marketing insights and audience analysis from Audiense reports, covering demographic, cultural, influencer, and content engagement analysis.",
+    "url": "https://github.com/AudienseCo/mcp-audiense-insights",
+    "readme_file": "official/Audiense_Insights.md",
+    "summary": "This server allows MCP-compatible clients to interact with an Audiense Insights account, extracting marketing insights and audience analysis including demographic, cultural, influencer, and content engagement data.",
+    "tools": [
+      {
+        "name": "get-reports",
+        "description": "Retrieves the list of Audiense insights reports owned by the authenticated user.",
+        "parameter": {}
+      },
+      {
+        "name": "get-report-info",
+        "description": "Fetches detailed information about a specific intelligence report, including status, segmentation type, audience size, segments, and access links.",
+        "parameter": {
+          "report_id": "(string) The ID of the intelligence report."
+        }
+      },
+      {
+        "name": "get-audience-insights",
+        "description": "Retrieves aggregated insights for a given audience, including demographics, behavioral traits, psychographics, and socioeconomic factors.",
+        "parameter": {
+          "audience_insights_id": "(string) The ID of the audience insights.",
+          "insights": "(array of strings, optional) List of specific insight names to filter."
+        }
+      },
+      {
+        "name": "get-baselines",
+        "description": "Retrieves available baseline audiences, optionally filtered by country.",
+        "parameter": {
+          "country": "(string, optional) ISO country code to filter by."
+        }
+      },
+      {
+        "name": "get-categories",
+        "description": "Retrieves the list of available affinity categories that can be used in influencer comparisons.",
+        "parameter": {}
+      },
+      {
+        "name": "compare-audience-influencers",
+        "description": "Compares influencers of a given audience with a baseline audience, providing affinity scores, baseline comparisons, and uniqueness scores.",
+        "parameter": {
+          "audience_influencers_id": "(string) ID of the audience influencers.",
+          "baseline_audience_influencers_id": "(string) ID of the baseline audience influencers.",
+          "cursor": "(number, optional) Pagination cursor.",
+          "count": "(number, optional) Number of items per page (default: 200).",
+          "bio_keyword": "(string, optional) Filter influencers by bio keyword.",
+          "entity_type": "(enum: person | brand, optional) Filter by entity type.",
+          "followers_min": "(number, optional) Minimum number of followers.",
+          "followers_max": "(number, optional) Maximum number of followers.",
+          "categories": "(array of strings, optional) Filter influencers by categories.",
+          "countries": "(array of strings, optional) Filter influencers by country ISO codes."
+        }
+      },
+      {
+        "name": "get-audience-content",
+        "description": "Retrieves audience content engagement details, including liked, shared, and influential content.",
+        "parameter": {
+          "audience_content_id": "(string) The ID of the audience content."
+        }
+      },
+      {
+        "name": "report-summary",
+        "description": "Generates a comprehensive summary of an Audiense report, including metadata, audience size, segment information, top insights, and top influencers with comparison metrics.",
+        "parameter": {
+          "report_id": "(string) The ID of the intelligence report to summarize."
+        }
+      }
+    ]
+  },
+  {
+    "name": "AWS",
+    "description": "Specialized MCP servers that bring AWS best practices directly to your development workflow.",
+    "url": "https://github.com/awslabs/mcp",
+    "readme_file": "official/AWS.md",
+    "summary": "A suite of specialized MCP servers that help you get the most out of AWS, wherever you use MCP. These servers enhance the capabilities of foundation models by providing relevant information, access to the latest documentation, workflow automation, and specialized domain knowledge for AWS services.",
+    "tools": [
+      {
+        "name": "Search Documentation",
+        "description": "Search AWS documentation and best practices using the official AWS search API.",
+        "parameter": {}
+      },
+      {
+        "name": "Get Content Recommendations",
+        "description": "Get content recommendations for AWS documentation pages.",
+        "parameter": {}
+      },
+      {
+        "name": "Convert Documentation to Markdown",
+        "description": "Convert AWS documentation to markdown format.",
+        "parameter": {}
+      },
+      {
+        "name": "Discover Knowledge Bases",
+        "description": "Discover Amazon Bedrock Knowledge Bases and their data sources.",
+        "parameter": {}
+      },
+      {
+        "name": "Query Knowledge Bases",
+        "description": "Query Amazon Bedrock Knowledge Bases with natural language.",
+        "parameter": {}
+      },
+      {
+        "name": "Filter Results by Data Source",
+        "description": "Filter query results by data source.",
+        "parameter": {}
+      },
+      {
+        "name": "Rerank Results",
+        "description": "Rerank query results.",
+        "parameter": {}
+      },
+      {
+        "name": "AWS CDK Project Analysis",
+        "description": "Analyze and assist with AWS CDK projects.",
+        "parameter": {}
+      },
+      {
+        "name": "CDK Construct Recommendations",
+        "description": "Provide recommendations for CDK constructs.",
+        "parameter": {}
+      },
+      {
+        "name": "Infrastructure as Code Best Practices",
+        "description": "Provide best practices for infrastructure as code.",
+        "parameter": {}
+      },
+      {
+        "name": "Analyze and Visualize Costs",
+        "description": "Analyze and visualize AWS costs.",
+        "parameter": {}
+      },
+      {
+        "name": "Query Cost Data with Natural Language",
+        "description": "Query cost data using natural language.",
+        "parameter": {}
+      },
+      {
+        "name": "Generate Cost Reports and Insights",
+        "description": "Generate detailed cost reports and insights.",
+        "parameter": {}
+      },
+      {
+        "name": "Text-Based Image Generation",
+        "description": "Generate images using text with customizable parameters.",
+        "parameter": {}
+      },
+      {
+        "name": "Color-Guided Image Generation",
+        "description": "Generate images with specific color palettes.",
+        "parameter": {}
+      },
+      {
+        "name": "Save Generated Images",
+        "description": "Save generated images to the workspace.",
+        "parameter": {}
+      },
+      {
+        "name": "Generate Professional Diagrams",
+        "description": "Generate professional diagrams using Python code.",
+        "parameter": {}
+      },
+      {
+        "name": "Customize Diagram Appearance",
+        "description": "Customize the appearance, layout, and styling of diagrams.",
+        "parameter": {}
+      },
+      {
+        "name": "Code Scanning for Secure Diagram Generation",
+        "description": "Scan code to ensure secure diagram generation.",
+        "parameter": {}
+      },
+      {
+        "name": "Run AWS Lambda Functions",
+        "description": "Select and run AWS Lambda functions as MCP tools without code changes.",
+        "parameter": {}
+      },
+      {
+        "name": "Security-First Development Workflow",
+        "description": "Implement a security-first development workflow.",
+        "parameter": {}
+      },
+      {
+        "name": "Checkov Integration",
+        "description": "Integrate Checkov for security checks.",
+        "parameter": {}
+      },
+      {
+        "name": "AWS and AWSCC Provider Documentation",
+        "description": "Provide documentation for AWS and AWSCC providers.",
+        "parameter": {}
+      },
+      {
+        "name": "AWS-IA GenAI Modules",
+        "description": "Use AWS-IA GenAI modules.",
+        "parameter": {}
+      },
+      {
+        "name": "Terraform Workflow Execution",
+        "description": "Execute Terraform workflows.",
+        "parameter": {}
+      },
+      {
+        "name": "Search for Places Using Geocoding",
+        "description": "Search for places using geocoding.",
+        "parameter": {}
+      },
+      {
+        "name": "Get Details for Specific Places",
+        "description": "Get details for specific places by PlaceId.",
+        "parameter": {}
+      },
+      {
+        "name": "Reverse Geocode Coordinates to Addresses",
+        "description": "Reverse geocode coordinates to addresses.",
+        "parameter": {}
+      },
+      {
+        "name": "Search for Places Near a Location",
+        "description": "Search for places near a specified location.",
+        "parameter": {}
+      },
+      {
+        "name": "Search for Places That Are Currently Open",
+        "description": "Search for places that are currently open.",
+        "parameter": {}
+      },
+      {
+        "name": "Calculate Routes Between Locations",
+        "description": "Calculate routes between locations with turn-by-turn directions.",
+        "parameter": {}
+      },
+      {
+        "name": "Optimize Waypoints for Efficient Routing",
+        "description": "Optimize waypoints for efficient routing.",
+        "parameter": {}
+      },
+      {
+        "name": "Repository Indexing",
+        "description": "Index Git repositories using FAISS and Amazon Bedrock embeddings.",
+        "parameter": {}
+      },
+      {
+        "name": "Semantic Search Within Repositories",
+        "description": "Perform semantic search within repositories.",
+        "parameter": {}
+      },
+      {
+        "name": "Repository Structure Analysis",
+        "description": "Analyze the structure of repositories.",
+        "parameter": {}
+      },
+      {
+        "name": "GitHub Repository Search in AWS Organizations",
+        "description": "Search GitHub repositories within AWS organizations.",
+        "parameter": {}
+      },
+      {
+        "name": "File Access with Text and Binary Support",
+        "description": "Access files with text and binary support.",
+        "parameter": {}
+      }
+    ]
+  }
+]

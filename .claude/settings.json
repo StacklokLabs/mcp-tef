@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(uv run python:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(uv run ruff:*)",
+      "Bash(test:*)",
+      "Bash(task typecheck)",
+      "Bash(task format)",
+      "Bash(task lint)",
+      "Bash(task test)",
+      "Bash(task test:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

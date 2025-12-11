@@ -1,0 +1,120 @@
+name: Release CLI
+
+on:
+  push:
+    tags:
+      - 'cli-v*'  # Trigger on CLI version tags (e.g., cli-v0.1.0)
+
+permissions:
+  contents: write
+
+jobs:
+  code-checks:
+    name: CLI Code Checks
+    uses: ./.github/workflows/code-quality-cli.yml
+
+  build-and-release:
+    name: Build and release CLI to GitHub
+    runs-on: ubuntu-latest
+    needs: code-checks
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244 # v7.1.4
+        with:
+          enable-cache: true
+          python-version: '3.13'
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          # Extract version from tag (cli-v0.1.0 -> 0.1.0)
+          VERSION=${GITHUB_REF#refs/tags/cli-v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "CLI Version: $VERSION"
+
+      - name: Validate version format
+        id: validate_version
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          # Validate PEP 440 version format (Python packaging standard)
+          # Supports: 1.0.0, 1.0.0a1, 1.0.0b1, 1.0.0rc1, 1.0.0.dev1, 1.0.0.post1
+          PEP440_REGEX='^([0-9]+)\.([0-9]+)\.([0-9]+)(a[0-9]+|b[0-9]+|rc[0-9]+)?(\.dev[0-9]+)?(\.post[0-9]+)?(\+[a-zA-Z0-9\.]+)?$'
+          if [[ ! "$VERSION" =~ $PEP440_REGEX ]]; then
+            echo "::error::Invalid version format: '$VERSION'. Must be PEP 440 compliant (e.g., 1.0.0, 1.0.0a1, 1.0.0b1, 1.0.0rc1, 1.0.0.dev1)"
+            exit 1
+          fi
+          echo "Version '$VERSION' is valid PEP 440"
+
+          # Consider .post releases as stable (not prerelease)
+          RELEASE_REGEX='^[0-9]+\.[0-9]+\.[0-9]+(\.post[0-9]+)?$'
+          if [[ "$VERSION" =~ $RELEASE_REGEX ]]; then
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build package
+        working-directory: cli
+        env:
+          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ steps.get_version.outputs.version }}
+        run: |
+          uv sync --frozen
+          uv build
+
+      - name: Verify package contents
+        working-directory: cli
+        run: |
+          ls -lh dist/
+          uv run --with twine twine check dist/*
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
+        with:
+          files: |
+            cli/dist/*.whl
+            cli/dist/*.tar.gz
+          body: |
+            ## mcp-tef CLI ${{ steps.get_version.outputs.version }}
+
+            ### Installation
+
+            Install directly from GitHub release:
+
+            ```bash
+            uv tool install https://github.com/${{ github.repository }}/releases/download/cli-v${{ steps.get_version.outputs.version }}/mcp_tef_cli-${{ steps.get_version.outputs.version }}-py3-none-any.whl
+            ```
+
+            Or install from Git repository:
+
+            ```bash
+            uv tool install "mcp-tef-cli @ git+https://github.com/${{ github.repository }}.git@cli-v${{ steps.get_version.outputs.version }}#subdirectory=cli"
+            ```
+
+            ### Upgrade
+
+            ```bash
+            uv tool upgrade mcp-tef-cli
+            ```
+
+            ### Quick Start
+
+            ```bash
+            # Deploy latest mcp-tef server
+            mcp-tef-cli deploy
+
+            # Deploy with API keys
+            mcp-tef-cli deploy \
+              --env OPENROUTER_API_KEY=sk-xxx \
+              --health-check
+            ```
+
+            ### Documentation
+
+            See the [CLI README](https://github.com/${{ github.repository }}/tree/main/cli) for full documentation.
+          draft: false
+          prerelease: ${{ steps.validate_version.outputs.prerelease == 'true' }}
+          generate_release_notes: true

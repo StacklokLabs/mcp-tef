@@ -1,0 +1,2119 @@
+[
+  {
+    "name": "AgentQL",
+    "description": "Enable AI agents to get structured data from unstructured web with AgentQL.",
+    "url": "https://github.com/tinyfish-io/agentql-mcp",
+    "readme_file": "official/AgentQL.md",
+    "summary": "A Model Context Protocol (MCP) server that integrates AgentQL's data extraction capabilities, allowing users to extract structured data from web pages.",
+    "tools": [
+      {
+        "name": "extract-web-data",
+        "description": "Extracts structured data from a given URL using a prompt to describe the data and fields to extract.",
+        "parameter": {
+          "url": "(string) The URL of the web page to extract data from.",
+          "prompt": "(string) A description of the actual data and its fields to extract."
+        }
+      }
+    ]
+  },
+  {
+    "name": "Aiven",
+    "description": "Navigate your Aiven projects and interact with the PostgreSQL\u00ae, Apache Kafka\u00ae, ClickHouse\u00ae and OpenSearch\u00ae services",
+    "url": "https://github.com/Aiven-Open/mcp-aiven",
+    "readme_file": "official/Aiven.md",
+    "summary": "A Model Context Protocol (MCP) server for Aiven, providing access to various Aiven services such as PostgreSQL, Kafka, ClickHouse, Valkey, and OpenSearch, enabling LLMs to build full stack solutions.",
+    "tools": [
+      {
+        "name": "list_projects",
+        "description": "List all projects on your Aiven account.",
+        "parameter": {}
+      },
+      {
+        "name": "list_services",
+        "description": "List all services in a specific Aiven project.",
+        "parameter": {}
+      },
+      {
+        "name": "get_service_details",
+        "description": "Get the detail of your service in a specific Aiven project.",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "Alibaba Cloud AnalyticDB for MySQL",
+    "description": "Connect to a AnalyticDB for MySQL cluster for getting database or table metadata, querying and analyzing data.It will be supported to add the openapi for cluster operation in the future.",
+    "url": "https://github.com/aliyun/alibabacloud-adb-mysql-mcp-server",
+    "readme_file": "official/Alibaba_Cloud_AnalyticDB_for_MySQL.md",
+    "summary": "A universal interface between AI Agents and AnalyticDB for MySQL databases, enabling seamless communication for retrieving database metadata and executing SQL operations.",
+    "tools": [
+      {
+        "name": "execute_sql",
+        "description": "Execute a SQL query in the AnalyticDB for MySQL Cluster",
+        "parameter": {}
+      },
+      {
+        "name": "get_query_plan",
+        "description": "Get the query plan for a SQL query",
+        "parameter": {}
+      },
+      {
+        "name": "get_execution_plan",
+        "description": "Get the actual execution plan with runtime statistics for a SQL query",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "Apache IoTDB",
+    "description": "MCP Server for Apache IoTDB database and its tools",
+    "url": "https://github.com/apache/iotdb-mcp-server",
+    "readme_file": "official/Apache_IoTDB.md",
+    "summary": "A Model Context Protocol (MCP) server implementation that provides database interaction and business intelligence capabilities through IoTDB. It enables running SQL queries.",
+    "tools": [
+      {
+        "name": "metadata_query",
+        "description": "Execute SHOW/COUNT queries to read metadata from the database",
+        "parameter": {
+          "query_sql": "(string) The SHOW/COUNT SQL query to execute"
+        }
+      },
+      {
+        "name": "select_query",
+        "description": "Execute SELECT queries to read data from the database",
+        "parameter": {
+          "query_sql": "(string) The SELECT SQL query to execute"
+        }
+      },
+      {
+        "name": "read_query",
+        "description": "Execute SELECT queries to read data from the database",
+        "parameter": {
+          "query": "(string) The SELECT SQL query to execute"
+        }
+      },
+      {
+        "name": "list_tables",
+        "description": "Get a list of all tables in the database",
+        "parameter": {}
+      },
+      {
+        "name": "describe-table",
+        "description": "View schema information for a specific table",
+        "parameter": {
+          "table_name": "(string) Name of table to describe"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Apify",
+    "description": "Actors MCP Server: Use 3,000+ pre-built cloud tools to extract data from websites, e-commerce, social media, search engines, maps, and more",
+    "url": "https://github.com/apify/actors-mcp-server",
+    "readme_file": "official/Apify.md",
+    "summary": "The Apify MCP Server enables interaction with Apify Actors as tools for performing various tasks, such as data extraction, web searching, and more. It supports both HTTP server (SSE) and local server (stdio) modes, and can be integrated with various MCP clients.",
+    "tools": [
+      {
+        "name": "get-actor-details",
+        "description": "Retrieves documentation, input schema, and details about a specific Actor.",
+        "parameter": {}
+      },
+      {
+        "name": "discover-actors",
+        "description": "Searches for relevant Actors using keywords and returns their details.",
+        "parameter": {}
+      },
+      {
+        "name": "add-actor-as-tool",
+        "description": "Adds an Actor by name to the available tools list without executing it, requiring user consent to run later.",
+        "parameter": {}
+      },
+      {
+        "name": "remove-actor-from-tool",
+        "description": "Removes an Actor by name from the available tools list when it's no longer needed.",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "APIMatic MCP",
+    "description": "APIMatic MCP Server is used to validate OpenAPI specifications using APIMatic. The server processes OpenAPI files and returns validation summaries by leveraging APIMatic\u2019s API.",
+    "url": "https://github.com/apimatic/apimatic-validator-mcp",
+    "readme_file": "official/APIMatic_MCP.md",
+    "summary": "A Model Context Protocol (MCP) Server for validating OpenAPI specifications using APIMatic. It supports OpenAPI 2.0 and 3.0 files in both JSON and YAML formats, leveraging APIMatic\u2019s API for comprehensive validation.",
+    "tools": [
+      {
+        "name": "validate-openapi-using-apimatic",
+        "description": "Validates an OpenAPI file using APIMatic\u2019s API and returns a validation summary.",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "Arize Phoenix",
+    "description": "Inspect traces, manage prompts, curate datasets, and run experiments using Arize Phoenix, an open-source AI and LLM observability tool.",
+    "url": "https://github.com/Arize-ai/phoenix/tree/main/js/packages/phoenix-mcp",
+    "readme_file": "official/Arize_Phoenix.md",
+    "summary": "An open-source AI observability platform designed for experimentation, evaluation, and troubleshooting. It provides tracing, evaluation, dataset management, experiment tracking, a playground for optimizing prompts, and prompt management.",
+    "tools": [
+      {
+        "name": "arize-phoenix-otel",
+        "description": "Provides a lightweight wrapper around OpenTelemetry primitives with Phoenix-aware defaults",
+        "parameter": {}
+      },
+      {
+        "name": "arize-phoenix-client",
+        "description": "Lightweight client for interacting with the Phoenix server via its OpenAPI REST interface",
+        "parameter": {}
+      },
+      {
+        "name": "arize-phoenix-evals",
+        "description": "Tooling to evaluate LLM applications including RAG relevance, answer relevance, and more",
+        "parameter": {}
+      },
+      {
+        "name": "@arizeai/phoenix-client",
+        "description": "Client for the Arize Phoenix API",
+        "parameter": {}
+      },
+      {
+        "name": "@arizeai/phoenix-mcp",
+        "description": "MCP server implementation for Arize Phoenix providing a unified interface to Phoenix's capabilities",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "Astra DB",
+    "description": "Comprehensive tools for managing collections and documents in a DataStax Astra DB NoSQL database with a full range of operations such as create, update, delete, find, and associated bulk actions.",
+    "url": "https://github.com/datastax/astra-db-mcp",
+    "readme_file": "official/Astra_DB.md",
+    "summary": "A Model Context Protocol (MCP) server for interacting with Astra DB, extending the capabilities of Large Language Models (LLMs) by allowing them to interact with external systems as agents.",
+    "tools": [
+      {
+        "name": "GetCollections",
+        "description": "Get all collections in the database",
+        "parameter": {}
+      },
+      {
+        "name": "CreateCollection",
+        "description": "Create a new collection in the database",
+        "parameter": {}
+      },
+      {
+        "name": "UpdateCollection",
+        "description": "Update an existing collection in the database",
+        "parameter": {}
+      },
+      {
+        "name": "DeleteCollection",
+        "description": "Delete a collection from the database",
+        "parameter": {}
+      },
+      {
+        "name": "ListRecords",
+        "description": "List records from a collection in the database",
+        "parameter": {}
+      },
+      {
+        "name": "GetRecord",
+        "description": "Get a specific record from a collection by ID",
+        "parameter": {}
+      },
+      {
+        "name": "CreateRecord",
+        "description": "Create a new record in a collection",
+        "parameter": {}
+      },
+      {
+        "name": "UpdateRecord",
+        "description": "Update an existing record in a collection",
+        "parameter": {}
+      },
+      {
+        "name": "DeleteRecord",
+        "description": "Delete a record from a collection",
+        "parameter": {}
+      },
+      {
+        "name": "FindRecord",
+        "description": "Find records in a collection by field value",
+        "parameter": {}
+      },
+      {
+        "name": "BulkCreateRecords",
+        "description": "Create multiple records in a collection at once",
+        "parameter": {}
+      },
+      {
+        "name": "BulkUpdateRecords",
+        "description": "Update multiple records in a collection at once",
+        "parameter": {}
+      },
+      {
+        "name": "BulkDeleteRecords",
+        "description": "Delete multiple records from a collection at once",
+        "parameter": {}
+      },
+      {
+        "name": "OpenBrowser",
+        "description": "Open a web browser for authentication and setup",
+        "parameter": {}
+      },
+      {
+        "name": "HelpAddToClient",
+        "description": "Get assistance with adding Astra DB client to your MCP client",
+        "parameter": {}
+      },
+      {
+        "name": "EstimateDocumentCount",
+        "description": "Get estimate of the number of documents in a collection",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "Audiense Insights",
+    "description": "Marketing insights and audience analysis from Audiense reports, covering demographic, cultural, influencer, and content engagement analysis.",
+    "url": "https://github.com/AudienseCo/mcp-audiense-insights",
+    "readme_file": "official/Audiense_Insights.md",
+    "summary": "This server allows MCP-compatible clients to interact with an Audiense Insights account, extracting marketing insights and audience analysis including demographic, cultural, influencer, and content engagement data.",
+    "tools": [
+      {
+        "name": "get-reports",
+        "description": "Retrieves the list of Audiense insights reports owned by the authenticated user.",
+        "parameter": {}
+      },
+      {
+        "name": "get-report-info",
+        "description": "Fetches detailed information about a specific intelligence report, including status, segmentation type, audience size, segments, and access links.",
+        "parameter": {
+          "report_id": "(string) The ID of the intelligence report."
+        }
+      },
+      {
+        "name": "get-audience-insights",
+        "description": "Retrieves aggregated insights for a given audience, including demographics, behavioral traits, psychographics, and socioeconomic factors.",
+        "parameter": {
+          "audience_insights_id": "(string) The ID of the audience insights.",
+          "insights": "(array of strings, optional) List of specific insight names to filter."
+        }
+      },
+      {
+        "name": "get-baselines",
+        "description": "Retrieves available baseline audiences, optionally filtered by country.",
+        "parameter": {
+          "country": "(string, optional) ISO country code to filter by."
+        }
+      },
+      {
+        "name": "get-categories",
+        "description": "Retrieves the list of available affinity categories that can be used in influencer comparisons.",
+        "parameter": {}
+      },
+      {
+        "name": "compare-audience-influencers",
+        "description": "Compares influencers of a given audience with a baseline audience, providing affinity scores, baseline comparisons, and uniqueness scores.",
+        "parameter": {
+          "audience_influencers_id": "(string) ID of the audience influencers.",
+          "baseline_audience_influencers_id": "(string) ID of the baseline audience influencers.",
+          "cursor": "(number, optional) Pagination cursor.",
+          "count": "(number, optional) Number of items per page (default: 200).",
+          "bio_keyword": "(string, optional) Filter influencers by bio keyword.",
+          "entity_type": "(enum: person | brand, optional) Filter by entity type.",
+          "followers_min": "(number, optional) Minimum number of followers.",
+          "followers_max": "(number, optional) Maximum number of followers.",
+          "categories": "(array of strings, optional) Filter influencers by categories.",
+          "countries": "(array of strings, optional) Filter influencers by country ISO codes."
+        }
+      },
+      {
+        "name": "get-audience-content",
+        "description": "Retrieves audience content engagement details, including liked, shared, and influential content.",
+        "parameter": {
+          "audience_content_id": "(string) The ID of the audience content."
+        }
+      },
+      {
+        "name": "report-summary",
+        "description": "Generates a comprehensive summary of an Audiense report, including metadata, audience size, segment information, top insights, and top influencers with comparison metrics.",
+        "parameter": {
+          "report_id": "(string) The ID of the intelligence report to summarize."
+        }
+      }
+    ]
+  },
+  {
+    "name": "AWS",
+    "description": "Specialized MCP servers that bring AWS best practices directly to your development workflow.",
+    "url": "https://github.com/awslabs/mcp",
+    "readme_file": "official/AWS.md",
+    "summary": "A suite of specialized MCP servers that help you get the most out of AWS, wherever you use MCP. These servers enhance the capabilities of foundation models by providing relevant information, access to the latest documentation, workflow automation, and specialized domain knowledge for AWS services.",
+    "tools": [
+      {
+        "name": "Search Documentation",
+        "description": "Search AWS documentation and best practices using the official AWS search API.",
+        "parameter": {}
+      },
+      {
+        "name": "Get Content Recommendations",
+        "description": "Get content recommendations for AWS documentation pages.",
+        "parameter": {}
+      },
+      {
+        "name": "Convert Documentation to Markdown",
+        "description": "Convert AWS documentation to markdown format.",
+        "parameter": {}
+      },
+      {
+        "name": "Discover Knowledge Bases",
+        "description": "Discover Amazon Bedrock Knowledge Bases and their data sources.",
+        "parameter": {}
+      },
+      {
+        "name": "Query Knowledge Bases",
+        "description": "Query Amazon Bedrock Knowledge Bases with natural language.",
+        "parameter": {}
+      },
+      {
+        "name": "Filter Results by Data Source",
+        "description": "Filter query results by data source.",
+        "parameter": {}
+      },
+      {
+        "name": "Rerank Results",
+        "description": "Rerank query results.",
+        "parameter": {}
+      },
+      {
+        "name": "AWS CDK Project Analysis",
+        "description": "Analyze and assist with AWS CDK projects.",
+        "parameter": {}
+      },
+      {
+        "name": "CDK Construct Recommendations",
+        "description": "Provide recommendations for CDK constructs.",
+        "parameter": {}
+      },
+      {
+        "name": "Infrastructure as Code Best Practices",
+        "description": "Provide best practices for infrastructure as code.",
+        "parameter": {}
+      },
+      {
+        "name": "Analyze and Visualize Costs",
+        "description": "Analyze and visualize AWS costs.",
+        "parameter": {}
+      },
+      {
+        "name": "Query Cost Data with Natural Language",
+        "description": "Query cost data using natural language.",
+        "parameter": {}
+      },
+      {
+        "name": "Generate Cost Reports and Insights",
+        "description": "Generate detailed cost reports and insights.",
+        "parameter": {}
+      },
+      {
+        "name": "Text-Based Image Generation",
+        "description": "Generate images using text with customizable parameters.",
+        "parameter": {}
+      },
+      {
+        "name": "Color-Guided Image Generation",
+        "description": "Generate images with specific color palettes.",
+        "parameter": {}
+      },
+      {
+        "name": "Save Generated Images",
+        "description": "Save generated images to the workspace.",
+        "parameter": {}
+      },
+      {
+        "name": "Generate Professional Diagrams",
+        "description": "Generate professional diagrams using Python code.",
+        "parameter": {}
+      },
+      {
+        "name": "Customize Diagram Appearance",
+        "description": "Customize the appearance, layout, and styling of diagrams.",
+        "parameter": {}
+      },
+      {
+        "name": "Code Scanning for Secure Diagram Generation",
+        "description": "Scan code to ensure secure diagram generation.",
+        "parameter": {}
+      },
+      {
+        "name": "Run AWS Lambda Functions",
+        "description": "Select and run AWS Lambda functions as MCP tools without code changes.",
+        "parameter": {}
+      },
+      {
+        "name": "Security-First Development Workflow",
+        "description": "Implement a security-first development workflow.",
+        "parameter": {}
+      },
+      {
+        "name": "Checkov Integration",
+        "description": "Integrate Checkov for security checks.",
+        "parameter": {}
+      },
+      {
+        "name": "AWS and AWSCC Provider Documentation",
+        "description": "Provide documentation for AWS and AWSCC providers.",
+        "parameter": {}
+      },
+      {
+        "name": "AWS-IA GenAI Modules",
+        "description": "Use AWS-IA GenAI modules.",
+        "parameter": {}
+      },
+      {
+        "name": "Terraform Workflow Execution",
+        "description": "Execute Terraform workflows.",
+        "parameter": {}
+      },
+      {
+        "name": "Search for Places Using Geocoding",
+        "description": "Search for places using geocoding.",
+        "parameter": {}
+      },
+      {
+        "name": "Get Details for Specific Places",
+        "description": "Get details for specific places by PlaceId.",
+        "parameter": {}
+      },
+      {
+        "name": "Reverse Geocode Coordinates to Addresses",
+        "description": "Reverse geocode coordinates to addresses.",
+        "parameter": {}
+      },
+      {
+        "name": "Search for Places Near a Location",
+        "description": "Search for places near a specified location.",
+        "parameter": {}
+      },
+      {
+        "name": "Search for Places That Are Currently Open",
+        "description": "Search for places that are currently open.",
+        "parameter": {}
+      },
+      {
+        "name": "Calculate Routes Between Locations",
+        "description": "Calculate routes between locations with turn-by-turn directions.",
+        "parameter": {}
+      },
+      {
+        "name": "Optimize Waypoints for Efficient Routing",
+        "description": "Optimize waypoints for efficient routing.",
+        "parameter": {}
+      },
+      {
+        "name": "Repository Indexing",
+        "description": "Index Git repositories using FAISS and Amazon Bedrock embeddings.",
+        "parameter": {}
+      },
+      {
+        "name": "Semantic Search Within Repositories",
+        "description": "Perform semantic search within repositories.",
+        "parameter": {}
+      },
+      {
+        "name": "Repository Structure Analysis",
+        "description": "Analyze the structure of repositories.",
+        "parameter": {}
+      },
+      {
+        "name": "GitHub Repository Search in AWS Organizations",
+        "description": "Search GitHub repositories within AWS organizations.",
+        "parameter": {}
+      },
+      {
+        "name": "File Access with Text and Binary Support",
+        "description": "Access files with text and binary support.",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "Axiom",
+    "description": "Query and analyze your Axiom logs, traces, and all other event data in natural language",
+    "url": "https://github.com/axiomhq/mcp-server-axiom",
+    "readme_file": "official/Axiom.md",
+    "summary": "A Model Context Protocol (MCP) server for Axiom that allows AI agents to query data using Axiom Processing Language (APL). It supports executing APL queries and listing available datasets.",
+    "tools": [
+      {
+        "name": "queryApl",
+        "description": "Execute APL queries against Axiom datasets",
+        "parameter": {}
+      },
+      {
+        "name": "listDatasets",
+        "description": "List available Axiom datasets",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "Azure",
+    "description": "The Azure MCP Server gives MCP Clients access to key Azure services and tools like Azure Storage, Cosmos DB, the Azure CLI, and more.",
+    "url": "https://github.com/Azure/azure-mcp",
+    "readme_file": "official/Azure.md",
+    "summary": "The Azure MCP Server implements the MCP specification to create a seamless connection between AI agents and key Azure services, including Azure Storage, Cosmos DB, and more. It enables AI agents to interact with Azure resources through smart JSON communication, natural language commands, intelligent parameter suggestions, and consistent error handling.",
+    "tools": [
+      {
+        "name": "List Azure AI Search services",
+        "description": "Lists all Azure AI Search services.",
+        "parameter": {}
+      },
+      {
+        "name": "List indexes and look at their schema and configuration",
+        "description": "Lists indexes and provides details about their schema and configuration.",
+        "parameter": {}
+      },
+      {
+        "name": "Query search indexes",
+        "description": "Queries search indexes for specific data.",
+        "parameter": {}
+      },
+      {
+        "name": "List Cosmos DB accounts",
+        "description": "Lists all Cosmos DB accounts.",
+        "parameter": {}
+      },
+      {
+        "name": "List and query databases",
+        "description": "Lists and queries databases within a Cosmos DB account.",
+        "parameter": {}
+      },
+      {
+        "name": "Manage containers and items",
+        "description": "Manages containers and items within a Cosmos DB database.",
+        "parameter": {}
+      },
+      {
+        "name": "Execute SQL queries against containers",
+        "description": "Executes SQL queries against containers within a Cosmos DB database.",
+        "parameter": {}
+      },
+      {
+        "name": "List and query databases",
+        "description": "Lists and queries databases within an Azure Database for PostgreSQL - Flexible Server.",
+        "parameter": {}
+      },
+      {
+        "name": "List and get schema for tables",
+        "description": "Lists and retrieves the schema for tables within an Azure Database for PostgreSQL - Flexible Server.",
+        "parameter": {}
+      },
+      {
+        "name": "List, get configuration and get parameters for servers",
+        "description": "Lists, retrieves configuration, and retrieves parameters for servers within an Azure Database for PostgreSQL - Flexible Server.",
+        "parameter": {}
+      },
+      {
+        "name": "List Kusto clusters",
+        "description": "Lists all Kusto clusters.",
+        "parameter": {}
+      },
+      {
+        "name": "List databases in a Kusto cluster",
+        "description": "Lists databases within a Kusto cluster.",
+        "parameter": {}
+      },
+      {
+        "name": "List tables in a Kusto database",
+        "description": "Lists tables within a Kusto database.",
+        "parameter": {}
+      },
+      {
+        "name": "Get schema for a Kusto table",
+        "description": "Retrieves the schema for a Kusto table.",
+        "parameter": {}
+      },
+      {
+        "name": "Sample rows from a Kusto table",
+        "description": "Samples rows from a Kusto table.",
+        "parameter": {}
+      },
+      {
+        "name": "Query Kusto databases using KQL",
+        "description": "Queries Kusto databases using KQL.",
+        "parameter": {}
+      },
+      {
+        "name": "List Storage accounts",
+        "description": "Lists all Storage accounts.",
+        "parameter": {}
+      },
+      {
+        "name": "Manage blob containers and blobs",
+        "description": "Manages blob containers and blobs within a Storage account.",
+        "parameter": {}
+      },
+      {
+        "name": "List and query Storage tables",
+        "description": "Lists and queries tables within a Storage account.",
+        "parameter": {}
+      },
+      {
+        "name": "Get container properties and metadata",
+        "description": "Retrieves properties and metadata for a Storage container.",
+        "parameter": {}
+      },
+      {
+        "name": "List Log Analytics workspaces",
+        "description": "Lists all Log Analytics workspaces.",
+        "parameter": {}
+      },
+      {
+        "name": "Query logs using KQL",
+        "description": "Queries logs using KQL.",
+        "parameter": {}
+      },
+      {
+        "name": "List available tables",
+        "description": "Lists available tables within a Log Analytics workspace.",
+        "parameter": {}
+      },
+      {
+        "name": "Configure monitoring options",
+        "description": "Configures monitoring options within a Log Analytics workspace.",
+        "parameter": {}
+      },
+      {
+        "name": "List App Configuration stores",
+        "description": "Lists all App Configuration stores.",
+        "parameter": {}
+      },
+      {
+        "name": "Manage key-value pairs",
+        "description": "Manages key-value pairs within an App Configuration store.",
+        "parameter": {}
+      },
+      {
+        "name": "Handle labeled configurations",
+        "description": "Handles labeled configurations within an App Configuration store.",
+        "parameter": {}
+      },
+      {
+        "name": "Lock/unlock configuration settings",
+        "description": "Locks or unlocks configuration settings within an App Configuration store.",
+        "parameter": {}
+      },
+      {
+        "name": "List, create, and get keys",
+        "description": "Lists, creates, and retrieves keys within an Azure Key Vault.",
+        "parameter": {}
+      },
+      {
+        "name": "List resource groups",
+        "description": "Lists all resource groups.",
+        "parameter": {}
+      },
+      {
+        "name": "Resource group management operations",
+        "description": "Performs management operations on resource groups.",
+        "parameter": {}
+      },
+      {
+        "name": "Execute Azure CLI commands directly",
+        "description": "Executes Azure CLI commands directly.",
+        "parameter": {}
+      },
+      {
+        "name": "Support for all Azure CLI functionality",
+        "description": "Supports all Azure CLI functionality.",
+        "parameter": {}
+      },
+      {
+        "name": "JSON output formatting",
+        "description": "Formats output in JSON.",
+        "parameter": {}
+      },
+      {
+        "name": "Cross-platform compatibility",
+        "description": "Ensures cross-platform compatibility.",
+        "parameter": {}
+      },
+      {
+        "name": "Execute Azure Developer CLI commands directly",
+        "description": "Executes Azure Developer CLI commands directly.",
+        "parameter": {}
+      },
+      {
+        "name": "Support for template discovery, template initialization, provisioning and deployment",
+        "description": "Supports template discovery, template initialization, provisioning, and deployment.",
+        "parameter": {}
+      },
+      {
+        "name": "Cross-platform compatibility",
+        "description": "Ensures cross-platform compatibility.",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "Bankless Onchain",
+    "description": "Query Onchain data, like ERC20 tokens, transaction history, smart contract state.",
+    "url": "https://github.com/bankless/onchain-mcp",
+    "readme_file": "official/Bankless_Onchain.md",
+    "summary": "A framework for interacting with on-chain data via the Bankless API, implementing the Model Context Protocol (MCP) to allow AI models to access blockchain state and event data.",
+    "tools": [
+      {
+        "name": "read_contract",
+        "description": "Read state from smart contracts on various blockchain networks.",
+        "parameter": {
+          "network": "(string, required) The blockchain network (e.g., 'ethereum', 'polygon')",
+          "contract": "(string, required) The contract address",
+          "method": "(string, required) The contract method to call",
+          "inputs": "(array, required) Input parameters for the method call, each containing: { type (string), value (any) }",
+          "outputs": "(array, required) Expected output types, each containing: { type (string) }"
+        }
+      },
+      {
+        "name": "get_proxy",
+        "description": "Retrieve proxy implementation contract addresses.",
+        "parameter": {
+          "network": "(string, required) The blockchain network (e.g., 'ethereum', 'base')",
+          "contract": "(string, required) The contract address"
+        }
+      },
+      {
+        "name": "get_events",
+        "description": "Fetch event logs for a contract based on topics.",
+        "parameter": {
+          "network": "(string, required) The blockchain network (e.g., 'ethereum', 'base')",
+          "addresses": "(array, required) List of contract addresses to filter events",
+          "topic": "(string, required) Primary topic to filter events",
+          "optionalTopics": "(array, optional) Optional additional topics (can include null values)"
+        }
+      },
+      {
+        "name": "build_event_topic",
+        "description": "Generate an event topic signature from event name and argument types.",
+        "parameter": {
+          "network": "(string, required) The blockchain network (e.g., 'ethereum', 'base')",
+          "name": "(string, required) Event name (e.g., 'Transfer(address,address,uint256)')",
+          "arguments": "(array, required) Event arguments types, each containing: { type (string) }"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Bitrise",
+    "description": "Chat with your builds, CI, and more.",
+    "url": "https://github.com/bitrise-io/bitrise-mcp",
+    "readme_file": "official/Bitrise.md",
+    "summary": "MCP Server for the Bitrise API, enabling app management, build operations, artifact management, and more.",
+    "tools": [
+      {
+        "name": "list_apps",
+        "description": "List all the apps available for the authenticated account",
+        "parameter": {
+          "sort_by": "(Optional, string) Order of the apps: last_build_at (default) or created_at",
+          "next": "(Optional, string) Slug of the first app in the response",
+          "limit": "(Optional, integer) Max number of elements per page (default: 50)"
+        }
+      },
+      {
+        "name": "register_app",
+        "description": "Add a new app to Bitrise",
+        "parameter": {
+          "repo_url": "(string) Repository URL",
+          "is_public": "(boolean) Whether the app's builds visibility is 'public'",
+          "organization_slug": "(string) The organization (aka workspace) the app to add to",
+          "project_type": "(Optional, string) Type of project (ios, android, etc.)",
+          "provider": "(Optional, string) github"
+        }
+      },
+      {
+        "name": "finish_bitrise_app",
+        "description": "Finish the setup of a Bitrise app",
+        "parameter": {
+          "app_slug": "(string) The slug of the Bitrise app to finish setup for",
+          "project_type": "(Optional, string) The type of project (e.g., android, ios, flutter, etc.)",
+          "stack_id": "(Optional, string) The stack ID to use for the app",
+          "mode": "(Optional, string) The mode of setup",
+          "config": "(Optional, string) The configuration to use for the app"
+        }
+      },
+      {
+        "name": "get_app",
+        "description": "Get the details of a specific app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app"
+        }
+      },
+      {
+        "name": "delete_app",
+        "description": "Delete an app from Bitrise",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app"
+        }
+      },
+      {
+        "name": "update_app",
+        "description": "Update an app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "is_public": "(boolean) Whether the app's builds visibility is 'public'",
+          "project_type": "(string) Type of project",
+          "provider": "(string) Repository provider",
+          "repo_url": "(string) Repository URL"
+        }
+      },
+      {
+        "name": "get_bitrise_yml",
+        "description": "Get the current Bitrise YML config file of a specified Bitrise app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app"
+        }
+      },
+      {
+        "name": "update_bitrise_yml",
+        "description": "Update the Bitrise YML config file of a specified Bitrise app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "bitrise_yml_as_json": "(string) The new Bitrise YML config file content"
+        }
+      },
+      {
+        "name": "list_branches",
+        "description": "List the branches with existing builds of an app's repository",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app"
+        }
+      },
+      {
+        "name": "register_ssh_key",
+        "description": "Add an SSH-key to a specific app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "auth_ssh_private_key": "(string) Private SSH key",
+          "auth_ssh_public_key": "(string) Public SSH key",
+          "is_register_key_into_provider_service": "(boolean) Register the key in the provider service"
+        }
+      },
+      {
+        "name": "register_webhook",
+        "description": "Register an incoming webhook for a specific application",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app"
+        }
+      },
+      {
+        "name": "list_builds",
+        "description": "List all the builds of a specified Bitrise app or all accessible builds",
+        "parameter": {
+          "app_slug": "(Optional, string) Identifier of the Bitrise app",
+          "sort_by": "(Optional, string) Order of builds: created_at (default), running_first",
+          "branch": "(Optional, string) Filter builds by branch",
+          "workflow": "(Optional, string) Filter builds by workflow",
+          "status": "(Optional, integer) Filter builds by status (0: not finished, 1: successful, 2: failed, 3: aborted, 4: in-progress)",
+          "next": "(Optional, string) Slug of the first build in the response",
+          "limit": "(Optional, integer) Max number of elements per page (default: 50)"
+        }
+      },
+      {
+        "name": "trigger_bitrise_build",
+        "description": "Trigger a new build/pipeline for a specified Bitrise app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "branch": "(Optional, string) The branch to build (default: main)",
+          "workflow_id": "(Optional, string) The workflow to build",
+          "commit_message": "(Optional, string) The commit message for the build",
+          "commit_hash": "(Optional, string) The commit hash for the build"
+        }
+      },
+      {
+        "name": "get_build",
+        "description": "Get a specific build of a given app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "build_slug": "(string) Identifier of the build"
+        }
+      },
+      {
+        "name": "abort_build",
+        "description": "Abort a specific build",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "build_slug": "(string) Identifier of the build",
+          "reason": "(Optional, string) Reason for aborting the build"
+        }
+      },
+      {
+        "name": "get_build_log",
+        "description": "Get the build log of a specified build of a Bitrise app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "build_slug": "(string) Identifier of the Bitrise build"
+        }
+      },
+      {
+        "name": "get_build_bitrise_yml",
+        "description": "Get the bitrise.yml of a build",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "build_slug": "(string) Identifier of the build"
+        }
+      },
+      {
+        "name": "list_build_workflows",
+        "description": "List the workflows of an app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app"
+        }
+      },
+      {
+        "name": "list_artifacts",
+        "description": "Get a list of all build artifacts",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "build_slug": "(string) Identifier of the build",
+          "next": "(Optional, string) Slug of the first artifact in the response",
+          "limit": "(Optional, integer) Max number of elements per page (default: 50)"
+        }
+      },
+      {
+        "name": "get_artifact",
+        "description": "Get a specific build artifact",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "build_slug": "(string) Identifier of the build",
+          "artifact_slug": "(string) Identifier of the artifact"
+        }
+      },
+      {
+        "name": "delete_artifact",
+        "description": "Delete a build artifact",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "build_slug": "(string) Identifier of the build",
+          "artifact_slug": "(string) Identifier of the artifact"
+        }
+      },
+      {
+        "name": "update_artifact",
+        "description": "Update a build artifact",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "build_slug": "(string) Identifier of the build",
+          "artifact_slug": "(string) Identifier of the artifact",
+          "is_public_page_enabled": "(boolean) Enable public page for the artifact"
+        }
+      },
+      {
+        "name": "list_outgoing_webhooks",
+        "description": "List the outgoing webhooks of an app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app"
+        }
+      },
+      {
+        "name": "delete_outgoing_webhook",
+        "description": "Delete the outgoing webhook of an app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "webhook_slug": "(string) Identifier of the webhook"
+        }
+      },
+      {
+        "name": "update_outgoing_webhook",
+        "description": "Update an outgoing webhook for an app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "webhook_slug": "(string) Identifier of the webhook",
+          "events": "(array) List of events to trigger the webhook",
+          "url": "(string) URL of the webhook",
+          "headers": "(Optional, array) Headers to be sent with the webhook"
+        }
+      },
+      {
+        "name": "create_outgoing_webhook",
+        "description": "Create an outgoing webhook for an app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "events": "(array) List of events to trigger the webhook",
+          "url": "(string) URL of the webhook",
+          "headers": "(Optional, array) Headers to be sent with the webhook"
+        }
+      },
+      {
+        "name": "list_cache_items",
+        "description": "List the key-value cache items belonging to an app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app"
+        }
+      },
+      {
+        "name": "delete_all_cache_items",
+        "description": "Delete all key-value cache items belonging to an app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app"
+        }
+      },
+      {
+        "name": "delete_cache_item",
+        "description": "Delete a key-value cache item",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "cache_item_id": "(string) Identifier of the cache item"
+        }
+      },
+      {
+        "name": "get_cache_item_download_url",
+        "description": "Get the download URL of a key-value cache item",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "cache_item_id": "(string) Identifier of the cache item"
+        }
+      },
+      {
+        "name": "list_pipelines",
+        "description": "List all pipelines and standalone builds of an app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app"
+        }
+      },
+      {
+        "name": "get_pipeline",
+        "description": "Get a pipeline of a given app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "pipeline_id": "(string) Identifier of the pipeline"
+        }
+      },
+      {
+        "name": "abort_pipeline",
+        "description": "Abort a pipeline",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "pipeline_id": "(string) Identifier of the pipeline",
+          "reason": "(Optional, string) Reason for aborting the pipeline"
+        }
+      },
+      {
+        "name": "rebuild_pipeline",
+        "description": "Rebuild a pipeline",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "pipeline_id": "(string) Identifier of the pipeline"
+        }
+      },
+      {
+        "name": "list_group_roles",
+        "description": "List group roles for an app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "role_name": "(string) Name of the role"
+        }
+      },
+      {
+        "name": "replace_group_roles",
+        "description": "Replace group roles for an app",
+        "parameter": {
+          "app_slug": "(string) Identifier of the Bitrise app",
+          "role_name": "(string) Name of the role",
+          "group_slugs": "(array) List of group slugs"
+        }
+      },
+      {
+        "name": "list_workspaces",
+        "description": "List the workspaces the user has access to",
+        "parameter": {}
+      },
+      {
+        "name": "get_workspace",
+        "description": "Get details for one workspace",
+        "parameter": {
+          "workspace_slug": "(string) Slug of the Bitrise workspace"
+        }
+      },
+      {
+        "name": "get_workspace_groups",
+        "description": "Get the groups in a workspace",
+        "parameter": {
+          "workspace_slug": "(string) Slug of the Bitrise workspace"
+        }
+      },
+      {
+        "name": "create_workspace_group",
+        "description": "Create a group in a workspace",
+        "parameter": {
+          "workspace_slug": "(string) Slug of the Bitrise workspace",
+          "group_name": "(string) Name of the group"
+        }
+      },
+      {
+        "name": "get_workspace_members",
+        "description": "Get the members in a workspace",
+        "parameter": {
+          "workspace_slug": "(string) Slug of the Bitrise workspace"
+        }
+      },
+      {
+        "name": "invite_member_to_workspace",
+        "description": "Invite a member to a workspace",
+        "parameter": {
+          "workspace_slug": "(string) Slug of the Bitrise workspace",
+          "email": "(string) Email address of the user"
+        }
+      },
+      {
+        "name": "add_member_to_group",
+        "description": "Add a member to a group",
+        "parameter": {
+          "group_slug": "(string) Slug of the group",
+          "user_slug": "(string) Slug of the user"
+        }
+      },
+      {
+        "name": "me",
+        "description": "Get info from the currently authenticated user account",
+        "parameter": {}
+      },
+      {
+        "name": "create_connected_app",
+        "description": "Add a new Release Management connected app to Bitrise",
+        "parameter": {
+          "platform": "(string) The mobile platform for the connected app (ios/android)",
+          "store_app_id": "(string) The app store identifier for the connected app",
+          "workspace_slug": "(string) Identifier of the Bitrise workspace",
+          "id": "(Optional, string) An uuidV4 identifier for your new connected app",
+          "manual_connection": "(Optional, boolean) Indicates a manual connection",
+          "project_id": "(Optional, string) Specifies which Bitrise Project to associate with",
+          "store_app_name": "(Optional, string) App name for manual connections",
+          "store_credential_id": "(Optional, string) Selection of credentials added on Bitrise"
+        }
+      },
+      {
+        "name": "list_connected_apps",
+        "description": "List Release Management connected apps available for the authenticated account within a workspace",
+        "parameter": {
+          "workspace_slug": "(string) Identifier of the Bitrise workspace",
+          "items_per_page": "(Optional, integer) Maximum number of connected apps per page",
+          "page": "(Optional, integer) Page number to return",
+          "platform": "(Optional, string) Filter for a specific mobile platform",
+          "project_id": "(Optional, string) Filter for a specific Bitrise Project",
+          "search": "(Optional, string) Search by bundle ID, package name, or app title"
+        }
+      },
+      {
+        "name": "get_connected_app",
+        "description": "Gives back a Release Management connected app for the authenticated account",
+        "parameter": {
+          "id": "(string) Identifier of the Release Management connected app"
+        }
+      },
+      {
+        "name": "update_connected_app",
+        "description": "Updates a connected app",
+        "parameter": {
+          "connected_app_id": "(string) The uuidV4 identifier for your connected app",
+          "store_app_id": "(string) The store identifier for your app",
+          "connect_to_store": "(Optional, boolean) Check validity against the App Store or Google Play",
+          "store_credential_id": "(Optional, string) Selection of credentials added on Bitrise"
+        }
+      },
+      {
+        "name": "list_installable_artifacts",
+        "description": "List Release Management installable artifacts of a connected app",
+        "parameter": {
+          "connected_app_id": "(string) Identifier of the Release Management connected app",
+          "after_date": "(Optional, string) Start of the interval for artifact creation/upload",
+          "artifact_type": "(Optional, string) Filter for a specific artifact type",
+          "before_date": "(Optional, string) End of the interval for artifact creation/upload",
+          "branch": "(Optional, string) Filter for the Bitrise CI branch",
+          "distribution_ready": "(Optional, boolean) Filter for distribution ready artifacts",
+          "items_per_page": "(Optional, integer) Maximum number of artifacts per page",
+          "page": "(Optional, integer) Page number to return",
+          "platform": "(Optional, string) Filter for a specific mobile platform",
+          "search": "(Optional, string) Search by version, filename or build number",
+          "source": "(Optional, string) Filter for the source of installable artifacts",
+          "store_signed": "(Optional, boolean) Filter for store ready installable artifacts",
+          "version": "(Optional, string) Filter for a specific version",
+          "workflow": "(Optional, string) Filter for a specific Bitrise CI workflow"
+        }
+      },
+      {
+        "name": "generate_installable_artifact_upload_url",
+        "description": "Generates a signed upload URL for an installable artifact to be uploaded to Bitrise",
+        "parameter": {
+          "connected_app_id": "(string) Identifier of the Release Management connected app",
+          "installable_artifact_id": "(string) An uuidv4 identifier for the installable artifact",
+          "file_name": "(string) The name of the installable artifact file",
+          "file_size_bytes": "(integer) The byte size of the installable artifact file",
+          "branch": "(Optional, string) Name of the CI branch",
+          "with_public_page": "(Optional, boolean) Enable public install page",
+          "workflow": "(Optional, string) Name of the CI workflow"
+        }
+      },
+      {
+        "name": "get_installable_artifact_upload_and_processing_status",
+        "description": "Gets the processing and upload status of an installable artifact",
+        "parameter": {
+          "connected_app_id": "(string) Identifier of the Release Management connected app",
+          "installable_artifact_id": "(string) The uuidv4 identifier for the installable artifact"
+        }
+      },
+      {
+        "name": "set_installable_artifact_public_install_page",
+        "description": "Changes whether public install page should be available for the installable artifact",
+        "parameter": {
+          "connected_app_id": "(string) Identifier of the Release Management connected app",
+          "installable_artifact_id": "(string) The uuidv4 identifier for the installable artifact",
+          "with_public_page": "(boolean) Boolean flag for enabling/disabling public install page"
+        }
+      },
+      {
+        "name": "list_build_distribution_versions",
+        "description": "Lists Build Distribution versions available for testers",
+        "parameter": {
+          "connected_app_id": "(string) The uuidV4 identifier of the connected app",
+          "items_per_page": "(Optional, integer) Maximum number of versions per page",
+          "page": "(Optional, integer) Page number to return"
+        }
+      },
+      {
+        "name": "list_build_distribution_version_test_builds",
+        "description": "Gives back a list of test builds for the given build distribution version",
+        "parameter": {
+          "connected_app_id": "(string) The uuidV4 identifier of the connected app",
+          "version": "(string) The version of the build distribution",
+          "items_per_page": "(Optional, integer) Maximum number of test builds per page",
+          "page": "(Optional, integer) Page number to return"
+        }
+      },
+      {
+        "name": "create_tester_group",
+        "description": "Creates a tester group for a Release Management connected app",
+        "parameter": {
+          "connected_app_id": "(string) The uuidV4 identifier of the connected app",
+          "name": "(string) The name for the new tester group",
+          "auto_notify": "(Optional, boolean) Indicates automatic notifications for the group"
+        }
+      },
+      {
+        "name": "notify_tester_group",
+        "description": "Notifies a tester group about a new test build",
+        "parameter": {
+          "connected_app_id": "(string) The uuidV4 identifier of the connected app",
+          "id": "(string) The uuidV4 identifier of the tester group",
+          "test_build_id": "(string) The unique identifier of the test build"
+        }
+      },
+      {
+        "name": "add_testers_to_tester_group",
+        "description": "Adds testers to a tester group of a connected app",
+        "parameter": {
+          "connected_app_id": "(string) The uuidV4 identifier of the connected app",
+          "id": "(string) The uuidV4 identifier of the tester group",
+          "user_slugs": "(array) The list of users identified by slugs to be added"
+        }
+      },
+      {
+        "name": "update_tester_group",
+        "description": "Updates the given tester group settings",
+        "parameter": {
+          "connected_app_id": "(string) The uuidV4 identifier of the connected app",
+          "id": "(string) The uuidV4 identifier of the tester group",
+          "auto_notify": "(Optional, boolean) Setting for automatic email notifications",
+          "name": "(Optional, string) The new name for the tester group"
+        }
+      },
+      {
+        "name": "list_tester_groups",
+        "description": "Gives back a list of tester groups related to a specific connected app",
+        "parameter": {
+          "connected_app_id": "(string) The uuidV4 identifier of the connected app",
+          "items_per_page": "(Optional, integer) Maximum number of tester groups per page",
+          "page": "(Optional, integer) Page number to return"
+        }
+      },
+      {
+        "name": "get_tester_group",
+        "description": "Gives back the details of the selected tester group",
+        "parameter": {
+          "connected_app_id": "(string) The uuidV4 identifier of the connected app",
+          "id": "(string) The uuidV4 identifier of the tester group"
+        }
+      },
+      {
+        "name": "get_potential_testers",
+        "description": "Gets a list of potential testers who can be added to a specific tester group",
+        "parameter": {
+          "connected_app_id": "(string) The uuidV4 identifier of the connected app",
+          "id": "(string) The uuidV4 identifier of the tester group",
+          "items_per_page": "(Optional, integer) Maximum number of potential testers per page",
+          "page": "(Optional, integer) Page number to return",
+          "search": "(Optional, string) Search for testers by email or username"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Box",
+    "description": "Interact with the Intelligent Content Management platform through Box AI.",
+    "url": "https://github.com/box-community/mcp-server-box",
+    "readme_file": "official/Box.md",
+    "summary": "A Python project that integrates with the Box API to perform various operations such as file search, text extraction, AI-based querying, and data extraction. It leverages the `box-sdk-gen` library and provides a set of tools to interact with Box files and folders.",
+    "tools": [
+      {
+        "name": "box_who_am_i",
+        "description": "Get your current user information and check connection status.",
+        "parameter": {}
+      },
+      {
+        "name": "box_authorize_app_tool",
+        "description": "Start the Box application authorization process.",
+        "parameter": {}
+      },
+      {
+        "name": "box_search_tool",
+        "description": "Search for files in Box.",
+        "parameter": {
+          "query": "(str) The query to search for.",
+          "file_extensions": "(List[str], optional) File extensions to filter results.",
+          "where_to_look_for_query": "(List[str], optional) Locations to search (e.g. NAME, DESCRIPTION, FILE_CONTENT, COMMENTS, TAG).",
+          "ancestor_folder_ids": "(List[str], optional) List of folder IDs in which to search."
+        }
+      },
+      {
+        "name": "box_read_tool",
+        "description": "Read the text content of a Box file.",
+        "parameter": {
+          "file_id": "(str) ID of the file to read"
+        }
+      },
+      {
+        "name": "box_ask_ai_tool",
+        "description": "Ask Box AI about a file.",
+        "parameter": {
+          "file_id": "(str) ID of the file",
+          "prompt": "(str) Question for the AI"
+        }
+      },
+      {
+        "name": "box_hubs_ask_ai_tool",
+        "description": "Ask Box AI about a hub. There is currently no way via API to discover a hub ID, so you must know the ID to use this tool. We will fix this in the future.",
+        "parameter": {
+          "hubs_id": "(str) ID of the hub",
+          "prompt": "(str) Question for the AI"
+        }
+      },
+      {
+        "name": "box_search_folder_by_name",
+        "description": "Locate a folder by name.",
+        "parameter": {
+          "folder_name": "(str) Name of the folder"
+        }
+      },
+      {
+        "name": "box_ai_extract_data",
+        "description": "Extract data from a file using AI.",
+        "parameter": {
+          "file_id": "(str) ID of the file",
+          "fields": "(str) Fields to extract"
+        }
+      },
+      {
+        "name": "box_list_folder_content_by_folder_id",
+        "description": "List folder contents.",
+        "parameter": {
+          "folder_id": "(str) ID of the folder",
+          "is_recursive": "(bool) Whether to list recursively"
+        }
+      },
+      {
+        "name": "box_manage_folder_tool",
+        "description": "Create, update, or delete folders in Box.",
+        "parameter": {
+          "action": "(str) Action to perform: 'create', 'delete', or 'update'",
+          "folder_id": "(str, optional) ID of the folder (required for delete/update)",
+          "name": "(str, optional) Folder name (required for create, optional for update)",
+          "parent_id": "(str, optional) Parent folder ID (required for create, optional for update)",
+          "description": "(str, optional) Folder description (optional for update)",
+          "recursive": "(bool, optional) Whether to delete recursively (optional for delete)"
+        }
+      },
+      {
+        "name": "box_upload_file_from_path_tool",
+        "description": "Upload a file to Box from a local filesystem path.",
+        "parameter": {
+          "file_path": "(str) Local file path",
+          "folder_id": "(str, optional) Destination folder ID (defaults to '0')",
+          "new_file_name": "(str, optional) New file name (if not provided, uses the original file name)"
+        }
+      },
+      {
+        "name": "box_upload_file_from_content_tool",
+        "description": "Upload content as a file to Box.",
+        "parameter": {
+          "content": "(str | bytes) Content to upload (text or binary)",
+          "file_name": "(str) The name to assign the file",
+          "folder_id": "(str, optional) Destination folder ID (defaults to '0')",
+          "is_base64": "(bool, optional) Indicates if the provided content is base64 encoded"
+        }
+      },
+      {
+        "name": "box_download_file_tool",
+        "description": "Download a file from Box.",
+        "parameter": {
+          "file_id": "(str) The ID of the file to download",
+          "save_file": "(bool, optional) Whether to save the file locally",
+          "save_path": "(str, optional) The local path where the file should be saved"
+        }
+      },
+      {
+        "name": "box_docgen_create_batch_tool",
+        "description": "Generate documents using a Box Doc Gen template and a local JSON file.",
+        "parameter": {
+          "file_id": "(str) Template file ID",
+          "destination_folder_id": "(str) Folder ID where generated documents should be stored",
+          "user_input_file_path": "(str) Path to a JSON file with input data",
+          "output_type": "(str, optional) Output format (default is 'pdf')"
+        }
+      },
+      {
+        "name": "box_docgen_get_job_tool",
+        "description": "Fetch a single Doc Gen job by its ID.",
+        "parameter": {
+          "job_id": "(str) The job identifier"
+        }
+      },
+      {
+        "name": "box_docgen_list_jobs_tool",
+        "description": "List all Doc Gen jobs associated with the current user.",
+        "parameter": {
+          "marker": "(str | None, optional) Pagination marker",
+          "limit": "(int | None, optional) Maximum number of jobs to return"
+        }
+      },
+      {
+        "name": "box_docgen_list_jobs_by_batch_tool",
+        "description": "List Doc Gen jobs belonging to a specific batch.",
+        "parameter": {
+          "batch_id": "(str) The batch identifier",
+          "marker": "(str | None, optional) Pagination marker",
+          "limit": "(int | None, optional) Maximum number of jobs to return"
+        }
+      },
+      {
+        "name": "box_docgen_template_create_tool",
+        "description": "Mark a file as a Box Doc Gen template.",
+        "parameter": {
+          "file_id": "(str) File ID to mark as a template"
+        }
+      },
+      {
+        "name": "box_docgen_template_list_tool",
+        "description": "List all available Box Doc Gen templates.",
+        "parameter": {
+          "marker": "(str | None, optional) Pagination marker",
+          "limit": "(int | None, optional) Maximum number of templates to list"
+        }
+      },
+      {
+        "name": "box_docgen_template_delete_tool",
+        "description": "Remove the Doc Gen template marking from a file.",
+        "parameter": {
+          "template_id": "(str) The template identifier"
+        }
+      },
+      {
+        "name": "box_docgen_template_get_by_id_tool",
+        "description": "Retrieve details of a specific Doc Gen template.",
+        "parameter": {
+          "template_id": "(str) The template identifier"
+        }
+      },
+      {
+        "name": "box_docgen_template_list_tags_tool",
+        "description": "List all tags associated with a Box Doc Gen template.",
+        "parameter": {
+          "template_id": "(str) The template ID",
+          "template_version_id": "(str | None, optional) Specific version ID",
+          "marker": "(str | None, optional) Pagination marker",
+          "limit": "(int | None, optional) Maximum number of tags to return"
+        }
+      },
+      {
+        "name": "box_docgen_template_list_jobs_tool",
+        "description": "List all Doc Gen jobs that used a specific template.",
+        "parameter": {
+          "template_id": "(str) The template identifier",
+          "marker": "(str | None, optional) Pagination marker",
+          "limit": "(int | None, optional) Maximum number of jobs to list"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Chroma",
+    "description": "Embeddings, vector search, document storage, and full-text search with the open-source AI application database",
+    "url": "https://github.com/chroma-core/chroma-mcp",
+    "readme_file": "official/Chroma.md",
+    "summary": "An MCP server that provides data retrieval capabilities powered by Chroma, enabling AI models to create and manage collections of data and perform various operations like vector search, full text search, and metadata filtering.",
+    "tools": [
+      {
+        "name": "chroma_list_collections",
+        "description": "List all collections with pagination support",
+        "parameter": {}
+      },
+      {
+        "name": "chroma_create_collection",
+        "description": "Create a new collection with optional HNSW configuration",
+        "parameter": {}
+      },
+      {
+        "name": "chroma_peek_collection",
+        "description": "View a sample of documents in a collection",
+        "parameter": {}
+      },
+      {
+        "name": "chroma_get_collection_info",
+        "description": "Get detailed information about a collection",
+        "parameter": {}
+      },
+      {
+        "name": "chroma_get_collection_count",
+        "description": "Get the number of documents in a collection",
+        "parameter": {}
+      },
+      {
+        "name": "chroma_modify_collection",
+        "description": "Update a collection's name or metadata",
+        "parameter": {}
+      },
+      {
+        "name": "chroma_delete_collection",
+        "description": "Delete a collection",
+        "parameter": {}
+      },
+      {
+        "name": "chroma_add_documents",
+        "description": "Add documents with optional metadata and custom IDs",
+        "parameter": {}
+      },
+      {
+        "name": "chroma_query_documents",
+        "description": "Query documents using semantic search with advanced filtering",
+        "parameter": {}
+      },
+      {
+        "name": "chroma_get_documents",
+        "description": "Retrieve documents by IDs or filters with pagination",
+        "parameter": {}
+      },
+      {
+        "name": "chroma_update_documents",
+        "description": "Update existing documents' content, metadata, or embeddings",
+        "parameter": {}
+      },
+      {
+        "name": "chroma_delete_documents",
+        "description": "Delete specific documents from a collection",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "CircleCI",
+    "description": "Enable AI Agents to fix build failures from CircleCI.",
+    "url": "https://github.com/CircleCI-Public/mcp-server-circleci",
+    "readme_file": "official/CircleCI.md",
+    "summary": "An MCP Server for CircleCI that allows users to interact with CircleCI using natural language through various MCP clients such as Cursor IDE, VS Code, Claude Desktop, Claude Code, and Windsurf. It provides tools for retrieving build failure logs, finding flaky tests, getting the latest pipeline status, retrieving job test results, validating CircleCI configurations, creating prompt templates, and generating test cases for prompt templates.",
+    "tools": [
+      {
+        "name": "get_build_failure_logs",
+        "description": "Retrieves detailed failure logs from CircleCI builds. Can be used with CircleCI URLs or local project context.",
+        "parameter": {
+          "url_or_context": "(string) Either a CircleCI URL or a combination of workspace root path, Git remote URL, and branch name"
+        }
+      },
+      {
+        "name": "find_flaky_tests",
+        "description": "Identifies flaky tests in a CircleCI project by analyzing test execution history. Can be used with CircleCI project URLs or local project context.",
+        "parameter": {
+          "url_or_context": "(string) Either a CircleCI project URL or a combination of workspace root path and Git remote URL"
+        }
+      },
+      {
+        "name": "get_latest_pipeline_status",
+        "description": "Retrieves the status of the latest pipeline for a given branch. Can be used with CircleCI project URLs or local project context.",
+        "parameter": {
+          "url_or_context": "(string) Either a CircleCI project URL or a combination of workspace root path, Git remote URL, and branch name"
+        }
+      },
+      {
+        "name": "get_job_test_results",
+        "description": "Retrieves test metadata for CircleCI jobs. Can be used with CircleCI URLs or local project context.",
+        "parameter": {
+          "url_or_context": "(string) Either a CircleCI URL (job, workflow, or pipeline) or a combination of workspace root path, Git remote URL, and branch name"
+        }
+      },
+      {
+        "name": "config_helper",
+        "description": "Assists with CircleCI configuration tasks by providing guidance and validation. Can validate CircleCI config files.",
+        "parameter": {
+          "config_path": "(string) Path to the .circleci/config.yml file"
+        }
+      },
+      {
+        "name": "create_prompt_template",
+        "description": "Helps generate structured prompt templates for AI-enabled applications based on feature requirements.",
+        "parameter": {
+          "requirements": "(string) User requirements for the prompt template"
+        }
+      },
+      {
+        "name": "recommend_prompt_template_tests",
+        "description": "Generates test cases for prompt templates to ensure they produce expected results.",
+        "parameter": {
+          "template": "(string) The prompt template to generate tests for"
+        }
+      }
+    ]
+  },
+  {
+    "name": "ClickHouse",
+    "description": "Query your ClickHouse database server.",
+    "url": "https://github.com/ClickHouse/mcp-clickhouse",
+    "readme_file": "official/ClickHouse.md",
+    "summary": "An MCP server designed to interact with ClickHouse clusters, providing tools to execute SQL queries, list databases, and list tables within a database.",
+    "tools": [
+      {
+        "name": "run_select_query",
+        "description": "Execute SQL queries on your ClickHouse cluster.",
+        "parameter": {
+          "sql": "(string) The SQL query to execute."
+        }
+      },
+      {
+        "name": "list_databases",
+        "description": "List all databases on your ClickHouse cluster.",
+        "parameter": {}
+      },
+      {
+        "name": "list_tables",
+        "description": "List all tables in a database.",
+        "parameter": {
+          "database": "(string) The name of the database."
+        }
+      }
+    ]
+  },
+  {
+    "name": "Codacy",
+    "description": "Interact with Codacy API to query code quality issues, vulnerabilities, and coverage insights about your code.",
+    "url": "https://github.com/codacy/codacy-mcp-server/",
+    "readme_file": "official/Codacy.md",
+    "summary": "MCP Server for the Codacy API, enabling access to repositories, files, quality, coverage, security, and more.",
+    "tools": [
+      {
+        "name": "codacy_list_organizations",
+        "description": "List organizations with pagination support.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_list_organization_repositories",
+        "description": "List repositories in an organization with pagination support.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_get_repository_with_analysis",
+        "description": "Get repository with analysis information, including metrics for Grade, Issues, Duplication, Complexity, and Coverage.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_list_repository_issues",
+        "description": "Lists and filters code quality issues in a repository. This is the primary tool for investigating general code quality concerns (e.g., best practices, performance, complexity, style) but NOT security issues. For security-related issues, use the SRM items tool instead.",
+        "parameter": {
+          "severity": "(Optional, string) Filter by issue severity",
+          "category": "(Optional, string) Filter by issue category",
+          "language": "(Optional, string) Filter by programming language",
+          "author": "(Optional, string) Filter by author",
+          "branch": "(Optional, string) Specify the branch for analysis",
+          "pattern": "(Optional, string) Pattern-based searching"
+        }
+      },
+      {
+        "name": "codacy_list_files",
+        "description": "List files in a repository with pagination support.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_get_file_issues",
+        "description": "Get the issue list for a file in a repository.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_get_file_coverage",
+        "description": "Get coverage information for a file in the head commit of a repository branch.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_get_file_clones",
+        "description": "Get the list of duplication clones (identical or very similar code segments) for a file in a repository.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_get_file_with_analysis",
+        "description": "Get detailed analysis information for a file, including metrics for Grade, Issues, Duplication, Complexity, and Coverage.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_search_organization_srm_items",
+        "description": "Primary tool to list security items/issues/vulnerabilities/findings across an organization. Results are related to the organization's security and risk management (SRM) dashboard on Codacy.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_search_repository_srm_items",
+        "description": "List security items/issues/vulnerabilities/findings for a specific repository.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_list_repository_pull_requests",
+        "description": "List pull requests from a repository that the user has access to.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_get_repository_pull_request",
+        "description": "Get detailed information about a specific pull request.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_list_pull_request_issues",
+        "description": "Returns a list of issues found in a pull request (new or fixed issues).",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_get_pull_request_files_coverage",
+        "description": "Get diff coverage information for all files in a pull request.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_get_pull_request_git_diff",
+        "description": "Returns the human-readable Git diff of a pull request.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_list_tools",
+        "description": "List all code analysis tools available in Codacy.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_list_repository_tools",
+        "description": "Get analysis tools settings and available tools for a repository.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_get_pattern",
+        "description": "Get the definition of a specific pattern.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_list_repository_tool_patterns",
+        "description": "List the patterns of a tool available for a repository.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_get_issue",
+        "description": "Get detailed information about a specific issue.",
+        "parameter": {}
+      },
+      {
+        "name": "codacy_cli_analyze",
+        "description": "Run quality analysis locally using Codacy CLI. Features include analyzing specific files or entire directories, using specific tools or all available tools, getting immediate results without waiting for scheduled analysis, and applying fixes based on Codacy configuration.",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "CodeLogic",
+    "description": "Interact with CodeLogic, a Software Intelligence platform that graphs complex code and data architecture dependencies, to boost AI accuracy and insight.",
+    "url": "https://github.com/CodeLogicIncEngineering/codelogic-mcp-server",
+    "readme_file": "official/CodeLogic.md",
+    "summary": "An MCP Server that leverages Codelogic's rich software dependency data to provide impact assessments for code and database modifications in AI programming assistants.",
+    "tools": [
+      {
+        "name": "codelogic-method-impact",
+        "description": "Pulls an impact assessment from the CodeLogic server's APIs for the specified code method and class.",
+        "parameter": {
+          "method": "(string) The method that you're working on",
+          "class": "(string) The class associated with the method"
+        }
+      },
+      {
+        "name": "codelogic-database-impact",
+        "description": "Analyzes impacts between code and database entities.",
+        "parameter": {
+          "entity_type": "(string) The type of database entity (column, table, or view)",
+          "entity_name": "(string) The name of the database entity"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Comet Opik",
+    "description": "Query and analyze your Opik logs, traces, prompts and all other telemtry data from your LLMs in natural language.",
+    "url": "https://github.com/comet-ml/opik-mcp",
+    "readme_file": "official/Comet_Opik.md",
+    "summary": "An open-source implementation of the Model Context Protocol for the Opik platform, providing a unified interface for interacting with Opik's capabilities and supporting multiple transport mechanisms for flexible integration into various environments.",
+    "tools": [
+      {
+        "name": "Prompts Management",
+        "description": "Create, list, update, and delete prompts",
+        "parameter": {}
+      },
+      {
+        "name": "Projects/Workspaces Management",
+        "description": "Organize and manage projects",
+        "parameter": {}
+      },
+      {
+        "name": "Traces",
+        "description": "Track and analyze trace data",
+        "parameter": {}
+      },
+      {
+        "name": "Metrics",
+        "description": "Gather and query metrics data",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "Couchbase",
+    "description": "Interact with the data stored in Couchbase clusters.",
+    "url": "https://github.com/Couchbase-Ecosystem/mcp-server-couchbase",
+    "readme_file": "official/Couchbase.md",
+    "summary": "An MCP server implementation of Couchbase that enables LLMs to interact directly with Couchbase clusters, allowing for CRUD operations and SQL++ queries.",
+    "tools": [
+      {
+        "name": "get_scopes_and_collections",
+        "description": "Get a list of all the scopes and collections in the specified bucket.",
+        "parameter": {}
+      },
+      {
+        "name": "get_collection_structure",
+        "description": "Get the structure for a collection.",
+        "parameter": {}
+      },
+      {
+        "name": "get_document_by_id",
+        "description": "Get a document by ID from a specified scope and collection.",
+        "parameter": {}
+      },
+      {
+        "name": "upsert_document_by_id",
+        "description": "Upsert a document by ID to a specified scope and collection.",
+        "parameter": {}
+      },
+      {
+        "name": "delete_document_by_id",
+        "description": "Delete a document by ID from a specified scope and collection.",
+        "parameter": {}
+      },
+      {
+        "name": "run_sqlpp_query",
+        "description": "Run a SQL++ query on a specified scope. The `READ_ONLY_QUERY_MODE` environment variable controls whether data-modifying queries are allowed.",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "Dart",
+    "description": "Interact with task, doc, and project data in Dart, an AI-native project management tool",
+    "url": "https://github.com/its-dart/dart-mcp-server",
+    "readme_file": "official/Dart.md",
+    "summary": "The official AI Model Context Protocol (MCP) server for Dart, providing AI-powered project management capabilities such as task and document management.",
+    "tools": [
+      {
+        "name": "get_config",
+        "description": "Get information about the user's space, including available assignees, dartboards, folders, statuses, tags, priorities, and sizes",
+        "parameter": {}
+      },
+      {
+        "name": "list_tasks",
+        "description": "List tasks with optional filtering by assignee, status, dartboard, priority, due date, and more",
+        "parameter": {}
+      },
+      {
+        "name": "create_task",
+        "description": "Create a new task with title, description, status, priority, size, dates, dartboard, assignees, tags, and parent task",
+        "parameter": {}
+      },
+      {
+        "name": "get_task",
+        "description": "Retrieve an existing task by its ID",
+        "parameter": {}
+      },
+      {
+        "name": "update_task",
+        "description": "Update an existing task's properties",
+        "parameter": {}
+      },
+      {
+        "name": "delete_task",
+        "description": "Move a task to the trash (recoverable)",
+        "parameter": {}
+      },
+      {
+        "name": "list_docs",
+        "description": "List docs with optional filtering by folder, title, text content, and more",
+        "parameter": {}
+      },
+      {
+        "name": "create_doc",
+        "description": "Create a new doc with title, text content, and folder",
+        "parameter": {}
+      },
+      {
+        "name": "get_doc",
+        "description": "Retrieve an existing doc by its ID",
+        "parameter": {}
+      },
+      {
+        "name": "update_doc",
+        "description": "Update an existing doc's properties",
+        "parameter": {}
+      },
+      {
+        "name": "delete_doc",
+        "description": "Move a doc to the trash (recoverable)",
+        "parameter": {}
+      }
+    ]
+  },
+  {
+    "name": "DevHub",
+    "description": "Manage and utilize website content within the DevHub CMS platform",
+    "url": "https://github.com/devhub/devhub-cms-mcp",
+    "readme_file": "official/DevHub.md",
+    "summary": "A Model Context Protocol (MCP) integration for managing content in the DevHub CMS system. It allows Large Language Models to manage businesses, locations, blog posts, and media without direct API access.",
+    "tools": [
+      {
+        "name": "get_businesses",
+        "description": "Gets all businesses within the DevHub account. Returns a list of businesses with their IDs and names.",
+        "parameter": {}
+      },
+      {
+        "name": "get_locations",
+        "description": "Gets all locations for a specific business. Returns detailed location information including address, coordinates, and URLs.",
+        "parameter": {
+          "business_id": "(string) The ID of the business."
+        }
+      },
+      {
+        "name": "get_hours_of_operation",
+        "description": "Gets the hours of operation for a specific DevHub location. Returns a structured list of time ranges for each day of the week.",
+        "parameter": {
+          "location_id": "(string) The ID of the location.",
+          "hours_type": "(Optional, string) The type of hours to retrieve, default is 'primary'."
+        }
+      },
+      {
+        "name": "update_hours",
+        "description": "Updates the hours of operation for a DevHub location.",
+        "parameter": {
+          "location_id": "(string) The ID of the location.",
+          "new_hours": "(dict) The new hours of operation.",
+          "hours_type": "(Optional, string) The type of hours to update, default is 'primary'."
+        }
+      },
+      {
+        "name": "get_nearest_location",
+        "description": "Finds the nearest DevHub location based on geographic coordinates.",
+        "parameter": {
+          "business_id": "(string) The ID of the business.",
+          "latitude": "(float) The latitude coordinate.",
+          "longitude": "(float) The longitude coordinate."
+        }
+      },
+      {
+        "name": "site_from_url",
+        "description": "Gets the DevHub site ID and details from a URL. Returns site ID, URL, and associated location IDs.",
+        "parameter": {
+          "url": "(string) The URL of the DevHub site."
+        }
+      },
+      {
+        "name": "get_blog_post",
+        "description": "Retrieves a single blog post by ID, including its title, date, and HTML content.",
+        "parameter": {
+          "post_id": "(string) The ID of the blog post."
+        }
+      },
+      {
+        "name": "create_blog_post",
+        "description": "Creates a new blog post. The content should be in HTML format and should not include an H1 tag.",
+        "parameter": {
+          "site_id": "(string) The ID of the site where the blog post will be created.",
+          "title": "(string) The title of the blog post.",
+          "content": "(string) The HTML content of the blog post."
+        }
+      },
+      {
+        "name": "update_blog_post",
+        "description": "Updates an existing blog post's title and/or content.",
+        "parameter": {
+          "post_id": "(string) The ID of the blog post.",
+          "title": "(Optional, string) The new title of the blog post.",
+          "content": "(Optional, string) The new HTML content of the blog post."
+        }
+      },
+      {
+        "name": "upload_image",
+        "description": "Uploads an image to the DevHub media gallery. Supports webp, jpeg, and png formats. The image must be provided as a base64-encoded string.",
+        "parameter": {
+          "base64_image_content": "(string) The base64-encoded content of the image.",
+          "filename": "(string) The filename of the image."
+        }
+      }
+    ]
+  },
+  {
+    "name": "Dynatrace",
+    "description": "Manage and interact with the Dynatrace Platform  for real-time observability and monitoring.",
+    "url": "https://github.com/dynatrace-oss/dynatrace-mcp",
+    "readme_file": "official/Dynatrace.md",
+    "summary": "A remote MCP server that enables interaction with the Dynatrace observability platform, allowing real-time observability data to be integrated into development workflows. It supports fetching production-level data, monitoring exceptions, logs, and anomalies, and provides more context on security issues.",
+    "tools": [
+      {
+        "name": "list_problems",
+        "description": "Lists problem details from your services, such as Kubernetes.",
+        "parameter": {}
+      },
+      {
+        "name": "get_security_problems",
+        "description": "Lists and retrieves security problems or vulnerability details.",
+        "parameter": {}
+      },
+      {
+        "name": "execute_dql",
+        "description": "Executes DQL (Dynatrace Query Language) queries to fetch events or logs.",
+        "parameter": {}
+      },
+      {
+        "name": "send_slack_message",
+        "description": "Sends Slack messages using the Slack Connector.",
+        "parameter": {}
+      },
+      {
+        "name": "set_up_notification_workflow",
+        "description": "Sets up notification workflows using the Dynatrace Automation Engine.",
+        "parameter": {}
+      },
+      {
+        "name": "get_ownership",
+        "description": "Retrieves ownership information of an entity.",
+        "parameter": {}
+      }
+    ]
+  }
+]

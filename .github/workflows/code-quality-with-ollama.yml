@@ -1,0 +1,85 @@
+name: Code Quality (with Ollama)
+description: Run code quality checks with Ollama for realistic LLM testing
+
+on:
+  workflow_call:
+    inputs:
+      enable_ollama:
+        description: 'Enable Ollama for LLM testing'
+        required: false
+        default: true
+        type: boolean
+      ollama_model:
+        description: 'Ollama model to use'
+        required: false
+        default: 'llama3.2:1b'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  code-quality-with-ollama:
+    name: Code Quality Checks (with Ollama)
+    runs-on: ubuntu-latest
+    
+    services:
+      ollama:
+        # Use Ollama Docker container as a service
+        image: ollama/ollama:latest
+        ports:
+          - 11434:11434
+        options: >-
+          --health-cmd "ollama list || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244 # v7.1.4
+        with:
+          enable-cache: true
+          python-version: '3.13'
+
+      - name: Install Task
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
+        with:
+          version: 3.44.1
+
+      # Pull Ollama model
+      - name: Pull Ollama Model
+        if: ${{ inputs.enable_ollama }}
+        run: |
+          echo "Pulling Ollama model: ${{ inputs.ollama_model }}"
+          docker exec $(docker ps -q -f ancestor=ollama/ollama:latest) ollama pull ${{ inputs.ollama_model }}
+          echo "Verifying model is available..."
+          docker exec $(docker ps -q -f ancestor=ollama/ollama:latest) ollama list
+
+      - name: Wait for Ollama to be ready
+        if: ${{ inputs.enable_ollama }}
+        run: |
+          echo "Waiting for Ollama service..."
+          timeout 60 bash -c 'until curl -f http://localhost:11434/api/tags; do sleep 2; done'
+          echo "Ollama is ready!"
+
+      - name: Run Linting
+        run: task lint
+      
+      - name: Run Type Checking
+        run: task typecheck
+      
+      - name: Run Tests (with Ollama)
+        if: ${{ inputs.enable_ollama }}
+        env:
+          USE_OLLAMA: "true"
+          OLLAMA_BASE_URL: "http://localhost:11434"
+          OLLAMA_MODEL: ${{ inputs.ollama_model }}
+        run: task test
+      
+      - name: Run Tests (mock only)
+        if: ${{ !inputs.enable_ollama }}
+        run: task test
+

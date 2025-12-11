@@ -1,0 +1,79 @@
+[project]
+name = "mcp-tef-cli"
+dynamic = ["version"]
+description = "CLI tool for deploying and managing mcp-tef MCP Tool Evaluation System"
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "Stacklok Labs", email = "info@stacklok.com" }
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Testing",
+]
+dependencies = [
+    "click>=8.1.0",
+    "httpx>=0.27.0",
+    "docker>=7.0.0",
+    "rich>=13.0.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+]
+
+[project.scripts]
+mcp-tef-cli = "mcp_tef_cli:main"
+
+[project.urls]
+Homepage = "https://github.com/StacklokLabs/mcp-tef"
+Documentation = "https://github.com/StacklokLabs/mcp-tef/tree/main/cli"
+Repository = "https://github.com/StacklokLabs/mcp-tef"
+Issues = "https://github.com/StacklokLabs/mcp-tef/issues"
+
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+fallback-version = "0.0.0.dev0"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+asyncio_mode = "auto"
+markers = [
+    "docker: tests that require Docker daemon",
+    "cli: CLI integration tests",
+    "integration: integration tests",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.1",
+    "pytest-asyncio>=1.3.0",
+    "pytest-cov>=7.0.0",
+    "respx>=0.21.0",
+    "ruff>=0.14.6",
+    "ty>=0.0.1a18",
+]
+
+[tool.ty.environment]
+root = ["./src"]
+
+[tool.ty.src]
+exclude = ["tests"]

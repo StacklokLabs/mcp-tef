@@ -1,0 +1,47 @@
+# Cursor/Claude Rules
+
+## CRITICAL: Read CLAUDE.md First
+Before starting ANY task, read CLAUDE.md for complete project guidelines.
+
+## Top Priority Rules
+
+### 1. MCP Tool First Approach
+- **ALWAYS** use MCP tools (find_tool/call_tool) for external data before web_search
+- For GitHub data (PRs, issues, commits): MUST use MCP GitHub tools
+- For external APIs and services: Check for MCP tools first
+- Only fall back to web_search if no MCP tool exists
+
+### 2. Quality Gates (Mandatory)
+After EVERY code edit, run ALL checks in sequence:
+```bash
+task format      # Fix formatting
+task lint        # Check code quality
+task typecheck   # Validate types
+task test        # Run all tests
+```
+
+### 3. Package Management
+- ALWAYS use `uv run <command>` (NEVER bare `python` or `pytest`)
+- ALWAYS use `uv add <package>` (NEVER use `pip`)
+
+### 4. Data Validation
+- ALL structured data MUST use Pydantic models
+- Use native Python types: `list`, `dict`, `str | None`
+
+### 5. Testing First
+- Write tests FIRST (TDD approach)
+- Tests should FAIL initially
+- Focus on integration and contract tests over unit tests
+
+## Project Constitution
+Read `docs/constitution.md` for the complete set of 10 core development principles.
+
+## See CLAUDE.md for Complete Guidelines
+This file is a quick reference. See CLAUDE.md for:
+- Complete development workflow
+- Project structure
+- Testing philosophy
+- All 10 critical development principles
+
+
+

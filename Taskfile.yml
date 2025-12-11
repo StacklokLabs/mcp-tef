@@ -1,0 +1,173 @@
+version: '3'
+
+tasks:
+
+  install:
+    desc: Install dependencies + dev packages
+    cmds:
+      - uv sync --dev
+
+  format:
+    desc: Format code with Ruff
+    cmds:
+      - uv run ruff format .
+      - uv run ruff check --fix .
+    deps:
+      - install
+
+  lint:
+    desc: Lint code with Ruff
+    cmds:
+      - uv run ruff check .
+    deps:
+      - install
+
+  typecheck:
+    desc: Run type checking with ty
+    cmds:
+      - uv run ty check .
+      - cd cli && uv sync --dev && uv run ty check .
+    deps:
+      - install
+
+  test:
+    desc: Run tests with pytest (skipping no_mock_agent tests and CLI folder)
+    cmds:
+      - uv run pytest src/ tests/ -m "not no_mock_agent"
+    deps:
+      - install
+
+  test:real-llm-keys:
+    desc: Run tests with pytest (skipping no_mock_agent tests)
+    cmds:
+      - uv run pytest
+    deps:
+      - install
+
+  test:fast:
+    desc: Run tests excluding slow tests
+    cmds:
+      - uv run pytest -m "not slow"
+    deps:
+      - install
+
+  test:ollama:
+    desc: Run tests with Ollama LLM (requires Ollama running locally)
+    cmds:
+      - USE_OLLAMA=true OLLAMA_MODEL=llama3.2:1b uv run pytest
+    deps:
+      - install
+
+  test:ollama-only:
+    desc: Run only tests marked as benefiting from Ollama
+    cmds:
+      - USE_OLLAMA=true OLLAMA_MODEL=llama3.2:1b uv run pytest -m ollama
+    deps:
+      - install
+
+  test:integration:
+    desc: Run integration tests only
+    cmds:
+      - uv run pytest -m integration
+    deps:
+      - install
+
+  test:contract:
+    desc: Run contract tests only
+    cmds:
+      - uv run pytest -m contract
+    deps:
+      - install
+
+  test:cli:
+    desc: Run CLI integration tests (requires Docker)
+    cmds:
+      - cd cli && uv run pytest -v
+    deps:
+      - install
+
+  test:cli:sh:
+    desc: Run CLI shell tests
+    dotenv: ['.env']
+    cmds:
+      - ./cli/tests/scripts/test_deploy.sh
+      - TEF_API_KEY=$OPENROUTER_API_KEY ./cli/tests/scripts/test_tool_quality.sh
+      - TEF_API_KEY=$OPENROUTER_API_KEY ./cli/tests/scripts/test_query_alignment.sh
+      - TEF_API_KEY=$OPENROUTER_API_KEY ./cli/tests/scripts/test_similarity.sh
+      - TEF_API_KEY=$OPENROUTER_API_KEY ./cli/tests/scripts/test_query_alignment_from_file.sh
+
+  test:cli:unit:
+    desc: Run CLI unit tests (no Docker required)
+    cmds:
+      - cd cli && uv run pytest -v -m "not docker"
+    deps:
+      - install
+
+  test:all:
+    desc: Run all tests including CLI and Docker tests
+    cmds:
+      - uv run pytest src/ tests/ -m "not no_mock_agent"
+      - cd cli && uv run pytest
+    deps:
+      - install
+
+  experiments:
+    desc: Run all experiments and generate report
+    cmds:
+      - task: experiment:labels
+      - task: experiment:labels-with-params
+      - task: experiment:progressive
+      - task: experiment:report
+    deps:
+      - install
+
+  experiment:labels:
+    desc: Run labels experiment (structured vs simple embedding text)
+    cmds:
+      - uv run python experiments/labels/labels_experiment.py
+    deps:
+      - install
+
+  experiment:labels-with-params:
+    desc: Run labels experiment with parameters included in embeddings
+    cmds:
+      - uv run python experiments/labels/labels_experiment.py --include-parameters
+    deps:
+      - install
+
+  experiment:visualize:
+    desc: Visualize experiment results (generate plots)
+    cmds:
+      - uv run python experiments/labels/visualize_results.py
+    deps:
+      - install
+
+  experiment:report:
+    desc: Generate comprehensive statistical analysis report
+    cmds:
+      - task: experiment:visualize
+      - uv run python experiments/labels/generate_report.py
+    deps:
+      - install
+
+  experiment:progressive:
+    desc: Run progressive analysis showing how metrics change with more servers (fast - reuses existing data)
+    cmds:
+      - uv run python experiments/labels/progressive_analysis_fast.py
+    deps:
+      - install
+
+  dev:
+    desc: Run development server
+    cmds:
+      - uv run tef --reload-server true
+    deps:
+      - install
+
+  all:
+    desc: Run all quality checks
+    cmds:
+      - task: format
+      - task: lint
+      - task: test
+      - task: test:cli:unit

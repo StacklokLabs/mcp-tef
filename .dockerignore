@@ -1,0 +1,78 @@
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pytype/
+.hypothesis/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.pixi/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Databases (don't copy local DBs into container)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+mcp_eval.db
+data/
+
+# Documentation
+CLAUDE.md
+docs/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Testing
+tests/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Logs
+*.log
+logs/
+
+# Package management (not needed in container)
+.python-version
+
+# Taskfile
+Taskfile.yml
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml

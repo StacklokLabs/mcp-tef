@@ -1,0 +1,107 @@
+[project]
+name = "mcp-tef"
+version = "0.1.0"
+description = "MCP Tool Evaluation System - Validate tool selection effectiveness for Model Context Protocol tools"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115.0",
+    "pydantic>=2.9.0",
+    "pydantic-ai>=0.0.13",
+    "pydantic-evals>=0.0.2",
+    "aiosqlite>=0.20.0",
+    "uvicorn>=0.32.0",
+    "httpx>=0.27.0",
+    "python-dotenv>=1.0.0",
+    "structlog>=25.5.0",
+    "dotenv>=0.9.9",
+    "mcp[cli]>=1.17.0",
+    "fastembed>=0.7.3",
+    "scikit-learn>=1.7.2",
+    "cryptography>=46.0.3",
+]
+
+[project.scripts]
+tef = "mcp_tef.__main__:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-cov>=6.0.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.7.0",
+    "ty==0.0.1a18",
+    "matplotlib>=3.10.7",
+    "seaborn>=0.13.2",
+    "scipy>=1.16.3",
+    "pandas>=2.3.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_tef"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "A", "C4", "DTZ", "T10", "PIE", "RET", "SIM", "ARG"]
+ignore = [
+    "B008",   # Do not perform function call in argument defaults (FastAPI Depends pattern)
+    "ARG001", # Unused function argument (FastAPI requires request parameter)
+    "N818",   # Exception name should end with Error (our naming is intentional)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["ARG002"]  # Allow unused fixture parameters (needed for side effects)
+"scripts/**/*.py" = ["E501", "N806"]  # Allow long lines and uppercase variables in demo scripts
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ty.src]
+exclude = ["tests", "cli"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+minversion = "8.0"
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+    "--color=yes",
+    "-ra",
+    "--cov=mcp_tef",
+    "--cov-report=term-missing",
+]
+markers = [
+    "asyncio: async tests",
+    "slow: slow-running tests (>1s)",
+    "ollama: tests that benefit from real Ollama LLM (can run with mock, but better with Ollama)",
+    "integration: integration tests",
+    "contract: contract tests against OpenAPI spec",
+    "unit: unit tests",
+    "no_mock_agent: tests that should not have Pydantic Agent auto-mocked (for real API calls)",
+]
+
+[tool.coverage.run]
+source = ["src/mcp_tef"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

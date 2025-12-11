@@ -1,0 +1,9 @@
+[
+  {
+    "name": "E2E Fetch Test - Positive",
+    "query": "Fetch the content from https://example.com",
+    "available_mcp_servers": ["${MCP_SERVER_URL}"],
+    "expected_mcp_server_url": "${MCP_SERVER_URL}",
+    "expected_tool_name": "fetch"
+  }
+]
