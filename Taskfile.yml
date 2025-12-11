@@ -5,7 +5,12 @@ tasks:
   install:
     desc: Install dependencies + dev packages
     cmds:
-      - uv sync --dev
+      - uv sync --dev --group security
+
+  install:cli:
+    desc: Install CLI dependencies + dev packages
+    cmds:
+      - cd cli && uv sync --dev --group security
 
   format:
     desc: Format code with Ruff
@@ -36,6 +41,22 @@ tasks:
       - uv run pytest src/ tests/ -m "not no_mock_agent"
     deps:
       - install
+
+  security:
+    desc: Run security scanning
+    cmds:
+      - uv run bandit -r src/ -c pyproject.toml
+      - uv run pip-audit
+    deps:
+      - install
+
+  security:cli:
+    desc: Run security scanning on CLI
+    cmds:
+      - cd cli && uv run bandit -r src/ -c pyproject.toml
+      - cd cli && uv run pip-audit
+    deps:
+      - install:cli
 
   test:real-llm-keys:
     desc: Run tests with pytest (skipping no_mock_agent tests)

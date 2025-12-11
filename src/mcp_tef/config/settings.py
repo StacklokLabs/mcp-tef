@@ -169,7 +169,7 @@ class Settings(BaseSettings):
     )
 
     host: str = Field(
-        default="0.0.0.0",
+        default="0.0.0.0",  # nosec B104 - Intentionally binding to all interfaces for server
         description="Host address for FastAPI server",
     )
     reload_server: bool = Field(
