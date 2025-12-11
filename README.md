@@ -220,10 +220,10 @@ The easiest way to deploy mcp-tef is using the CLI tool:
 uv tool install mcp-tef-cli
 
 # Deploy latest version
-mcp-tef-cli deploy
+mtef deploy
 
 # Deploy with API keys and health check
-mcp-tef-cli deploy \
+mtef deploy \
   --env OPENROUTER_API_KEY=sk-xxx \
   --health-check
 ```
