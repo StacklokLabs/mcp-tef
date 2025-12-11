@@ -30,13 +30,13 @@ This installs the CLI in an isolated environment and makes it available globally
 ### Alternative: Install from Git Repository
 
 ```bash
-uv tool install "mcp-tef-cli @ git+https://github.com/StacklokLabs/mcp-tef.git@cli-v0.1.0#subdirectory=cli"
+uv tool install "mtef @ git+https://github.com/StacklokLabs/mcp-tef.git@cli-v0.1.0#subdirectory=cli"
 ```
 
 Or install the latest from main branch:
 
 ```bash
-uv tool install "mcp-tef-cli @ git+https://github.com/StacklokLabs/mcp-tef.git#subdirectory=cli"
+uv tool install "mtef @ git+https://github.com/StacklokLabs/mcp-tef.git#subdirectory=cli"
 ```
 
 ### Development: Install from Source
@@ -309,7 +309,7 @@ jobs:
         uses: astral-sh/setup-uv@v4
 
       - name: Install mcp-tef CLI
-        run: uv tool install "mcp-tef-cli @ git+https://github.com/StacklokLabs/mcp-tef.git#subdirectory=cli"
+        run: uv tool install "mtef @ git+https://github.com/StacklokLabs/mcp-tef.git#subdirectory=cli"
 
       - name: Deploy mcp-tef server
         run: |
@@ -368,7 +368,7 @@ test:
     - docker:dind
   before_script:
     - pip install uv
-    - uv tool install "mcp-tef-cli @ git+https://github.com/StacklokLabs/mcp-tef.git#subdirectory=cli"
+    - uv tool install "mtef @ git+https://github.com/StacklokLabs/mcp-tef.git#subdirectory=cli"
   script:
     - |
       mtef deploy \
