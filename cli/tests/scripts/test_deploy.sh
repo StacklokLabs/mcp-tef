@@ -46,8 +46,8 @@ LOCAL_IMAGE=$(build_mcp_tef_image) || exit 1
 # Step 2: Install CLI from source
 log_info "Step 2: Installing mtef from source..."
 
-if ! install_mcp_tef_cli_from_source; then
-    exit 1
+if ! check_mcp_tef_cli 2>/dev/null; then
+    install_mcp_tef_cli_from_source || exit 1
 fi
 
 # Step 3: Deploy container

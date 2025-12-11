@@ -77,10 +77,10 @@ check_thv() {
     return 0
 }
 
-# Check that mtef is installed
+# Check that mcp-tef-cli is installed
 check_mcp_tef_cli() {
-    if ! command -v mtef &> /dev/null; then
-        log_error "mtef not found. Install with: uv tool install mcp-tef-cli"
+    if ! command -v mcp-tef-cli &> /dev/null; then
+        log_warn "mcp-tef-cli not found. Install with: uv tool install mcp-tef-cli"
         return 1
     fi
 
