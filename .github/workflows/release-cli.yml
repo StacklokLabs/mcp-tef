@@ -31,8 +31,23 @@ jobs:
       - name: Extract version from tag
         id: get_version
         run: |
-          # Extract version from tag (cli-v0.1.0 -> 0.1.0)
-          VERSION=${GITHUB_REF#refs/tags/cli-v}
+          # Extract version from tag or release
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            # Release event: extract from release tag (e.g., cli-v0.1.0 -> 0.1.0)
+            TAG_NAME="${{ github.event.release.tag_name }}"
+          else
+            # Tag push event: extract from ref (e.g., refs/tags/cli-v0.1.0 -> cli-v0.1.0)
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+          fi
+          
+          # Remove cli-v prefix if present
+          if [[ "$TAG_NAME" =~ ^cli-v(.+)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+          else
+            echo "::error::Tag name must start with 'cli-v' (e.g., cli-v0.1.0), got: $TAG_NAME"
+            exit 1
+          fi
+          
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "CLI Version: $VERSION"
 
@@ -71,9 +86,10 @@ jobs:
           ls -lh dist/
           uv run --with twine twine check dist/*
 
-      - name: Create GitHub Release
+      - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
         with:
+          tag_name: ${{ github.event.release.tag_name || github.ref_name }}
           files: |
             cli/dist/*.whl
             cli/dist/*.tar.gz
