@@ -32,8 +32,7 @@ jobs:
           version: 3.x
 
       - name: Install dependencies
-        working-directory: cli
-        run: uv sync --dev
+        run: task install:cli
 
       - name: Format check
         run: task format
@@ -46,3 +45,6 @@ jobs:
 
       - name: Run CLI tests
         run: task test:cli:unit
+
+      - name: Run CLI security scanning
+        run: task security:cli
