@@ -44,7 +44,10 @@ def get_mcp_loader_service(request: Request) -> MCPLoaderService:
     description="List all tools from a specific MCP server",
 )
 async def get_mcp_server_tools(
-    server_url: str | None = Query(default=None, description="MCP server url to get tools from"),
+    server_url: str = Query(description="MCP server url to get tools from"),
+    transport: str = Query(
+        default="streamable-http", description="Transport protocol: 'sse' or 'streamable-http'"
+    ),
     offset: int = 0,
     limit: int = 100,
     mcp_loader_service: MCPLoaderService = Depends(get_mcp_loader_service),
@@ -53,6 +56,7 @@ async def get_mcp_server_tools(
 
     Args:
         server_url: MCP server url
+        transport: Transport protocol ('sse' or 'streamable-http')
         offset: Number of tools to skip (default: 0)
         limit: Maximum tools to return (default: 100)
 
@@ -62,9 +66,7 @@ async def get_mcp_server_tools(
     Raises:
         ResourceNotFoundError: If server not found (404 status)
     """
-    if not server_url:
-        raise BadRequestError("server_url required")
-    tools = await mcp_loader_service.load_tools_from_url_typed(server_url)
+    tools = await mcp_loader_service.load_tools_from_server(server_url, transport)
     if offset >= len(tools):
         return MCPServerToolsResponse(tools=[], count=0)
     tools = tools[offset : min(offset + limit, len(tools))]
@@ -82,6 +84,9 @@ async def get_mcp_server_tools(
 )
 async def get_mcp_server_tool_quality_by_url(
     server_urls: str = Query(description="MCP server url to get tools from"),
+    transport: str = Query(
+        default="streamable-http", description="Transport protocol: 'sse' or 'streamable-http'"
+    ),
     model_provider: str = Query(description="Provider for quality evaluation model"),
     model_name: str = Query(description="Quality evaluation model"),
     mcp_loader_service: MCPLoaderService = Depends(get_mcp_loader_service),
@@ -95,6 +100,7 @@ async def get_mcp_server_tool_quality_by_url(
     tasks = [
         _get_mcp_server_tool_quality_inner(
             server_url=url,
+            transport=transport,
             model_provider=model_provider,
             model_name=model_name,
             mcp_loader_service=mcp_loader_service,
@@ -117,6 +123,7 @@ async def get_mcp_server_tool_quality_by_url(
 
 async def _get_mcp_server_tool_quality_inner(
     server_url: str,
+    transport: str,
     model_provider: str,
     model_name: str,
     mcp_loader_service: MCPLoaderService,
@@ -134,5 +141,5 @@ async def _get_mcp_server_tool_quality_inner(
         mcp_loader_service=mcp_loader_service,
         llm_service=llm_service,
     )
-    quality_results = await tool_quality_service.evaluate_server(server_url)
+    quality_results = await tool_quality_service.evaluate_server(server_url, transport)
     return ToolQualityResponse(results=quality_results)

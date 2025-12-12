@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from mcp_tef_cli.models import (
     DifferentiationRecommendationResponse,
     HealthResponse,
+    MCPServerConfig,
     ModelSettingsCreate,
     OverlapMatrixResponse,
     PaginatedTestCaseResponse,
@@ -174,7 +175,7 @@ class TefClient:
         self,
         name: str,
         query: str,
-        available_mcp_servers: list[str],
+        available_mcp_servers: list[MCPServerConfig],
         expected_mcp_server_url: str | None = None,
         expected_tool_name: str | None = None,
         expected_parameters: dict | None = None,
@@ -184,7 +185,7 @@ class TefClient:
         Args:
             name: Descriptive name for the test case
             query: User query to evaluate
-            available_mcp_servers: List of MCP server URLs available for selection
+            available_mcp_servers: List of MCPServerConfig objects
             expected_mcp_server_url: Expected MCP server URL (null for negative tests)
             expected_tool_name: Expected tool name (null for negative tests)
             expected_parameters: Expected parameters as dict

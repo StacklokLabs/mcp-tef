@@ -61,9 +61,11 @@ CREATE INDEX IF NOT EXISTS idx_test_case_expected_tool ON test_cases(expected_to
 -- Junction table for test case available MCP servers (many-to-many)
 CREATE TABLE IF NOT EXISTS test_case_mcp_servers (
     test_case_id TEXT NOT NULL,
-    mcp_server_url TEXT NOT NULL,
-    PRIMARY KEY (test_case_id, mcp_server_url),
-    FOREIGN KEY (test_case_id) REFERENCES test_cases(id) ON DELETE CASCADE
+    server_url TEXT NOT NULL,
+    transport TEXT NOT NULL DEFAULT 'streamable-http',
+    PRIMARY KEY (test_case_id, server_url),
+    FOREIGN KEY (test_case_id) REFERENCES test_cases(id) ON DELETE CASCADE,
+    CHECK (transport IN ('sse', 'streamable-http'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_test_case_mcp_servers_test_case ON test_case_mcp_servers(test_case_id);

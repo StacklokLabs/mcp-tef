@@ -7,7 +7,6 @@ from pydantic_ai import Agent
 
 from mcp_tef.config.prompts import EVALUATE_TOOL_DESCRIPTION_PROMPT
 from mcp_tef.models.schemas import ToolDefinition
-from mcp_tef.services.json_schema_utils import extract_parameter_descriptions
 from mcp_tef.services.llm_service import LLMService
 from mcp_tef.services.mcp_loader import MCPLoaderService
 
@@ -73,24 +72,12 @@ class ToolQualityService:
     async def evaluate_server(
         self,
         server_url: str,
+        transport: str,
     ) -> list[ToolQualityResult]:
         """Evaluates all the tools for the given MCP server."""
-        tools = await self._mcp_loader_service.load_tools_from_url(server_url)
-
-        tool_definitions = []
-        for tool in tools:
-            input_schema = tool.get("input_schema", {})
-            # Extract parameter descriptions (handles $ref)
-            parameters = extract_parameter_descriptions(input_schema) if input_schema else {}
-
-            tool_definitions.append(
-                ToolDefinition(
-                    name=tool["name"],
-                    description=tool["description"],
-                    input_schema=input_schema,
-                    parameters=parameters,
-                )
-            )
+        tool_definitions = await self._mcp_loader_service.load_tools_from_server(
+            server_url, transport
+        )
 
         results = []
         async for result in self.evaluate_tools(tool_definitions):

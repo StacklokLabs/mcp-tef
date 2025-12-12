@@ -18,6 +18,7 @@ __all__ = [
     "ToolQualityResult",
     "ToolQualityResponse",
     # Test case models
+    "MCPServerConfig",
     "TestCaseCreate",
     "TestCaseResponse",
     "PaginatedTestCaseResponse",
@@ -102,6 +103,22 @@ class ToolQualityResponse(BaseModel):
 # =============================================================================
 
 
+class MCPServerConfig(BaseModel):
+    """MCP server configuration with transport type."""
+
+    url: str = Field(
+        ...,
+        min_length=1,
+        pattern=r"^https?://",
+        description="Server URL (must be http or https)",
+    )
+    transport: str = Field(
+        default="streamable-http",
+        pattern=r"^(sse|streamable-http)$",
+        description="Transport type: 'sse' or 'streamable-http'",
+    )
+
+
 class ToolDefinition(BaseModel):
     """Definition of a tool available from an MCP server."""
 
@@ -123,8 +140,8 @@ class TestCaseCreate(BaseModel):
     expected_parameters: dict | None = Field(
         default=None, description="Expected parameters as JSON object"
     )
-    available_mcp_servers: list[str] = Field(
-        ..., description="MCP server URLs available for selection", min_length=1
+    available_mcp_servers: list[MCPServerConfig] = Field(
+        ..., description="MCP server configurations available for selection", min_length=1
     )
 
     @model_validator(mode="after")
@@ -138,14 +155,13 @@ class TestCaseCreate(BaseModel):
             )
 
         # expected_server must be in available_mcp_servers
-        if (
-            self.expected_mcp_server_url
-            and self.expected_mcp_server_url not in self.available_mcp_servers
-        ):
-            raise ValueError(
-                f"expected_mcp_server_url '{self.expected_mcp_server_url}' "
-                "must be in available_mcp_servers"
-            )
+        if self.expected_mcp_server_url:
+            available_urls = [server.url for server in self.available_mcp_servers]
+            if self.expected_mcp_server_url not in available_urls:
+                raise ValueError(
+                    f"expected_mcp_server_url '{self.expected_mcp_server_url}' "
+                    "must be in available_mcp_servers"
+                )
 
         # expected_parameters requires expected_tool_name
         if self.expected_parameters and not self.expected_tool_name:
@@ -163,7 +179,9 @@ class TestCaseResponse(BaseModel):
     expected_mcp_server_url: str | None = Field(default=None, description="Expected MCP server URL")
     expected_tool_name: str | None = Field(default=None, description="Expected tool name")
     expected_parameters: dict | None = Field(default=None, description="Expected parameters")
-    available_mcp_servers: list[str] = Field(..., description="Available MCP servers")
+    available_mcp_servers: list[MCPServerConfig] = Field(
+        ..., description="Available MCP server configurations"
+    )
     available_tools: dict[str, list[ToolDefinition]] | None = Field(
         default=None, description="Available tools by server URL"
     )

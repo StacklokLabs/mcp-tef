@@ -24,19 +24,44 @@ class MCPLoaderService:
         """
         self.timeout = timeout
 
-    async def load_tools_from_url_typed(self, url: str) -> list[ToolDefinition]:
-        """Load tool definitions from MCP server URL as ToolDefinition objects.
+    async def load_tools_from_server(self, url: str, transport: str) -> list[ToolDefinition]:
+        """Load tool definitions from MCP server as ToolDefinition objects.
 
         Args:
             url: MCP server URL
+            transport: Transport protocol ('sse' or 'streamable_http')
 
         Returns:
             List of ToolDefinition objects with full input_schema and extracted parameters
-        """
-        raw = await self.load_tools_from_url(url)
-        tools = []
 
-        for tool in raw:
+        Raises:
+            LLMProviderError: If connection fails or SDK operation fails
+        """
+        logger.info("Loading tools from MCP server", url=url, transport=transport)
+        try:
+            # Select appropriate client based on transport
+            if transport == "sse":
+                async with sse_client(url) as (read, write):
+                    raw_tools = await self._handle_session(read, write)
+            else:  # transport == "streamable_http"
+                async with streamablehttp_client(url) as (read, write, _):
+                    raw_tools = await self._handle_session(read, write)
+
+            logger.info("Loaded tools from MCP server", url=url, tool_count=len(raw_tools))
+        except Exception as e:
+            logger.exception("Failed to load tools from MCP server", url=url, error=str(e))
+
+            # Provide more helpful error messages for common cases
+            error_msg = self._format_connection_error(url, e)
+
+            raise LLMProviderError(
+                "MCP Server",
+                error_msg,
+                e,
+            ) from e
+
+        tools = []
+        for tool in raw_tools:
             input_schema = tool.get("input_schema", {})
 
             # Extract parameter descriptions from schema (handles $ref)
@@ -52,65 +77,6 @@ class MCPLoaderService:
             )
 
         return tools
-
-    async def load_tools_from_url(self, url: str) -> list[dict]:
-        """Load tool definitions from MCP server URL with auto-detected transport.
-
-        Args:
-            url: MCP server URL (transport auto-detected from URL pattern)
-
-        Returns:
-            List of tool definitions as dictionaries
-
-        Raises:
-            LLMProviderError: If connection fails or SDK operation fails
-        """
-        # Auto-detect transport from URL pattern
-        # SSE URLs contain '/sse' or '/sse#'
-        # Streamable HTTP URLs typically end with '/mcp'
-        transport = "sse" if "/sse" in url else "streamable_http"
-
-        return await self.load_tools_from_server(url, transport)
-
-    # TODO return list[MCPServerTool] rather than list[dict]
-    async def load_tools_from_server(self, url: str, transport: str) -> list[dict]:
-        """Load tool definitions from MCP server using MCP SDK.
-
-        Args:
-            url: MCP server URL
-            transport: Transport protocol ('sse' or 'streamable_http')
-
-        Returns:
-            List of tool definitions as dictionaries (not Pydantic models)
-
-        Raises:
-            LLMProviderError: If connection fails or SDK operation fails
-        """
-        logger.info("Loading tools from MCP server", url=url, transport=transport)
-
-        try:
-            # Select appropriate client based on transport
-            if transport == "sse":
-                async with sse_client(url) as (read, write):
-                    tools = await self._handle_session(read, write)
-            else:  # transport == "streamable_http"
-                async with streamablehttp_client(url) as (read, write, _):
-                    tools = await self._handle_session(read, write)
-
-            logger.info("Loaded tools from MCP server", url=url, tool_count=len(tools))
-            return tools
-
-        except Exception as e:
-            logger.exception("Failed to load tools from MCP server", url=url, error=str(e))
-
-            # Provide more helpful error messages for common cases
-            error_msg = self._format_connection_error(url, e)
-
-            raise LLMProviderError(
-                "MCP Server",
-                error_msg,
-                e,
-            ) from e
 
     def _format_connection_error(self, url: str, error: Exception) -> str:
         """Format connection errors with helpful context.

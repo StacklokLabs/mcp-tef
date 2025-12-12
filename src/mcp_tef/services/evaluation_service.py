@@ -133,9 +133,6 @@ class EvaluationService:
             # Get test case
             test_case = await self.test_case_repo.get(test_run.test_case_id)
 
-            # MCP server URLs are already in test_case.available_mcp_servers
-            mcp_server_urls = test_case.available_mcp_servers
-
             # Create LLM service with optional runtime API key and model settings
             # If API key is None, pass empty string (will fail gracefully during authentication)
             llm_service = LLMService(
@@ -152,7 +149,7 @@ class EvaluationService:
             system_prompt = (
                 model_settings.system_prompt or self.settings.default_system_prompt_tool_selection
             )
-            await llm_service.connect_to_mcp_servers(mcp_server_urls, system_prompt)
+            await llm_service.connect_to_mcp_servers(test_case.available_mcp_servers, system_prompt)
 
             # Query LLM with tool mapping
             llm_response = await llm_service.select_tool(test_case.query)
@@ -294,9 +291,9 @@ class EvaluationService:
             ToolIngestionError: If any server tool loading fails
         """
         # Get all MCP servers for this test case
-        server_urls = await self.test_case_repo.get_test_case_servers(test_case_id)
+        server_configs = await self.test_case_repo.get_test_case_servers(test_case_id)
 
-        if not server_urls:
+        if not server_configs:
             logger.warning("No MCP servers found for test case", test_case_id=test_case_id)
             return
 
@@ -304,15 +301,15 @@ class EvaluationService:
             "Ingesting tools for test run",
             test_run_id=test_run_id,
             test_case_id=test_case_id,
-            server_count=len(server_urls),
+            server_count=len(server_configs),
         )
 
         # Ingest tools from all servers concurrently
         try:
             results = await asyncio.gather(
                 *[
-                    self._ingest_from_single_server(server_url, test_run_id)
-                    for server_url in server_urls
+                    self._ingest_from_single_server(server.url, server.transport, test_run_id)
+                    for server in server_configs
                 ]
             )
 
@@ -323,7 +320,7 @@ class EvaluationService:
             logger.info(
                 "Tool ingestion completed",
                 test_run_id=test_run_id,
-                server_count=len(server_urls),
+                server_count=len(server_configs),
                 total_ingested=total_ingested,
                 total_skipped=total_skipped,
             )
@@ -351,12 +348,14 @@ class EvaluationService:
     async def _ingest_from_single_server(
         self,
         server_url: str,
+        transport: str,
         test_run_id: str,
     ) -> tuple[list, list[str]]:
         """Ingest tools from a single MCP server for a test run.
 
         Args:
-            server_url: MCP server to ingest from
+            server_url: MCP server URL to ingest from
+            transport: Transport protocol ('sse' or 'streamable_http')
             test_run_id: Test run ID to associate tools with
 
         Returns:
@@ -367,19 +366,19 @@ class EvaluationService:
         """
         try:
             # Load tools from MCP server
-            tools_data = await self.mcp_loader.load_tools_from_url(server_url)
+            tools_data = await self.mcp_loader.load_tools_from_server(server_url, transport)
 
             # Prepare tool definitions for batch insert
             tools_to_create = [
                 ToolDefinitionCreate(
-                    name=tool_dict["name"],
-                    description=tool_dict["description"],
-                    input_schema=tool_dict["input_schema"],
-                    output_schema=tool_dict.get("output_schema"),
+                    name=tool_def.name,
+                    description=tool_def.description,
+                    input_schema=tool_def.input_schema,
+                    output_schema=None,
                     mcp_server_url=server_url,
                     test_run_id=test_run_id,
                 )
-                for tool_dict in tools_data
+                for tool_def in tools_data
             ]
 
             # Batch create tool definitions in database
