@@ -23,7 +23,7 @@ servers:
   - url: https://localhost:8000
     description: Local development server (HTTPS with auto-generated cert)
   - url: http://localhost:8000
-    description: Local development server (HTTP, use --no-tls-enabled)
+    description: Local development server (HTTP, use --tls-enabled=false)
 
 tags:
   - name: mcp-servers

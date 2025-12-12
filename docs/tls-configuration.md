@@ -65,6 +65,7 @@ For development and testing, you can disable TLS to run the server over plain HT
 ```bash
 # Disable TLS for development/testing
 uv run python -m mcp_tef --tls-enabled=false
+# Or use: --tls-enabled false
 ```
 
 When running in insecure mode, you'll see a prominent warning:
@@ -218,4 +219,10 @@ Current test coverage for `tls_service.py`: **100%**
 - **Development**: Use `--tls-enabled=false` for plain HTTP
 - **Production**: Use CA-signed certificates with `--tls-cert-file` and `--tls-key-file`
 - **Never** disable TLS in production environments
+
+## Related Documentation
+
+- [Quickstart Guide](quickstart.md) - Getting started with mcp-tef
+- [Testing with Ollama](testing-with-ollama.md) - Local development and testing setup
+- [Main README](../README.md) - Project overview and quick start
 

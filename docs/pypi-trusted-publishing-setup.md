@@ -2,6 +2,8 @@
 
 This document describes how to configure PyPI trusted publishing for the `mtef` package.
 
+> **Note**: Currently, the CLI is published to GitHub Releases only. This guide is for future PyPI publishing setup. The workflow file referenced (`release-cli.yml`) currently creates GitHub releases but does not publish to PyPI yet.
+
 ## Overview
 
 Trusted publishing allows GitHub Actions to publish to PyPI without storing API tokens. It uses OpenID Connect (OIDC) to establish trust between GitHub and PyPI.
@@ -53,7 +55,7 @@ If the `mtef` project doesn't exist on PyPI yet:
 
 ## How It Works
 
-The release workflow (`.github/workflows/release-cli.yml`) uses:
+When PyPI publishing is enabled, the release workflow (`.github/workflows/release-cli.yml`) would use:
 
 ```yaml
 permissions:
@@ -109,6 +111,11 @@ When the workflow runs:
 - If the project doesn't exist, you need either:
   - A pending publisher configured on your PyPI account
   - Manual project creation on PyPI first
+
+## Related Documentation
+
+- [Main README](../README.md) - Project overview and release process
+- [CLI Documentation](../cli/README.md) - CLI usage and installation
 
 ## References
 

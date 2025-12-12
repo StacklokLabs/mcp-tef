@@ -43,7 +43,7 @@ uv run python -m mcp_tef
 **Security:**
 - **Default**: HTTPS with auto-generated self-signed certificate
 - **Custom certs**: `--tls-cert-file` and `--tls-key-file` flags
-- **Development**: `--no-tls-enabled` for HTTP (⚠️ not for production)
+- **Development**: `--tls-enabled=false` for HTTP (⚠️ not for production)
 
 See [docs/testing-with-ollama.md](docs/testing-with-ollama.md) and [docs/tls-configuration.md](docs/tls-configuration.md) for details.
 
