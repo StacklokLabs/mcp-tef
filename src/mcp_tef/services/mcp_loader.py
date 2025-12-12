@@ -29,7 +29,7 @@ class MCPLoaderService:
 
         Args:
             url: MCP server URL
-            transport: Transport protocol ('sse' or 'streamable_http')
+            transport: Transport protocol ('sse' or 'streamable-http')
 
         Returns:
             List of ToolDefinition objects with full input_schema and extracted parameters
@@ -43,7 +43,7 @@ class MCPLoaderService:
             if transport == "sse":
                 async with sse_client(url) as (read, write):
                     raw_tools = await self._handle_session(read, write)
-            else:  # transport == "streamable_http"
+            else:  # transport == "streamable-http"
                 async with streamablehttp_client(url) as (read, write, _):
                     raw_tools = await self._handle_session(read, write)
 

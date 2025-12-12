@@ -14,6 +14,7 @@ from mcp_tef.models.schemas import (
     ModelSettingsCreate,
     TestRunResponse,
     ToolDefinitionCreate,
+    ToolDefinitionResponse,
 )
 from mcp_tef.services.confidence_analyzer import ConfidenceAnalyzer
 from mcp_tef.services.llm_service import LLMService
@@ -350,16 +351,17 @@ class EvaluationService:
         server_url: str,
         transport: str,
         test_run_id: str,
-    ) -> tuple[list, list[str]]:
+    ) -> tuple[list[ToolDefinitionResponse], list[str]]:
         """Ingest tools from a single MCP server for a test run.
 
         Args:
             server_url: MCP server URL to ingest from
-            transport: Transport protocol ('sse' or 'streamable_http')
+            transport: Transport protocol ('sse' or 'streamable-http')
             test_run_id: Test run ID to associate tools with
 
         Returns:
-            Tuple of (ingested_tools, skipped_tool_names)
+            Tuple of (list[ToolDefinitionResponse], list[str]) containing
+            (ingested_tools, skipped_tool_names)
 
         Raises:
             ToolIngestionError: If tool loading fails

@@ -590,7 +590,7 @@ class MCPServerResponse(BaseModel):
     id: str
     name: str
     url: str
-    transport: str  # 'sse' or 'streamable_http'
+    transport: str  # 'sse' or 'streamable-http'
     status: str  # 'active', 'failed', 'inactive'
     last_connected_at: datetime | None
     created_at: datetime

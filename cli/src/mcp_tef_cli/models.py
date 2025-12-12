@@ -104,7 +104,12 @@ class ToolQualityResponse(BaseModel):
 
 
 class MCPServerConfig(BaseModel):
-    """MCP server configuration with transport type."""
+    """MCP server configuration with transport type.
+
+    Note: This model is vendored (copied) from src/mcp_tef/models/schemas.py
+    to avoid requiring the full server package as a CLI dependency.
+    Keep in sync with the main model for consistency.
+    """
 
     url: str = Field(
         ...,

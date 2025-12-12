@@ -296,33 +296,30 @@ def parse_server_spec(server_spec: str) -> MCPServerConfig:
     Raises:
         click.BadParameter: If format is invalid or transport is not recognized
     """
-    if ":" in server_spec and not server_spec.startswith(("http://", "https://")):
-        raise click.BadParameter(
-            f"Invalid server format: '{server_spec}'. "
-            "Expected 'URL' or 'URL:transport' (e.g., 'http://localhost:3000:sse')"
-        )
-
-    # Check if transport is specified (format: url:transport)
-    # Need to be careful not to split on the ':' in 'http://'
-    parts = server_spec.rsplit(":", 1)
-
-    if len(parts) == 2:
-        url, transport = parts
-        # Check if this is actually a transport spec or just part of the URL
-        # Valid transports are 'sse' or 'streamable-http'
-        if transport in ("sse", "streamable-http"):
-            # This is a transport specification
-            if not url.startswith(("http://", "https://")):
-                raise click.BadParameter(
-                    f"Invalid URL in server spec: '{url}'. Must start with http:// or https://"
-                )
-            return MCPServerConfig(url=url, transport=transport)
-
-    # No valid transport found, treat entire string as URL with default transport
+    # Validate basic format
     if not server_spec.startswith(("http://", "https://")):
         raise click.BadParameter(
             f"Invalid server URL: '{server_spec}'. Must start with http:// or https://"
         )
+
+    # Check if transport is specified (format: url:transport)
+    # Use rsplit to handle URLs with ports (e.g., http://localhost:8080)
+    # We only treat it as transport if the part after the last ':' is a valid transport
+    parts = server_spec.rsplit(":", 1)
+
+    if len(parts) == 2:
+        url, potential_transport = parts
+        # Check if this is actually a transport spec or just part of the URL
+        # Valid transports are 'sse' or 'streamable-http'
+        if potential_transport in ("sse", "streamable-http"):
+            # Verify the URL part is still valid (starts with http:// or https://)
+            if not url.startswith(("http://", "https://")):
+                raise click.BadParameter(
+                    f"Invalid URL in server spec: '{url}'. Must start with http:// or https://"
+                )
+            return MCPServerConfig(url=url, transport=potential_transport)
+
+    # No valid transport found, treat entire string as URL with default transport
     return MCPServerConfig(url=server_spec)
 
 
