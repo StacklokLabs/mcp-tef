@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from httpx import AsyncClient
 
+from mcp_tef.models.schemas import ToolDefinition
+
 
 @pytest.fixture
 async def test_case_id(client: AsyncClient) -> str:
@@ -16,11 +18,11 @@ async def test_case_id(client: AsyncClient) -> str:
         mock_instance = mock.return_value
         mock_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "test_tool",
-                    "description": "Test tool",
-                    "input_schema": {"type": "object", "properties": {"param": {"type": "string"}}},
-                }
+                ToolDefinition(
+                    name="test_tool",
+                    description="Test tool",
+                    input_schema={"type": "object", "properties": {"param": {"type": "string"}}},
+                )
             ]
         )
 

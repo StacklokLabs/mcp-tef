@@ -9,6 +9,7 @@ import pytest
 from mcp_tef.models.schemas import (
     ModelSettingsCreate,
     TestCaseCreate,
+    ToolDefinition,
     ToolDefinitionCreate,
 )
 from mcp_tef.storage.model_settings_repository import ModelSettingsRepository
@@ -44,11 +45,11 @@ class TestTestRunRepositoryQuery:
         # Mock must return tools that include the expected tool
         mock_loader.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "get_weather",
-                    "description": "Get current weather",
-                    "input_schema": {"type": "object"},
-                }
+                ToolDefinition(
+                    name="get_weather",
+                    description="Get current weather",
+                    input_schema={"type": "object"},
+                )
             ]
         )
 
@@ -73,11 +74,11 @@ class TestTestRunRepositoryQuery:
         # Mock must return tools that include the expected tool
         mock_loader.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "get_events",
-                    "description": "Get calendar events",
-                    "input_schema": {"type": "object"},
-                }
+                ToolDefinition(
+                    name="get_events",
+                    description="Get calendar events",
+                    input_schema={"type": "object"},
+                )
             ]
         )
 
@@ -239,11 +240,11 @@ class TestTestRunRepositoryQuery:
         mock_loader = AsyncMock()
         mock_loader.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "test_tool",
-                    "description": "Test tool",
-                    "input_schema": {"type": "object"},
-                }
+                ToolDefinition(
+                    name="test_tool",
+                    description="Test tool",
+                    input_schema={"type": "object"},
+                )
             ]
         )
 

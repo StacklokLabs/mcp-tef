@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from httpx import AsyncClient
 
+from mcp_tef.models.schemas import ToolDefinition
+
 
 @pytest.mark.asyncio
 async def test_tool_selection_workflow(client: AsyncClient, test_mcp_server_url: str):
@@ -19,17 +21,17 @@ async def test_tool_selection_workflow(client: AsyncClient, test_mcp_server_url:
         mock_loader_api_instance = mock_loader_api.return_value
         mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "test_tool",
-                    "description": "A test tool for unit testing",
-                    "input_schema": {
+                ToolDefinition(
+                    name="test_tool",
+                    description="A test tool for unit testing",
+                    input_schema={
                         "type": "object",
                         "properties": {
                             "param": {"type": "string", "description": "Test parameter"}
                         },
                         "required": ["param"],
                     },
-                }
+                )
             ]
         )
 
@@ -37,17 +39,17 @@ async def test_tool_selection_workflow(client: AsyncClient, test_mcp_server_url:
         mock_loader_eval_instance = mock_loader_eval.return_value
         mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "test_tool",
-                    "description": "A test tool for unit testing",
-                    "input_schema": {
+                ToolDefinition(
+                    name="test_tool",
+                    description="A test tool for unit testing",
+                    input_schema={
                         "type": "object",
                         "properties": {
                             "param": {"type": "string", "description": "Test parameter"}
                         },
                         "required": ["param"],
                     },
-                }
+                )
             ]
         )
 
@@ -127,11 +129,11 @@ async def test_multiple_tools_selection(client: AsyncClient, test_mcp_server_url
         mock_loader_api_instance = mock_loader_api.return_value
         mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": name,
-                    "description": f"{name} tool",
-                    "input_schema": {"type": "object"},
-                }
+                ToolDefinition(
+                    name=name,
+                    description=f"{name} tool",
+                    input_schema={"type": "object"},
+                )
                 for name in tool_names
             ]
         )
@@ -140,11 +142,11 @@ async def test_multiple_tools_selection(client: AsyncClient, test_mcp_server_url
         mock_loader_eval_instance = mock_loader_eval.return_value
         mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": name,
-                    "description": f"{name} tool",
-                    "input_schema": {"type": "object"},
-                }
+                ToolDefinition(
+                    name=name,
+                    description=f"{name} tool",
+                    input_schema={"type": "object"},
+                )
                 for name in tool_names
             ]
         )
@@ -209,11 +211,11 @@ async def test_concurrent_api_key_isolation(client: AsyncClient, test_mcp_server
         mock_loader_api_instance = mock_loader_api.return_value
         mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "concurrent_test_tool",
-                    "description": "Tool for concurrent testing",
-                    "input_schema": {"type": "object"},
-                }
+                ToolDefinition(
+                    name="concurrent_test_tool",
+                    description="Tool for concurrent testing",
+                    input_schema={"type": "object"},
+                )
             ]
         )
 
@@ -221,11 +223,11 @@ async def test_concurrent_api_key_isolation(client: AsyncClient, test_mcp_server
         mock_loader_eval_instance = mock_loader_eval.return_value
         mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "concurrent_test_tool",
-                    "description": "Tool for concurrent testing",
-                    "input_schema": {"type": "object"},
-                }
+                ToolDefinition(
+                    name="concurrent_test_tool",
+                    description="Tool for concurrent testing",
+                    input_schema={"type": "object"},
+                )
             ]
         )
 

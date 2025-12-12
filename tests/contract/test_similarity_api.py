@@ -45,7 +45,9 @@ def mock_mcp_loader():
         mock_loader_class.return_value = mock_loader
 
         # Return different tools for each URL
-        async def load_tools_from_server(url: str) -> list[ToolDefinition]:
+        async def load_tools_from_server(
+            url: str, transport: str = "streamable-http"
+        ) -> list[ToolDefinition]:
             if "mcp1" in url:
                 return [
                     ToolDefinition(
@@ -62,7 +64,7 @@ def mock_mcp_loader():
                 ),
             ]
 
-        mock_loader.load_tools_from_server_typed = AsyncMock(side_effect=load_tools_from_server)
+        mock_loader.load_tools_from_server = AsyncMock(side_effect=load_tools_from_server)
         yield mock_loader
 
 

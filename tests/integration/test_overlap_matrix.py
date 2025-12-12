@@ -29,7 +29,9 @@ def mock_mcp_loader():
         mock_loader_class.return_value = mock_loader
 
         # Return different tools for each URL
-        async def load_tools_from_server(url: str) -> list[ToolDefinition]:
+        async def load_tools_from_server(
+            url: str, transport: str = "streamable-http"
+        ) -> list[ToolDefinition]:
             if "mcp1" in url:
                 return [
                     ToolDefinition(
@@ -74,7 +76,7 @@ def mock_mcp_loader():
                 ),
             ]
 
-        mock_loader.load_tools_from_server_typed = AsyncMock(side_effect=load_tools_from_server)
+        mock_loader.load_tools_from_server = AsyncMock(side_effect=load_tools_from_server)
         yield mock_loader
 
 
@@ -185,7 +187,7 @@ async def test_overlap_matrix_with_similar_parameters(client):
                 ),
             ]
 
-        mock_loader.load_tools_from_server_typed = AsyncMock(side_effect=load_tools_from_server)
+        mock_loader.load_tools_from_server = AsyncMock(side_effect=load_tools_from_server)
 
         response = await client.post(
             "/similarity/overlap-matrix",
@@ -241,7 +243,7 @@ async def test_overlap_matrix_with_similar_descriptions(client):
                 ),
             ]
 
-        mock_loader.load_tools_from_server_typed = AsyncMock(side_effect=load_tools_from_server)
+        mock_loader.load_tools_from_server = AsyncMock(side_effect=load_tools_from_server)
 
         response = await client.post(
             "/similarity/overlap-matrix",
@@ -288,7 +290,7 @@ async def test_overlap_matrix_performance(client):
                 for i in range(3)
             ]
 
-        mock_loader.load_tools_from_server_typed = AsyncMock(side_effect=load_tools_from_server)
+        mock_loader.load_tools_from_server = AsyncMock(side_effect=load_tools_from_server)
 
         # 4 URLs * 3 tools each = 12 tools
         url_list = [f"http://test.com/mcp{i}" for i in range(4)]

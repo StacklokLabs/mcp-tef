@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from httpx import AsyncClient
 
+from mcp_tef.models.schemas import ToolDefinition
 from tests.conftest import wait_for_test_run_completion
 
 
@@ -24,16 +25,16 @@ async def test_metrics_precision_recall_calculation(
         mock_loader_api_instance = mock_loader_api.return_value
         mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "test_tool",
-                    "description": "Test tool",
-                    "input_schema": {"type": "object", "properties": {}},
-                },
-                {
-                    "name": "tool_wrong",
-                    "description": "Wrong tool",
-                    "input_schema": {"type": "object", "properties": {}},
-                },
+                ToolDefinition(
+                    name="test_tool",
+                    description="Test tool",
+                    input_schema={"type": "object", "properties": {}},
+                ),
+                ToolDefinition(
+                    name="tool_wrong",
+                    description="Wrong tool",
+                    input_schema={"type": "object", "properties": {}},
+                ),
             ]
         )
 
@@ -41,16 +42,16 @@ async def test_metrics_precision_recall_calculation(
         mock_loader_eval_instance = mock_loader_eval.return_value
         mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "test_tool",
-                    "description": "Test tool",
-                    "input_schema": {"type": "object", "properties": {}},
-                },
-                {
-                    "name": "tool_wrong",
-                    "description": "Wrong tool",
-                    "input_schema": {"type": "object", "properties": {}},
-                },
+                ToolDefinition(
+                    name="test_tool",
+                    description="Test tool",
+                    input_schema={"type": "object", "properties": {}},
+                ),
+                ToolDefinition(
+                    name="tool_wrong",
+                    description="Wrong tool",
+                    input_schema={"type": "object", "properties": {}},
+                ),
             ]
         )
 
@@ -188,10 +189,10 @@ async def test_metrics_parameter_accuracy_calculation(
         mock_loader_api_instance = mock_loader_api.return_value
         mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "param_tool",
-                    "description": "Tool with params",
-                    "input_schema": {
+                ToolDefinition(
+                    name="param_tool",
+                    description="Tool with params",
+                    input_schema={
                         "type": "object",
                         "properties": {
                             "arg1": {"type": "string"},
@@ -199,7 +200,7 @@ async def test_metrics_parameter_accuracy_calculation(
                         },
                         "required": ["arg1", "arg2"],
                     },
-                }
+                )
             ]
         )
 
@@ -207,10 +208,10 @@ async def test_metrics_parameter_accuracy_calculation(
         mock_loader_eval_instance = mock_loader_eval.return_value
         mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "param_tool",
-                    "description": "Tool with params",
-                    "input_schema": {
+                ToolDefinition(
+                    name="param_tool",
+                    description="Tool with params",
+                    input_schema={
                         "type": "object",
                         "properties": {
                             "arg1": {"type": "string"},
@@ -218,7 +219,7 @@ async def test_metrics_parameter_accuracy_calculation(
                         },
                         "required": ["arg1", "arg2"],
                     },
-                }
+                )
             ]
         )
 
@@ -295,11 +296,11 @@ async def test_metrics_execution_time_average(client: AsyncClient, test_mcp_serv
         mock_loader_api_instance = mock_loader_api.return_value
         mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "test_tool",
-                    "description": "Test tool",
-                    "input_schema": {"type": "object", "properties": {"param": {"type": "string"}}},
-                }
+                ToolDefinition(
+                    name="test_tool",
+                    description="Test tool",
+                    input_schema={"type": "object", "properties": {"param": {"type": "string"}}},
+                )
             ]
         )
 
@@ -307,11 +308,11 @@ async def test_metrics_execution_time_average(client: AsyncClient, test_mcp_serv
         mock_loader_eval_instance = mock_loader_eval.return_value
         mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "test_tool",
-                    "description": "Test tool",
-                    "input_schema": {"type": "object", "properties": {"param": {"type": "string"}}},
-                }
+                ToolDefinition(
+                    name="test_tool",
+                    description="Test tool",
+                    input_schema={"type": "object", "properties": {"param": {"type": "string"}}},
+                )
             ]
         )
 
@@ -386,11 +387,11 @@ async def test_metrics_confidence_distribution(client: AsyncClient, test_mcp_ser
         mock_loader_api_instance = mock_loader_api.return_value
         mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "test_tool",
-                    "description": "Test tool",
-                    "input_schema": {"type": "object", "properties": {"param": {"type": "string"}}},
-                }
+                ToolDefinition(
+                    name="test_tool",
+                    description="Test tool",
+                    input_schema={"type": "object", "properties": {"param": {"type": "string"}}},
+                )
             ]
         )
 
@@ -398,11 +399,11 @@ async def test_metrics_confidence_distribution(client: AsyncClient, test_mcp_ser
         mock_loader_eval_instance = mock_loader_eval.return_value
         mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "test_tool",
-                    "description": "Test tool",
-                    "input_schema": {"type": "object", "properties": {"param": {"type": "string"}}},
-                }
+                ToolDefinition(
+                    name="test_tool",
+                    description="Test tool",
+                    input_schema={"type": "object", "properties": {"param": {"type": "string"}}},
+                )
             ]
         )
 

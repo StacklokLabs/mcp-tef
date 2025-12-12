@@ -10,6 +10,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from httpx import AsyncClient
 
+from mcp_tef.models.schemas import ToolDefinition
+
 
 @pytest.mark.asyncio
 async def test_tool_history_per_test_run(client: AsyncClient):
@@ -29,14 +31,14 @@ async def test_tool_history_per_test_run(client: AsyncClient):
         mock_loader_api_instance = mock_loader_api.return_value
         mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "history_tool",
-                    "description": "Version 1 of tool",
-                    "input_schema": {
+                ToolDefinition(
+                    name="history_tool",
+                    description="Version 1 of tool",
+                    input_schema={
                         "type": "object",
                         "properties": {"param1": {"type": "string"}},
                     },
-                }
+                )
             ]
         )
 
@@ -57,34 +59,34 @@ async def test_tool_history_per_test_run(client: AsyncClient):
         # For test execution: Track which version is returned
         call_count = 0
 
-        async def mock_load_with_versions(url):
+        async def mock_load_with_versions(url: str, transport: str = "streamable-http"):
             nonlocal call_count
             call_count += 1
             if call_count == 1:
                 # First test run: Return v1 tool
                 return [
-                    {
-                        "name": "history_tool",
-                        "description": "Version 1 of tool",
-                        "input_schema": {
+                    ToolDefinition(
+                        name="history_tool",
+                        description="Version 1 of tool",
+                        input_schema={
                             "type": "object",
                             "properties": {"param1": {"type": "string"}},
                         },
-                    }
+                    )
                 ]
             # Second test run: Return v2 tool (modified)
             return [
-                {
-                    "name": "history_tool",
-                    "description": "Version 2 of tool (UPDATED)",
-                    "input_schema": {
+                ToolDefinition(
+                    name="history_tool",
+                    description="Version 2 of tool (UPDATED)",
+                    input_schema={
                         "type": "object",
                         "properties": {
                             "param1": {"type": "string"},
                             "param2": {"type": "number"},  # New parameter
                         },
                     },
-                }
+                )
             ]
 
         mock_loader_eval_instance = mock_loader_eval.return_value
@@ -163,14 +165,14 @@ async def test_historical_tools_preserved_after_server_changes(client: AsyncClie
         mock_loader_api_instance = mock_loader_api.return_value
         mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "preservation_tool",
-                    "description": "Original tool",
-                    "input_schema": {
+                ToolDefinition(
+                    name="preservation_tool",
+                    description="Original tool",
+                    input_schema={
                         "type": "object",
                         "properties": {"old_param": {"type": "string"}},
                     },
-                }
+                )
             ]
         )
 
@@ -192,14 +194,14 @@ async def test_historical_tools_preserved_after_server_changes(client: AsyncClie
         mock_loader_eval_instance = mock_loader_eval.return_value
         mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "preservation_tool",
-                    "description": "Original tool",
-                    "input_schema": {
+                ToolDefinition(
+                    name="preservation_tool",
+                    description="Original tool",
+                    input_schema={
                         "type": "object",
                         "properties": {"old_param": {"type": "string"}},
                     },
-                }
+                )
             ]
         )
 
@@ -227,14 +229,14 @@ async def test_historical_tools_preserved_after_server_changes(client: AsyncClie
         # Simulate server tools changing (mock returns different tools now)
         mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "preservation_tool",
-                    "description": "COMPLETELY DIFFERENT TOOL",
-                    "input_schema": {
+                ToolDefinition(
+                    name="preservation_tool",
+                    description="COMPLETELY DIFFERENT TOOL",
+                    input_schema={
                         "type": "object",
                         "properties": {"new_param": {"type": "number"}},
                     },
-                }
+                )
             ]
         )
 
