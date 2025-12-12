@@ -39,6 +39,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          show_full_output: true
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
@@ -57,9 +58,10 @@ jobs:
             - Be constructive and helpful in your feedback.
             - Be specific and precise in the feedback. Reading time for the review should be less than 2 minutes.
 
-            Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
+            Provide your review feedback. The action will automatically post it as a comment on the PR.
 
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://docs.claude.com/en/docs/claude-code/cli-reference for available options
-          claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
+          # Note: The action automatically handles PR commenting via MCP server (mcp__github_comment__update_claude_comment)
+          # No need to specify gh CLI tools - the action provides default tools including file operations and git commands
 
