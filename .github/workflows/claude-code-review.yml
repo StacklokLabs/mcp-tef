@@ -1,11 +1,8 @@
 name: Claude Code Review
 
 on:
-  workflow_dispatch:
   pull_request:
-    # Only make CC review on PR creation. Later, if we want further checks we can mention it.
-    # e.g. @claude please re-review
-    types: [opened]
+    types: [opened, synchronize]
     # Optional: Only run on specific file changes
     # paths:
     #   - "src/**/*.ts"
@@ -30,7 +27,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
@@ -38,8 +35,7 @@ jobs:
         id: claude-review
         uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.CLAUDE_API_KEY }}
-          show_full_output: true
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
@@ -49,23 +45,13 @@ jobs:
             - Potential bugs or issues
             - Performance considerations
             - Security concerns
-            - Regressions or breaking changes
-            - Verbosity and clarity of code. The code should be as short as possible while still being clear.
+            - Test coverage
 
             Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
-
-            Have the following practices in mind while reviewing:
-            - Be constructive and helpful in your feedback.
-            - Be specific and precise in the feedback. Reading time for the review should be less than 2 minutes.
 
             Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
 
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://docs.claude.com/en/docs/claude-code/cli-reference for available options
+          # or https://code.claude.com/docs/en/cli-reference for available options
           claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
-
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://docs.claude.com/en/docs/claude-code/cli-reference for available options
-          # Note: The action automatically handles PR commenting via MCP server (mcp__github_comment__update_claude_comment)
-          # No need to specify gh CLI tools - the action provides default tools including file operations and git commands
 
