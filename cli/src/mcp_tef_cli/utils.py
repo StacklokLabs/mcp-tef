@@ -65,7 +65,12 @@ def resolve_tef_url(
     container_name: str | None,
     output_format: str,
 ) -> str:
-    """Resolve mcp-tef URL from CLI arg or Docker discovery.
+    """Resolve mcp-tef URL from CLI arg, environment variable, or Docker discovery.
+
+    Priority order:
+    1. CLI argument (--url)
+    2. TEF_SERVER_URL environment variable
+    3. Docker container discovery
 
     Args:
         tef_url: Explicit URL from CLI
@@ -75,11 +80,22 @@ def resolve_tef_url(
     Returns:
         Resolved URL
     """
+    import os
+
+    # Priority 1: CLI argument
     if tef_url:
         if output_format != "json":
             print_info(f"Using mcp-tef at {tef_url}")
         return tef_url
 
+    # Priority 2: Environment variable (TEF_SERVER_URL)
+    env_url = os.environ.get("TEF_SERVER_URL")
+    if env_url:
+        if output_format != "json":
+            print_info(f"Using mcp-tef at {env_url} (from TEF_SERVER_URL)")
+        return env_url
+
+    # Priority 3: Docker container discovery
     url = discover_tef_url(container_name or DEFAULT_CONTAINER_NAME)
     if output_format != "json":
         print_info(f"Discovered mcp-tef at {url}")
