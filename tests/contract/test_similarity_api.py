@@ -97,7 +97,12 @@ async def test_analyze_similarity_contract(client, sample_url_list):
     response = await client.post(
         "/similarity/analyze",
         json={
-            "mcp_server_urls": sample_url_list,
+            "mcp_servers": [
+                {"url": s.url, "transport": s.transport}
+                if hasattr(s, "url")
+                else {"url": s, "transport": "streamable-http"}
+                for s in sample_url_list
+            ],
             "similarity_threshold": 0.85,
             "compute_full_similarity": False,
             "include_confusion_testing": False,
@@ -147,7 +152,12 @@ async def test_generate_similarity_matrix_contract(client, sample_url_list):
     response = await client.post(
         "/similarity/matrix",
         json={
-            "mcp_server_urls": sample_url_list,
+            "mcp_servers": [
+                {"url": s.url, "transport": s.transport}
+                if hasattr(s, "url")
+                else {"url": s, "transport": "streamable-http"}
+                for s in sample_url_list
+            ],
             "similarity_threshold": 0.85,
         },
     )
@@ -174,7 +184,12 @@ async def test_generate_overlap_matrix_contract(client, sample_url_list):
     response = await client.post(
         "/similarity/overlap-matrix",
         json={
-            "mcp_server_urls": sample_url_list,
+            "mcp_servers": [
+                {"url": s.url, "transport": s.transport}
+                if hasattr(s, "url")
+                else {"url": s, "transport": "streamable-http"}
+                for s in sample_url_list
+            ],
         },
     )
 
@@ -257,7 +272,12 @@ async def test_analyze_similarity_with_embedding_method(client, sample_url_list)
     response = await client.post(
         "/similarity/analyze",
         json={
-            "mcp_server_urls": sample_url_list,
+            "mcp_servers": [
+                {"url": s.url, "transport": s.transport}
+                if hasattr(s, "url")
+                else {"url": s, "transport": "streamable-http"}
+                for s in sample_url_list
+            ],
             "similarity_threshold": 0.85,
             "analysis_methods": ["embedding"],
         },
@@ -278,7 +298,12 @@ async def test_analyze_similarity_with_description_overlap_method(client, sample
     response = await client.post(
         "/similarity/analyze",
         json={
-            "mcp_server_urls": sample_url_list,
+            "mcp_servers": [
+                {"url": s.url, "transport": s.transport}
+                if hasattr(s, "url")
+                else {"url": s, "transport": "streamable-http"}
+                for s in sample_url_list
+            ],
             "similarity_threshold": 0.85,
             "analysis_methods": ["description_overlap"],
         },
@@ -299,7 +324,12 @@ async def test_analyze_similarity_with_unsupported_method(client, sample_url_lis
     response = await client.post(
         "/similarity/analyze",
         json={
-            "mcp_server_urls": sample_url_list,
+            "mcp_servers": [
+                {"url": s.url, "transport": s.transport}
+                if hasattr(s, "url")
+                else {"url": s, "transport": "streamable-http"}
+                for s in sample_url_list
+            ],
             "similarity_threshold": 0.85,
             "analysis_methods": ["llm_similarity"],  # Not implemented yet
         },
@@ -318,7 +348,12 @@ async def test_analyze_similarity_with_custom_embedding_model(client, sample_url
     response = await client.post(
         "/similarity/analyze",
         json={
-            "mcp_server_urls": sample_url_list,
+            "mcp_servers": [
+                {"url": s.url, "transport": s.transport}
+                if hasattr(s, "url")
+                else {"url": s, "transport": "streamable-http"}
+                for s in sample_url_list
+            ],
             "similarity_threshold": 0.85,
             "embedding_model": "BAAI/bge-base-en-v1.5",  # Different fastembed model
         },
@@ -339,7 +374,12 @@ async def test_analyze_similarity_with_model_type_prefix(client, sample_url_list
     response = await client.post(
         "/similarity/analyze",
         json={
-            "mcp_server_urls": sample_url_list,
+            "mcp_servers": [
+                {"url": s.url, "transport": s.transport}
+                if hasattr(s, "url")
+                else {"url": s, "transport": "streamable-http"}
+                for s in sample_url_list
+            ],
             "similarity_threshold": 0.85,
             "embedding_model": "fastembed:BAAI/bge-small-en-v1.5",  # Explicit type prefix
         },

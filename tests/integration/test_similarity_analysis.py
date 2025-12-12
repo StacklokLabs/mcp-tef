@@ -26,11 +26,13 @@ def sample_server_list(test_data_dir):
 
 @pytest.fixture
 def sample_url_list():
-    """Create sample URL list for testing."""
+    """Create sample MCP server config list for testing."""
+    from mcp_tef.models.schemas import MCPServerConfig
+
     return [
-        "http://example.com/mcp1",
-        "http://example.com/mcp2",
-        "http://example.com/mcp3",
+        MCPServerConfig(url="http://example.com/mcp1", transport="streamable-http"),
+        MCPServerConfig(url="http://example.com/mcp2", transport="streamable-http"),
+        MCPServerConfig(url="http://example.com/mcp3", transport="streamable-http"),
     ]
 
 
@@ -141,7 +143,12 @@ async def test_analyze_similarity_with_url_list(client, sample_url_list):
     response = await client.post(
         "/similarity/analyze",
         json={
-            "mcp_server_urls": sample_url_list,
+            "mcp_servers": [
+                {"url": s.url, "transport": s.transport}
+                if hasattr(s, "url")
+                else {"url": s, "transport": "streamable-http"}
+                for s in sample_url_list
+            ],
             "similarity_threshold": 0.80,
         },
     )
@@ -179,7 +186,12 @@ async def test_analyze_similarity_with_compute_full(client, sample_url_list):
     response = await client.post(
         "/similarity/analyze",
         json={
-            "mcp_server_urls": sample_url_list,
+            "mcp_servers": [
+                {"url": s.url, "transport": s.transport}
+                if hasattr(s, "url")
+                else {"url": s, "transport": "streamable-http"}
+                for s in sample_url_list
+            ],
             "similarity_threshold": 0.85,
             "compute_full_similarity": True,
         },
@@ -199,7 +211,12 @@ async def test_generate_similarity_matrix(client, sample_url_list):
     response = await client.post(
         "/similarity/matrix",
         json={
-            "mcp_server_urls": sample_url_list,
+            "mcp_servers": [
+                {"url": s.url, "transport": s.transport}
+                if hasattr(s, "url")
+                else {"url": s, "transport": "streamable-http"}
+                for s in sample_url_list
+            ],
             "similarity_threshold": 0.85,
         },
     )
