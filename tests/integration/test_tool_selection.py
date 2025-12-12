@@ -17,7 +17,7 @@ async def test_tool_selection_workflow(client: AsyncClient, test_mcp_server_url:
     ):
         # Mock for test case creation (API layer)
         mock_loader_api_instance = mock_loader_api.return_value
-        mock_loader_api_instance.load_tools_from_url = AsyncMock(
+        mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "test_tool",
@@ -35,7 +35,7 @@ async def test_tool_selection_workflow(client: AsyncClient, test_mcp_server_url:
 
         # Mock for test execution (EvaluationService layer)
         mock_loader_eval_instance = mock_loader_eval.return_value
-        mock_loader_eval_instance.load_tools_from_url = AsyncMock(
+        mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "test_tool",
@@ -72,7 +72,9 @@ async def test_tool_selection_workflow(client: AsyncClient, test_mcp_server_url:
                 "expected_mcp_server_url": test_mcp_server_url,
                 "expected_tool_name": "test_tool",
                 "expected_parameters": {"location": "San Francisco"},
-                "available_mcp_servers": [test_mcp_server_url],
+                "available_mcp_servers": [
+                    {"url": test_mcp_server_url, "transport": "streamable-http"}
+                ],
             },
         )
         assert test_case_response.status_code == 201
@@ -123,7 +125,7 @@ async def test_multiple_tools_selection(client: AsyncClient, test_mcp_server_url
     ):
         # Mock for test case creation
         mock_loader_api_instance = mock_loader_api.return_value
-        mock_loader_api_instance.load_tools_from_url = AsyncMock(
+        mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": name,
@@ -136,7 +138,7 @@ async def test_multiple_tools_selection(client: AsyncClient, test_mcp_server_url
 
         # Mock for test execution
         mock_loader_eval_instance = mock_loader_eval.return_value
-        mock_loader_eval_instance.load_tools_from_url = AsyncMock(
+        mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": name,
@@ -167,7 +169,9 @@ async def test_multiple_tools_selection(client: AsyncClient, test_mcp_server_url
                 "query": "Search for Python tutorials",
                 "expected_mcp_server_url": test_mcp_server_url,
                 "expected_tool_name": "search",
-                "available_mcp_servers": [test_mcp_server_url],
+                "available_mcp_servers": [
+                    {"url": test_mcp_server_url, "transport": "streamable-http"}
+                ],
             },
         )
         assert test_case_response.status_code == 201
@@ -203,7 +207,7 @@ async def test_concurrent_api_key_isolation(client: AsyncClient, test_mcp_server
     ):
         # Mock for test case creation
         mock_loader_api_instance = mock_loader_api.return_value
-        mock_loader_api_instance.load_tools_from_url = AsyncMock(
+        mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "concurrent_test_tool",
@@ -215,7 +219,7 @@ async def test_concurrent_api_key_isolation(client: AsyncClient, test_mcp_server
 
         # Mock for test execution
         mock_loader_eval_instance = mock_loader_eval.return_value
-        mock_loader_eval_instance.load_tools_from_url = AsyncMock(
+        mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "concurrent_test_tool",
@@ -245,7 +249,9 @@ async def test_concurrent_api_key_isolation(client: AsyncClient, test_mcp_server
                 "query": "Test concurrent execution",
                 "expected_mcp_server_url": test_mcp_server_url,
                 "expected_tool_name": "concurrent_test_tool",
-                "available_mcp_servers": [test_mcp_server_url],
+                "available_mcp_servers": [
+                    {"url": test_mcp_server_url, "transport": "streamable-http"}
+                ],
             },
         )
         assert test_case_response.status_code == 201

@@ -27,7 +27,7 @@ async def test_tool_history_per_test_run(client: AsyncClient):
     ):
         # For test case creation: Return v1 tool
         mock_loader_api_instance = mock_loader_api.return_value
-        mock_loader_api_instance.load_tools_from_url = AsyncMock(
+        mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "history_tool",
@@ -48,7 +48,7 @@ async def test_tool_history_per_test_run(client: AsyncClient):
                 "query": "Test tool history",
                 "expected_mcp_server_url": server_url,
                 "expected_tool_name": "history_tool",
-                "available_mcp_servers": [server_url],
+                "available_mcp_servers": [{"url": server_url, "transport": "streamable-http"}],
             },
         )
         assert test_case_response.status_code == 201
@@ -88,7 +88,7 @@ async def test_tool_history_per_test_run(client: AsyncClient):
             ]
 
         mock_loader_eval_instance = mock_loader_eval.return_value
-        mock_loader_eval_instance.load_tools_from_url = AsyncMock(
+        mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             side_effect=mock_load_with_versions
         )
 
@@ -161,7 +161,7 @@ async def test_historical_tools_preserved_after_server_changes(client: AsyncClie
     ):
         # For test case creation: Return original tool
         mock_loader_api_instance = mock_loader_api.return_value
-        mock_loader_api_instance.load_tools_from_url = AsyncMock(
+        mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "preservation_tool",
@@ -182,7 +182,7 @@ async def test_historical_tools_preserved_after_server_changes(client: AsyncClie
                 "query": "Test preservation",
                 "expected_mcp_server_url": server_url,
                 "expected_tool_name": "preservation_tool",
-                "available_mcp_servers": [server_url],
+                "available_mcp_servers": [{"url": server_url, "transport": "streamable-http"}],
             },
         )
         assert test_case_response.status_code == 201
@@ -190,7 +190,7 @@ async def test_historical_tools_preserved_after_server_changes(client: AsyncClie
 
         # For test execution: Return original tool
         mock_loader_eval_instance = mock_loader_eval.return_value
-        mock_loader_eval_instance.load_tools_from_url = AsyncMock(
+        mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "preservation_tool",
@@ -225,7 +225,7 @@ async def test_historical_tools_preserved_after_server_changes(client: AsyncClie
         assert run_details.status_code == 200
 
         # Simulate server tools changing (mock returns different tools now)
-        mock_loader_eval_instance.load_tools_from_url = AsyncMock(
+        mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "preservation_tool",

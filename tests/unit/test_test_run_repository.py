@@ -42,7 +42,7 @@ class TestTestRunRepositoryQuery:
         repo = TestCaseRepository(test_db)
         mock_loader = AsyncMock()
         # Mock must return tools that include the expected tool
-        mock_loader.load_tools_from_url = AsyncMock(
+        mock_loader.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "get_weather",
@@ -58,7 +58,9 @@ class TestTestRunRepositoryQuery:
             expected_mcp_server_url="http://localhost:3000",
             expected_tool_name="get_weather",
             expected_parameters={"location": "San Francisco"},
-            available_mcp_servers=["http://localhost:3000"],
+            available_mcp_servers=[
+                {"url": "http://localhost:3000", "transport": "streamable-http"}
+            ],
         )
         test_case = await repo.create(test_case_data, mock_loader)
         return test_case.id
@@ -69,7 +71,7 @@ class TestTestRunRepositoryQuery:
         repo = TestCaseRepository(test_db)
         mock_loader = AsyncMock()
         # Mock must return tools that include the expected tool
-        mock_loader.load_tools_from_url = AsyncMock(
+        mock_loader.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "get_events",
@@ -85,7 +87,9 @@ class TestTestRunRepositoryQuery:
             expected_mcp_server_url="http://localhost:4000",
             expected_tool_name="get_events",
             expected_parameters={"date": "2025-01-01"},
-            available_mcp_servers=["http://localhost:4000"],
+            available_mcp_servers=[
+                {"url": "http://localhost:4000", "transport": "streamable-http"}
+            ],
         )
         test_case = await repo.create(test_case_data, mock_loader)
         return test_case.id
@@ -233,7 +237,7 @@ class TestTestRunRepositoryQuery:
         """Test query pagination with offset and limit."""
         repo = TestCaseRepository(test_db)
         mock_loader = AsyncMock()
-        mock_loader.load_tools_from_url = AsyncMock(
+        mock_loader.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "test_tool",
@@ -250,7 +254,9 @@ class TestTestRunRepositoryQuery:
             expected_mcp_server_url="http://localhost:5000",
             expected_tool_name="test_tool",
             expected_parameters={},
-            available_mcp_servers=["http://localhost:5000"],
+            available_mcp_servers=[
+                {"url": "http://localhost:5000", "transport": "streamable-http"}
+            ],
         )
         test_case = await repo.create(test_case_data, mock_loader)
 

@@ -282,7 +282,7 @@ async def test_run_id(client):
     # Mock tools for test case creation and test execution
     with patch("mcp_tef.api.test_cases.MCPLoaderService") as mock:
         mock_instance = mock.return_value
-        mock_instance.load_tools_from_url = AsyncMock(
+        mock_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "fixture_tool",
@@ -300,7 +300,9 @@ async def test_run_id(client):
                 "query": "Test query for fixture",
                 "expected_mcp_server_url": "http://localhost:9999",
                 "expected_tool_name": "fixture_tool",
-                "available_mcp_servers": ["http://localhost:9999"],
+                "available_mcp_servers": [
+                    {"url": "http://localhost:9999", "transport": "streamable-http"}
+                ],
             },
         )
         assert test_case_response.status_code == 201

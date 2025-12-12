@@ -19,7 +19,7 @@ async def test_get_mcp_server_tools_direct_fetch(client: AsyncClient):
     # Mock MCPLoaderService to return tools
     with patch("mcp_tef.api.mcp_servers.MCPLoaderService") as mock_loader:
         mock_instance = mock_loader.return_value
-        mock_instance.load_tools_from_url_typed = AsyncMock(
+        mock_instance.load_tools_from_server_typed = AsyncMock(
             return_value=[
                 {
                     "name": "test_tool",
@@ -40,7 +40,7 @@ async def test_get_mcp_server_tools_direct_fetch(client: AsyncClient):
         assert data["tools"][0]["name"] == "test_tool"
 
         # Verify the service was called with correct URL
-        mock_instance.load_tools_from_url_typed.assert_called_once_with(test_server_url)
+        mock_instance.load_tools_from_server_typed.assert_called_once_with(test_server_url)
 
 
 @pytest.mark.asyncio
@@ -60,7 +60,7 @@ async def test_get_mcp_server_tools_pagination(client: AsyncClient):
 
     with patch("mcp_tef.api.mcp_servers.MCPLoaderService") as mock_loader:
         mock_instance = mock_loader.return_value
-        mock_instance.load_tools_from_url_typed = AsyncMock(return_value=mock_tools)
+        mock_instance.load_tools_from_server_typed = AsyncMock(return_value=mock_tools)
 
         # Test limit
         response = await client.get(f"/mcp-servers/tools?server_url={test_server_url}&limit=2")
@@ -97,7 +97,7 @@ async def test_get_mcp_server_tools_empty(client: AsyncClient):
 
     with patch("mcp_tef.api.mcp_servers.MCPLoaderService") as mock_loader:
         mock_instance = mock_loader.return_value
-        mock_instance.load_tools_from_url_typed = AsyncMock(return_value=[])
+        mock_instance.load_tools_from_server_typed = AsyncMock(return_value=[])
 
         response = await client.get(f"/mcp-servers/tools?server_url={test_server_url}")
 

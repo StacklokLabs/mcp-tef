@@ -14,7 +14,7 @@ async def test_case_id(client: AsyncClient) -> str:
     # Mock MCPLoaderService for test case creation
     with patch("mcp_tef.api.test_cases.MCPLoaderService") as mock:
         mock_instance = mock.return_value
-        mock_instance.load_tools_from_url = AsyncMock(
+        mock_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "test_tool",
@@ -32,7 +32,7 @@ async def test_case_id(client: AsyncClient) -> str:
                 "query": "Test query",
                 "expected_mcp_server_url": mcp_server_url,
                 "expected_tool_name": "test_tool",
-                "available_mcp_servers": [mcp_server_url],
+                "available_mcp_servers": [{"url": mcp_server_url, "transport": "streamable-http"}],
             },
         )
         return test_case_response.json()["id"]

@@ -87,19 +87,21 @@ async def test_fresh_tools_per_test_run(client: AsyncClient):
         mock_loader_api_instance.load_tools_from_url_typed = AsyncMock(
             side_effect=mock_load_side_effect
         )
-        mock_loader_api_instance.load_tools_from_url = AsyncMock(side_effect=mock_load_raw)
+        mock_loader_api_instance.load_tools_from_server = AsyncMock(side_effect=mock_load_raw)
 
         mock_loader_mcp_servers_instance = mock_loader_mcp_servers.return_value
         mock_loader_mcp_servers_instance.load_tools_from_url_typed = AsyncMock(
             side_effect=mock_load_side_effect
         )
-        mock_loader_mcp_servers_instance.load_tools_from_url = AsyncMock(side_effect=mock_load_raw)
+        mock_loader_mcp_servers_instance.load_tools_from_server = AsyncMock(
+            side_effect=mock_load_raw
+        )
 
         mock_loader_eval_instance = mock_loader_eval.return_value
         mock_loader_eval_instance.load_tools_from_url_typed = AsyncMock(
             side_effect=mock_load_side_effect
         )
-        mock_loader_eval_instance.load_tools_from_url = AsyncMock(side_effect=mock_load_raw)
+        mock_loader_eval_instance.load_tools_from_server = AsyncMock(side_effect=mock_load_raw)
 
         # Create test case
         test_case_response = await client.post(
@@ -110,7 +112,7 @@ async def test_fresh_tools_per_test_run(client: AsyncClient):
                 "expected_mcp_server_url": server_url,
                 "expected_tool_name": "weather_tool_v1",
                 "expected_parameters": {"location": "SF"},
-                "available_mcp_servers": [server_url],
+                "available_mcp_servers": [{"url": server_url, "transport": "streamable-http"}],
             },
         )
         assert test_case_response.status_code == 201
@@ -226,13 +228,15 @@ async def test_concurrent_tool_ingestion_from_multiple_servers(client: AsyncClie
             ]
 
         mock_loader_api_instance = mock_loader_api.return_value
-        mock_loader_api_instance.load_tools_from_url = AsyncMock(side_effect=mock_load_with_timing)
+        mock_loader_api_instance.load_tools_from_server = AsyncMock(
+            side_effect=mock_load_with_timing
+        )
         mock_loader_api_instance.load_tools_from_url_typed = AsyncMock(
             side_effect=mock_load_typed_with_timing
         )
 
         mock_loader_mcp_servers_instance = mock_loader_mcp_servers.return_value
-        mock_loader_mcp_servers_instance.load_tools_from_url = AsyncMock(
+        mock_loader_mcp_servers_instance.load_tools_from_server = AsyncMock(
             side_effect=mock_load_with_timing
         )
         mock_loader_mcp_servers_instance.load_tools_from_url_typed = AsyncMock(
@@ -240,7 +244,9 @@ async def test_concurrent_tool_ingestion_from_multiple_servers(client: AsyncClie
         )
 
         mock_loader_eval_instance = mock_loader_eval.return_value
-        mock_loader_eval_instance.load_tools_from_url = AsyncMock(side_effect=mock_load_with_timing)
+        mock_loader_eval_instance.load_tools_from_server = AsyncMock(
+            side_effect=mock_load_with_timing
+        )
         mock_loader_eval_instance.load_tools_from_url_typed = AsyncMock(
             side_effect=mock_load_typed_with_timing
         )

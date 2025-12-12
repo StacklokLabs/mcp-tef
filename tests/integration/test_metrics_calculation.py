@@ -22,7 +22,7 @@ async def test_metrics_precision_recall_calculation(
     ):
         # Mock for test case creation (API layer)
         mock_loader_api_instance = mock_loader_api.return_value
-        mock_loader_api_instance.load_tools_from_url = AsyncMock(
+        mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "test_tool",
@@ -39,7 +39,7 @@ async def test_metrics_precision_recall_calculation(
 
         # Mock for test execution (EvaluationService layer)
         mock_loader_eval_instance = mock_loader_eval.return_value
-        mock_loader_eval_instance.load_tools_from_url = AsyncMock(
+        mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "test_tool",
@@ -63,7 +63,9 @@ async def test_metrics_precision_recall_calculation(
                 "query": "Select test_tool",
                 "expected_mcp_server_url": test_mcp_server_url,
                 "expected_tool_name": "test_tool",
-                "available_mcp_servers": [test_mcp_server_url],
+                "available_mcp_servers": [
+                    {"url": test_mcp_server_url, "transport": "streamable-http"}
+                ],
             },
         )
         assert tc1_response.status_code == 201
@@ -77,7 +79,9 @@ async def test_metrics_precision_recall_calculation(
                 "query": "Select tool_wrong",
                 "expected_mcp_server_url": test_mcp_server_url,
                 "expected_tool_name": "tool_wrong",
-                "available_mcp_servers": [test_mcp_server_url],
+                "available_mcp_servers": [
+                    {"url": test_mcp_server_url, "transport": "streamable-http"}
+                ],
             },
         )
         assert tc2_response.status_code == 201
@@ -182,7 +186,7 @@ async def test_metrics_parameter_accuracy_calculation(
     ):
         # Mock for test case creation (API layer)
         mock_loader_api_instance = mock_loader_api.return_value
-        mock_loader_api_instance.load_tools_from_url = AsyncMock(
+        mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "param_tool",
@@ -201,7 +205,7 @@ async def test_metrics_parameter_accuracy_calculation(
 
         # Mock for test execution (EvaluationService layer)
         mock_loader_eval_instance = mock_loader_eval.return_value
-        mock_loader_eval_instance.load_tools_from_url = AsyncMock(
+        mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "param_tool",
@@ -227,7 +231,9 @@ async def test_metrics_parameter_accuracy_calculation(
                 "expected_mcp_server_url": test_mcp_server_url,
                 "expected_tool_name": "param_tool",
                 "expected_parameters": {"arg1": "hello", "arg2": 42},
-                "available_mcp_servers": [test_mcp_server_url],
+                "available_mcp_servers": [
+                    {"url": test_mcp_server_url, "transport": "streamable-http"}
+                ],
             },
         )
         assert tc_response.status_code == 201
@@ -287,7 +293,7 @@ async def test_metrics_execution_time_average(client: AsyncClient, test_mcp_serv
     ):
         # Mock for test case creation (API layer)
         mock_loader_api_instance = mock_loader_api.return_value
-        mock_loader_api_instance.load_tools_from_url = AsyncMock(
+        mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "test_tool",
@@ -299,7 +305,7 @@ async def test_metrics_execution_time_average(client: AsyncClient, test_mcp_serv
 
         # Mock for test execution (EvaluationService layer)
         mock_loader_eval_instance = mock_loader_eval.return_value
-        mock_loader_eval_instance.load_tools_from_url = AsyncMock(
+        mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "test_tool",
@@ -317,7 +323,9 @@ async def test_metrics_execution_time_average(client: AsyncClient, test_mcp_serv
                 "query": "Test execution time",
                 "expected_mcp_server_url": test_mcp_server_url,
                 "expected_tool_name": "test_tool",
-                "available_mcp_servers": [test_mcp_server_url],
+                "available_mcp_servers": [
+                    {"url": test_mcp_server_url, "transport": "streamable-http"}
+                ],
             },
         )
         assert tc_response.status_code == 201
@@ -376,7 +384,7 @@ async def test_metrics_confidence_distribution(client: AsyncClient, test_mcp_ser
     ):
         # Mock for test case creation (API layer)
         mock_loader_api_instance = mock_loader_api.return_value
-        mock_loader_api_instance.load_tools_from_url = AsyncMock(
+        mock_loader_api_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "test_tool",
@@ -388,7 +396,7 @@ async def test_metrics_confidence_distribution(client: AsyncClient, test_mcp_ser
 
         # Mock for test execution (EvaluationService layer)
         mock_loader_eval_instance = mock_loader_eval.return_value
-        mock_loader_eval_instance.load_tools_from_url = AsyncMock(
+        mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
                 {
                     "name": "test_tool",
@@ -406,7 +414,9 @@ async def test_metrics_confidence_distribution(client: AsyncClient, test_mcp_ser
                 "query": "Test confidence scoring",
                 "expected_mcp_server_url": test_mcp_server_url,
                 "expected_tool_name": "test_tool",
-                "available_mcp_servers": [test_mcp_server_url],
+                "available_mcp_servers": [
+                    {"url": test_mcp_server_url, "transport": "streamable-http"}
+                ],
             },
         )
         assert tc_response.status_code == 201
