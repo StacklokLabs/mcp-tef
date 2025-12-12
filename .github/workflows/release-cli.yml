@@ -101,19 +101,19 @@ jobs:
             Install directly from GitHub release:
 
             ```bash
-            uv tool install https://github.com/${{ github.repository }}/releases/download/cli-v${{ steps.get_version.outputs.version }}/mcp_tef_cli-${{ steps.get_version.outputs.version }}-py3-none-any.whl
+            uv tool install https://github.com/${{ github.repository }}/releases/download/cli-v${{ steps.get_version.outputs.version }}/mtef-${{ steps.get_version.outputs.version }}-py3-none-any.whl
             ```
 
             Or install from Git repository:
 
             ```bash
-            uv tool install "mcp-tef-cli @ git+https://github.com/${{ github.repository }}.git@cli-v${{ steps.get_version.outputs.version }}#subdirectory=cli"
+            uv tool install "mtef @ git+https://github.com/${{ github.repository }}.git@cli-v${{ steps.get_version.outputs.version }}#subdirectory=cli"
             ```
 
             ### Upgrade
 
             ```bash
-            uv tool upgrade mcp-tef-cli
+            uv tool upgrade mtef
             ```
 
             ### Quick Start

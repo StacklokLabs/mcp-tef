@@ -217,7 +217,7 @@ The easiest way to deploy mcp-tef is using the CLI tool:
 
 ```bash
 # Install the CLI
-uv tool install mcp-tef-cli
+uv tool install mtef
 
 # Deploy latest version
 mtef deploy

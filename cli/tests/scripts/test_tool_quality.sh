@@ -70,8 +70,8 @@ if ! check_thv; then
     exit 1
 fi
 
-if ! check_mcp_tef_cli; then
-    exit 1
+if ! check_mcp_tef_cli 2>/dev/null; then
+    install_mcp_tef_cli_from_source || exit 1
 fi
 
 if [[ -z "${API_KEY}" ]]; then

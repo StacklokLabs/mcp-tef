@@ -1,6 +1,6 @@
-# PyPI Trusted Publishing Setup for mcp-tef-cli
+# PyPI Trusted Publishing Setup for mtef (mcp-tef CLI)
 
-This document describes how to configure PyPI trusted publishing for the `mcp-tef-cli` package.
+This document describes how to configure PyPI trusted publishing for the `mtef` package.
 
 ## Overview
 
@@ -9,7 +9,7 @@ Trusted publishing allows GitHub Actions to publish to PyPI without storing API 
 ## Prerequisites
 
 - Admin access to the [StacklokLabs/mcp-tef](https://github.com/StacklokLabs/mcp-tef) repository
-- PyPI account with permissions to manage `mcp-tef-cli` project
+- PyPI account with permissions to manage `mtef` project
 
 ## Setup Steps
 
@@ -23,12 +23,12 @@ Trusted publishing allows GitHub Actions to publish to PyPI without storing API 
 
 ### 2. Create PyPI Project (First Release Only)
 
-If the `mcp-tef-cli` project doesn't exist on PyPI yet:
+If the `mtef` project doesn't exist on PyPI yet:
 
 **Option A: Create manually first**
 1. Go to https://pypi.org/manage/projects/
 2. Click "Create project"
-3. Name: `mcp-tef-cli`
+3. Name: `mtef`
 
 **Option B: Use pending publisher (recommended)**
 1. Go to https://pypi.org/manage/account/publishing/
@@ -37,7 +37,7 @@ If the `mcp-tef-cli` project doesn't exist on PyPI yet:
 
 ### 3. Configure Trusted Publisher on PyPI
 
-1. Go to https://pypi.org/manage/project/mcp-tef-cli/settings/publishing/
+1. Go to https://pypi.org/manage/project/mtef/settings/publishing/
    - Or if using pending publisher: https://pypi.org/manage/account/publishing/
 
 2. Add a new publisher with these values:
@@ -85,7 +85,7 @@ When the workflow runs:
    https://github.com/StacklokLabs/mcp-tef/actions/workflows/release-cli.yml
 
 3. Check PyPI for the published package:
-   https://pypi.org/project/mcp-tef-cli/
+   https://pypi.org/project/mtef/
 
 4. Delete the test release if needed:
    - PyPI: Delete via project settings (only within 24 hours for new projects)
