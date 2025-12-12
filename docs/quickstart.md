@@ -50,15 +50,29 @@ cp .env.example .env
 
 ### Start the Server
 
+**Option 1: Run directly (Python)**
+
 ```bash
 # Default: HTTPS with auto-generated self-signed certificate
 uv run python -m mcp_tef
 
 # OR: HTTP mode for development (insecure)
-uv run python -m mcp_tef --no-tls-enabled
+uv run python -m mcp_tef --tls-enabled=false
 ```
 
-The server starts at `https://localhost:8000` (or `http://localhost:8000` with `--no-tls-enabled`).
+The server starts at `https://localhost:8000` (or `http://localhost:8000` with `--tls-enabled=false`).
+
+**Option 2: Deploy with CLI (Docker)**
+
+```bash
+# Install the CLI
+uv tool install "mtef @ git+https://github.com/StacklokLabs/mcp-tef.git#subdirectory=cli"
+
+# Deploy the server
+mtef deploy --health-check
+```
+
+> **💡 Tip**: The CLI deploys mcp-tef as a Docker container from GitHub Container Registry. See [CLI documentation](../cli/README.md) for details.
 
 ### Access API Documentation
 
@@ -72,7 +86,7 @@ Open your browser (accept the self-signed certificate warning if using HTTPS):
 # HTTPS (default)
 curl -k https://localhost:8000/health
 
-# HTTP (with --no-tls-enabled)
+# HTTP (with --tls-enabled=false)
 curl http://localhost:8000/health
 ```
 
@@ -123,6 +137,8 @@ Stateless analysis that:
 
 Use your actual MCP server URLs - no need to register servers first!
 
+**Option A: Using the REST API (curl)**
+
 ```bash
 curl -k -X POST https://localhost:8000/test-cases \
   -H "Content-Type: application/json" \
@@ -140,6 +156,23 @@ curl -k -X POST https://localhost:8000/test-cases \
     ]
   }'
 ```
+
+**Option B: Using the CLI**
+
+```bash
+mtef test-case create \
+  --name "Weather query test" \
+  --query "What is the weather in San Francisco?" \
+  --expected-server "https://my-mcp-server.com/sse" \
+  --expected-tool "get_weather" \
+  --expected-params '{"location": "San Francisco"}' \
+  --servers "https://my-mcp-server.com/sse,https://another-server.com/sse"
+```
+
+> **Note**: The `--servers` flag accepts comma-separated URLs. See [CLI documentation](../cli/README.md) for more examples.
+```
+
+> **💡 Tip**: The CLI provides a simpler interface for common operations. See [CLI documentation](../cli/README.md) for full details.
 
 **Response**:
 ```json
@@ -168,6 +201,8 @@ curl -k -X POST https://localhost:8000/test-cases \
 
 Execute the test with runtime API key and model configuration:
 
+**Option A: Using the REST API (curl)**
+
 ```bash
 # Using OpenRouter (or OpenAI, Anthropic)
 curl -k -X POST https://localhost:8000/test-cases/550e8400-e29b-41d4-a716-446655440000/run \
@@ -195,6 +230,21 @@ curl -k -X POST https://localhost:8000/test-cases/550e8400-e29b-41d4-a716-446655
       "max_retries": 2
     }
   }'
+```
+
+**Option B: Using the CLI**
+
+```bash
+# Using OpenRouter
+mtef test-run execute 550e8400-e29b-41d4-a716-446655440000 \
+  --model-provider openrouter \
+  --model-name anthropic/claude-3.5-sonnet \
+  --api-key sk-or-v1-...
+
+# Using Ollama (no API key needed)
+mtef test-run execute 550e8400-e29b-41d4-a716-446655440000 \
+  --model-provider ollama \
+  --model-name llama3.2:3b
 ```
 
 **What Happens**:
@@ -231,8 +281,16 @@ curl -k -X POST https://localhost:8000/test-cases/550e8400-e29b-41d4-a716-446655
 
 ### Step 3: View Detailed Results
 
+**Option A: Using the REST API (curl)**
+
 ```bash
 curl -k https://localhost:8000/test-runs/660e8400-e29b-41d4-a716-446655440001/result
+```
+
+**Option B: Using the CLI**
+
+```bash
+mtef test-run get 660e8400-e29b-41d4-a716-446655440001
 ```
 
 **Response**:
@@ -270,9 +328,13 @@ curl -k https://localhost:8000/test-runs/660e8400-e29b-41d4-a716-446655440001/re
 
 After running multiple tests:
 
+**Using the REST API (curl)**
+
 ```bash
 curl -k https://localhost:8000/metrics/summary
 ```
+
+> **Note**: Aggregate metrics are currently only available via the REST API. CLI support may be added in future releases.
 
 **Response**:
 ```json
@@ -312,6 +374,8 @@ curl -k https://localhost:8000/metrics/summary
 
 The easiest way - just provide your MCP server URLs:
 
+**Using the REST API (curl)**
+
 ```bash
 curl -k -X POST https://localhost:8000/similarity/analyze \
   -H "Content-Type: application/json" \
@@ -325,9 +389,20 @@ curl -k -X POST https://localhost:8000/similarity/analyze \
   }'
 ```
 
+**Using the CLI**
+
+```bash
+mtef similarity analyze \
+  --server-urls "https://my-server-1.com/sse,https://my-server-2.com/sse" \
+  --threshold 0.85 \
+  --recommendations
+```
+
 ### Option B: Analyze Tools Directly (No Server Fetch)
 
 If you already have tool definitions:
+
+**Using the REST API (curl)**
 
 ```bash
 curl -k -X POST https://localhost:8000/similarity/analyze \
@@ -355,6 +430,8 @@ curl -k -X POST https://localhost:8000/similarity/analyze \
     "include_recommendations": true
   }'
 ```
+
+> **Note**: Direct tool list analysis is currently only available via the REST API. CLI support requires MCP server URLs.
 
 ### Understanding Similarity Results
 
@@ -420,6 +497,8 @@ curl -k -X POST https://localhost:8000/similarity/analyze \
 
 For visualization or analysis of all pairwise similarities:
 
+**Using the REST API (curl)**
+
 ```bash
 curl -k -X POST https://localhost:8000/similarity/matrix \
   -H "Content-Type: application/json" \
@@ -428,6 +507,16 @@ curl -k -X POST https://localhost:8000/similarity/matrix \
     "similarity_threshold": 0.7
   }'
 ```
+
+**Using the CLI**
+
+```bash
+mtef similarity matrix \
+  --server-urls "https://my-server.com/sse" \
+  --threshold 0.7
+```
+
+> **Note**: The `--server-urls` flag accepts comma-separated URLs for multiple servers.
 
 #### Generate Overlap Matrix
 
@@ -455,6 +544,8 @@ curl -k -X POST https://localhost:8000/similarity/overlap-matrix \
 
 ### Analyze Tools from MCP Server(s)
 
+**Using the REST API (curl)**
+
 ```bash
 # Single server
 curl -k "https://localhost:8000/mcp-servers/tools/quality?server_urls=https://my-server.com/sse&model_provider=openrouter&model_name=anthropic/claude-3.5-sonnet" \
@@ -466,6 +557,29 @@ curl -k "https://localhost:8000/mcp-servers/tools/quality?server_urls=https://se
 
 # Using Ollama (no API key)
 curl -k "https://localhost:8000/mcp-servers/tools/quality?server_urls=https://my-server.com/sse&model_provider=ollama&model_name=llama3.2:3b"
+```
+
+**Using the CLI**
+
+```bash
+# Single server with OpenRouter
+mtef tool-quality \
+  --server-urls "https://my-server.com/sse" \
+  --model-provider openrouter \
+  --model-name anthropic/claude-3.5-sonnet \
+  --api-key sk-or-v1-...
+
+# Multiple servers (comma-separated)
+mtef tool-quality \
+  --server-urls "https://server1.com/sse,https://server2.com/sse" \
+  --model-provider openrouter \
+  --api-key sk-or-v1-...
+
+# Using Ollama (no API key)
+mtef tool-quality \
+  --server-urls "https://my-server.com/sse" \
+  --model-provider ollama \
+  --model-name llama3.2:3b
 ```
 
 ### Understanding Quality Results
@@ -692,7 +806,7 @@ rm mcp_eval.db mcp_eval.db-shm mcp_eval.db-wal
 curl -k https://localhost:8000/health
 
 # Option 2: Disable TLS for development
-uv run python -m mcp_tef --no-tls-enabled
+uv run python -m mcp_tef --tls-enabled=false
 # Then use http://localhost:8000
 ```
 
@@ -805,6 +919,7 @@ ollama pull llama3.2:3b
 5. **Understand Data Model**: [docs/data-model.md](data-model.md)
 6. **Deep Dive: Ollama Testing**: [docs/testing-with-ollama.md](testing-with-ollama.md)
 7. **Production TLS Setup**: [docs/tls-configuration.md](tls-configuration.md)
+8. **Browse All Documentation**: [docs/README.md](README.md)
 
 ---
 
@@ -817,7 +932,7 @@ ollama pull llama3.2:3b
 uv run python -m mcp_tef
 
 # Start server (HTTP)
-uv run python -m mcp_tef --no-tls-enabled
+uv run python -m mcp_tef --tls-enabled=false
 
 # Run tests
 task test
@@ -849,6 +964,31 @@ open https://localhost:8000/docs
 | `DEFAULT_MODEL__BASE_URL` | `http://localhost:11434/v1` | Ollama base URL |
 | `OPENROUTER_API_KEY` | - | OpenRouter API key |
 | `DATABASE_URL` | `sqlite+aiosqlite:///./mcp_eval.db` | Database location |
+
+---
+
+## Choosing Between API and CLI
+
+Both the REST API and CLI provide access to mcp-tef functionality:
+
+| Use Case | Recommended Method |
+|----------|-------------------|
+| **Interactive exploration** | REST API (curl) - See examples in workflows above |
+| **Scripting and automation** | CLI (`mtef`) - Better for shell scripts and CI/CD |
+| **Docker deployment** | CLI (`mtef deploy`) - Simplifies container management |
+| **Direct server control** | Python (`uv run python -m mcp_tef`) - Full control over configuration |
+
+**CLI Installation:**
+
+```bash
+# Install from GitHub release
+uv tool install https://github.com/StacklokLabs/mcp-tef/releases/download/cli-v0.1.0/mcp_tef_cli-0.1.0-py3-none-any.whl
+
+# Or install from Git
+uv tool install "mtef @ git+https://github.com/StacklokLabs/mcp-tef.git#subdirectory=cli"
+```
+
+See the [CLI documentation](../cli/README.md) for complete CLI usage and examples.
 
 ---
 

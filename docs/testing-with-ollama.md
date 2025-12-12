@@ -470,6 +470,8 @@ pytest --tb=short
 
 ## Related Resources
 
+- [Quickstart Guide](quickstart.md) - Complete user workflows and examples
+- [TLS Configuration](tls-configuration.md) - HTTPS/TLS setup for production
 - [Ollama Documentation](https://github.com/ollama/ollama)
 - [Ollama API Reference](https://github.com/ollama/ollama/blob/main/docs/api.md)
 - [Available Models](https://ollama.ai/library)
