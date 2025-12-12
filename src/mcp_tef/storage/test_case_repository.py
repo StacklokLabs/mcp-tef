@@ -109,8 +109,8 @@ class TestCaseRepository:
                         test_case.expected_tool_name,
                         (
                             json.dumps(test_case.expected_parameters)
-                            if test_case.expected_parameters
-                            else ""
+                            if test_case.expected_parameters is not None
+                            else None
                         ),
                     ),
                 )

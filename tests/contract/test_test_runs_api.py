@@ -300,12 +300,14 @@ async def test_polling_for_test_completion(
     import asyncio
 
     # Configure the autouse mock to return tools for this test
+    from mcp_tef.models.schemas import ToolDefinition
+
     mock_mcp_loader_service.return_value = [
-        {
-            "name": "test_tool",
-            "description": "Test tool",
-            "input_schema": {"type": "object", "properties": {"param": {"type": "string"}}},
-        }
+        ToolDefinition(
+            name="test_tool",
+            description="Test tool",
+            input_schema={"type": "object", "properties": {"param": {"type": "string"}}},
+        )
     ]
 
     # Start test execution (autouse mock_pydantic_agent handles Agent)

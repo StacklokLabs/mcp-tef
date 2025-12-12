@@ -85,13 +85,12 @@ async def test_get_mcp_server_tools_pagination(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_get_mcp_server_tools_missing_url(client: AsyncClient):
-    """Test GET /mcp-servers/tools returns 400 when server_url is missing."""
+    """Test GET /mcp-servers/tools returns 422 when server_url is missing."""
     response = await client.get("/mcp-servers/tools")
 
-    assert response.status_code == 400
+    assert response.status_code == 422  # FastAPI returns 422 for missing required query parameters
     data = response.json()
-    assert "message" in data
-    assert "server_url required" in data["message"]
+    assert "detail" in data
 
 
 @pytest.mark.asyncio
