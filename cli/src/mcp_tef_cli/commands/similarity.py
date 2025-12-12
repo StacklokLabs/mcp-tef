@@ -725,6 +725,11 @@ def overlap(
     help="Comma-separated MCP server URLs (must resolve to exactly 2 tools)",
 )
 @click.option(
+    "--tool-names",
+    default=None,
+    help="Comma-separated tool names to filter (useful when server has many tools)",
+)
+@click.option(
     "--url",
     "tef_url",
     default=None,
@@ -755,6 +760,7 @@ def overlap(
 )
 def recommend(
     server_urls: str,
+    tool_names: str | None,
     tef_url: str | None,
     container_name: str | None,
     output_format: str,
@@ -769,9 +775,15 @@ def recommend(
     Examples:
 
       \b
-      # Get recommendations for two tools
+      # Get recommendations for two tools from a server
       mtef similarity recommend \\
         --server-urls http://localhost:3000/sse
+
+      \b
+      # Filter specific tools from a server with many tools
+      mtef similarity recommend \\
+        --server-urls http://localhost:3000/sse \\
+        --tool-names search_issues,search_pull_requests
 
       \b
       # Output as JSON
@@ -784,6 +796,14 @@ def recommend(
     except click.BadParameter as e:
         print_error("Invalid server URLs", str(e))
         raise SystemExit(EXIT_INVALID_ARGUMENTS) from e
+
+    # Parse tool names if provided
+    parsed_tool_names = None
+    if tool_names:
+        parsed_tool_names = [name.strip() for name in tool_names.split(",") if name.strip()]
+        if not parsed_tool_names:
+            print_error("Invalid tool names", "At least one tool name is required")
+            raise SystemExit(EXIT_INVALID_ARGUMENTS)
 
     # Resolve mcp-tef URL
     url = resolve_tef_url(tef_url, container_name, output_format)
@@ -800,6 +820,7 @@ def recommend(
         try:
             return await client.get_recommendations(
                 server_urls=parsed_urls,
+                tool_names=parsed_tool_names,
             )
         finally:
             await client.close()

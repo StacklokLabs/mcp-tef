@@ -510,11 +510,13 @@ class TefClient:
     async def get_recommendations(
         self,
         server_urls: list[str],
+        tool_names: list[str] | None = None,
     ) -> DifferentiationRecommendationResponse:
         """Get differentiation recommendations for exactly 2 tools.
 
         Args:
             server_urls: List of MCP server URLs (must yield exactly 2 tools)
+            tool_names: Optional list of tool names to filter
 
         Returns:
             DifferentiationRecommendationResponse with recommendations
@@ -526,6 +528,8 @@ class TefClient:
         payload = {
             "mcp_server_urls": server_urls,
         }
+        if tool_names:
+            payload["tool_names"] = tool_names
 
         async with self._get_client() as client:
             response = await client.post("/similarity/recommendations", json=payload)
