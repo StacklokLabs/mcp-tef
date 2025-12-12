@@ -190,6 +190,7 @@ async def analyze_similarity(
     # Extract and normalize tools
     tools = await similarity_service.extract_and_normalize_tools(
         url_list=request.mcp_server_urls,
+        tool_names=request.tool_names,
     )
 
     logger.info(f"Analyzing {len(tools)} tools")
@@ -314,6 +315,7 @@ async def generate_similarity_matrix(
     # Extract and normalize tools
     tools = await similarity_service.extract_and_normalize_tools(
         url_list=request.mcp_server_urls,
+        tool_names=request.tool_names,
     )
 
     logger.info(f"Generating matrix for {len(tools)} tools")
@@ -418,6 +420,7 @@ async def get_recommendations(
     # Extract and normalize tools
     tools = await similarity_service.extract_and_normalize_tools(
         url_list=request.mcp_server_urls,
+        tool_names=request.tool_names,
     )
 
     if len(tools) != 2:

@@ -122,11 +122,14 @@ class SimilarityService:
     async def extract_and_normalize_tools(
         self,
         url_list: list[str],
+        tool_names: list[str] | None = None,
     ) -> list[NormalizedTool]:
         """Extract and normalize tools from MCP server URLs.
 
         Args:
             url_list: Array of MCP server URLs to fetch tools from
+            tool_names: Optional list of tool names to filter. If provided, only tools
+                with matching names will be included.
 
         Returns:
             List of normalized tool definitions with temporary IDs
@@ -138,6 +141,8 @@ class SimilarityService:
             raise ValidationError("MCPLoaderService is required")
 
         logger.info(f"Fetching tools from {len(url_list)} URLs")
+        if tool_names:
+            logger.info(f"Filtering tools by names: {tool_names}")
 
         # Fetch tools concurrently
         fetch_tasks = [self._fetch_tools_from_url(url) for url in url_list]
@@ -145,12 +150,18 @@ class SimilarityService:
 
         # Process results
         normalized_tools = []
+        tool_names_set = set(tool_names) if tool_names else None
+
         for url, tools in zip(url_list, fetch_results, strict=False):
             if isinstance(tools, Exception):
                 logger.warning(f"Failed to fetch tools from {url}: {tools}")
                 continue
 
             for tool in tools:
+                # Filter by tool name if specified
+                if tool_names_set is not None and tool.name not in tool_names_set:
+                    continue
+
                 normalized_tools.append(
                     NormalizedTool(
                         id=f"{url}:{tool.name}",
@@ -164,6 +175,13 @@ class SimilarityService:
 
         # Validate minimum tool count
         if len(normalized_tools) < 2:
+            if tool_names:
+                error_msg = (
+                    f"At least 2 tools required for similarity analysis, "
+                    f"got {len(normalized_tools)}. Requested tool names: {tool_names}. "
+                    "Make sure the specified tools exist on the provided server(s)."
+                )
+                raise ValidationError(error_msg)
             raise ValidationError(
                 f"At least 2 tools required for similarity analysis, got {len(normalized_tools)}"
             )

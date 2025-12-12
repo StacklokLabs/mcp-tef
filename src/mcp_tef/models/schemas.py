@@ -393,6 +393,14 @@ class SimilarityAnalysisRequest(BaseModel):
     mcp_server_urls: list[str] = Field(
         min_length=1, description="Array of MCP server URLs to fetch tools from"
     )
+    tool_names: list[str] | None = Field(
+        None,
+        description=(
+            "Optional list of tool names to filter. If provided, only tools with matching names "
+            "will be included in the analysis. Useful when a server exposes many tools but you "
+            "want to compare specific ones."
+        ),
+    )
 
     # Configuration
     embedding_model: str | None = Field(
