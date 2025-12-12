@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from httpx import AsyncClient
 
+from mcp_tef.models.schemas import ToolDefinition
+
 
 @pytest.fixture
 async def test_runs_with_known_data(test_db):
@@ -33,15 +35,17 @@ async def test_runs_with_known_data(test_db):
     test_run_repo = TestRunRepository(test_db)
     tool_repo = ToolRepository(test_db)
 
-    server_url = "http://localhost:3000/sse"
+    server_url = "http://localhost:3000"
     test_case_ids = []
     test_run_ids = []
 
     # Mock MCP loader for test case creation
     mock_mcp_loader = MCPLoaderService()
-    mock_mcp_loader.load_tools_from_url = AsyncMock(
+    mock_mcp_loader.load_tools_from_server = AsyncMock(
         return_value=[
-            {"name": f"tool_{i}", "description": f"Tool {i}", "input_schema": {"type": "object"}}
+            ToolDefinition(
+                name=f"tool_{i}", description=f"Tool {i}", input_schema={"type": "object"}
+            )
             for i in range(1, 6)
         ]
     )
@@ -58,7 +62,7 @@ async def test_runs_with_known_data(test_db):
             expected_mcp_server_url=server_url,
             expected_tool_name=f"tool_{i + 1}",
             expected_parameters={"param": "value"},
-            available_mcp_servers=[server_url],
+            available_mcp_servers=[{"url": server_url, "transport": "sse"}],
         )
 
         created_test_case = await test_case_repo.create(test_case, mock_mcp_loader)
@@ -195,15 +199,15 @@ async def test_runs_for_filtering(test_db):
     test_run_repo = TestRunRepository(test_db)
     tool_repo = ToolRepository(test_db)
 
-    server_url_1 = "http://localhost:3000/sse"
-    server_url_2 = "http://localhost:4000/sse"
+    server_url_1 = "http://localhost:3000"
+    server_url_2 = "http://localhost:4000"
 
     # Mock MCP loader
     mock_mcp_loader = MCPLoaderService()
-    mock_mcp_loader.load_tools_from_url = AsyncMock(
+    mock_mcp_loader.load_tools_from_server = AsyncMock(
         side_effect=[
-            [{"name": "tool_a", "description": "Tool A", "input_schema": {"type": "object"}}],
-            [{"name": "tool_b", "description": "Tool B", "input_schema": {"type": "object"}}],
+            [ToolDefinition(name="tool_a", description="Tool A", input_schema={"type": "object"})],
+            [ToolDefinition(name="tool_b", description="Tool B", input_schema={"type": "object"})],
         ]
     )
 
@@ -214,7 +218,7 @@ async def test_runs_for_filtering(test_db):
         expected_mcp_server_url=server_url_1,
         expected_tool_name="tool_a",
         expected_parameters={"param": "value"},
-        available_mcp_servers=[server_url_1],
+        available_mcp_servers=[{"url": server_url_1, "transport": "sse"}],
     )
     created_test_case_1 = await test_case_repo.create(test_case_1, mock_mcp_loader)
 
@@ -224,7 +228,7 @@ async def test_runs_for_filtering(test_db):
         expected_mcp_server_url=server_url_2,
         expected_tool_name="tool_b",
         expected_parameters={"param": "value"},
-        available_mcp_servers=[server_url_2],
+        available_mcp_servers=[{"url": server_url_2, "transport": "sse"}],
     )
     created_test_case_2 = await test_case_repo.create(test_case_2, mock_mcp_loader)
 
@@ -357,13 +361,13 @@ async def test_get_metrics_summary_with_data(client: AsyncClient):
     # Mock MCPLoaderService for test case creation
     with patch("mcp_tef.api.test_cases.MCPLoaderService") as mock:
         mock_instance = mock.return_value
-        mock_instance.load_tools_from_url = AsyncMock(
+        mock_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "test_tool",
-                    "description": "Test tool",
-                    "input_schema": {"type": "object", "properties": {"param": {"type": "string"}}},
-                }
+                ToolDefinition(
+                    name="test_tool",
+                    description="Test tool",
+                    input_schema={"type": "object", "properties": {"param": {"type": "string"}}},
+                )
             ]
         )
 
@@ -376,7 +380,7 @@ async def test_get_metrics_summary_with_data(client: AsyncClient):
                 "expected_mcp_server_url": server_url,
                 "expected_tool_name": "test_tool",
                 "expected_parameters": {"param": "value"},
-                "available_mcp_servers": [server_url],
+                "available_mcp_servers": [{"url": server_url, "transport": "streamable-http"}],
             },
         )
         test_case_id = test_case_response.json()["id"]
@@ -387,13 +391,13 @@ async def test_get_metrics_summary_with_data(client: AsyncClient):
         patch("mcp_tef.services.llm_service.Agent") as mock_agent_class,
     ):
         mock_loader_eval_instance = mock_loader_eval.return_value
-        mock_loader_eval_instance.load_tools_from_url = AsyncMock(
+        mock_loader_eval_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "test_tool",
-                    "description": "Test tool",
-                    "input_schema": {"type": "object", "properties": {"param": {"type": "string"}}},
-                }
+                ToolDefinition(
+                    name="test_tool",
+                    description="Test tool",
+                    input_schema={"type": "object", "properties": {"param": {"type": "string"}}},
+                )
             ]
         )
         mock_agent = MagicMock()

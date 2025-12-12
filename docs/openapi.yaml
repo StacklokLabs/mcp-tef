@@ -641,7 +641,7 @@ components:
           format: uri
         transport:
           type: string
-          enum: [sse, streamable_http]
+          enum: [sse, streamable-http]
 
     MCPServerUpdate:
       type: object
@@ -654,7 +654,7 @@ components:
           format: uri
         transport:
           type: string
-          enum: [sse, streamable_http]
+          enum: [sse, streamable-http]
 
     MCPServerResponse:
       type: object

@@ -134,7 +134,7 @@ This document defines all entities, relationships, and data structures for the M
 | id | TEXT | PK | UUID identifier |
 | name | TEXT | NOT NULL, UNIQUE | Server name |
 | url | TEXT | NOT NULL, UNIQUE | Server connection URL |
-| transport | TEXT | NOT NULL | Connection type ('sse', 'streamable_http') |
+| transport | TEXT | NOT NULL | Connection type ('sse', 'streamable-http') |
 | status | TEXT | NOT NULL, DEFAULT 'inactive' | Status ('active', 'failed', 'inactive') |
 | last_connected_at | TIMESTAMP | NULL | Last successful connection |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT NOW | Creation timestamp |

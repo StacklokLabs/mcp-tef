@@ -46,7 +46,7 @@ def openrouter_api_key():
 def mock_tools():
     """Create mock tool definitions returned by MCPLoaderService.
 
-    Returns dictionaries in the format from load_tools_from_url (with input_schema).
+    Returns dictionaries in the format from load_tools_from_server (with input_schema).
     The service will convert these to ToolDefinition objects internally.
     """
     return [
@@ -112,7 +112,7 @@ async def test_get_mcp_server_tool_quality_missing_api_key(
 
     # Create mock loader
     mock_loader = AsyncMock()
-    mock_loader.load_tools_from_url = AsyncMock(return_value=mock_tools)
+    mock_loader.load_tools_from_server = AsyncMock(return_value=mock_tools)
 
     # Create settings with no API keys (empty strings)
     mock_settings = Settings(
@@ -229,7 +229,7 @@ async def test_get_mcp_server_tool_quality_by_url_multiple_urls(
 
     # Create mock loader
     mock_loader = AsyncMock()
-    mock_loader.load_tools_from_url = AsyncMock(return_value=mock_tools)
+    mock_loader.load_tools_from_server = AsyncMock(return_value=mock_tools)
 
     # Use FastAPI's dependency override system
     test_app.dependency_overrides[get_mcp_loader_service] = lambda: mock_loader
@@ -302,10 +302,12 @@ async def test_get_mcp_server_tool_quality_by_url_multiple_urls(
                 )
 
         # Verify mock was called for both URLs
-        call_count = mock_loader.load_tools_from_url.call_count
-        assert call_count == 2, f"Expected load_tools_from_url to be called twice, got {call_count}"
+        call_count = mock_loader.load_tools_from_server.call_count
+        assert call_count == 2, (
+            f"Expected load_tools_from_server to be called twice, got {call_count}"
+        )
         # Verify it was called with the correct URLs
-        call_args_list = [call[0][0] for call in mock_loader.load_tools_from_url.call_args_list]
+        call_args_list = [call[0][0] for call in mock_loader.load_tools_from_server.call_args_list]
         assert url1 in call_args_list, f"Expected call with {url1}"
         assert url2 in call_args_list, f"Expected call with {url2}"
     finally:

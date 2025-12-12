@@ -189,7 +189,7 @@ async def analyze_similarity(
 
     # Extract and normalize tools
     tools = await similarity_service.extract_and_normalize_tools(
-        url_list=request.mcp_server_urls,
+        server_configs=request.mcp_servers,
         tool_names=request.tool_names,
     )
 
@@ -314,7 +314,7 @@ async def generate_similarity_matrix(
 
     # Extract and normalize tools
     tools = await similarity_service.extract_and_normalize_tools(
-        url_list=request.mcp_server_urls,
+        server_configs=request.mcp_servers,
         tool_names=request.tool_names,
     )
 
@@ -366,7 +366,7 @@ async def generate_overlap_matrix(
     # Extract and normalize tools
 
     tools = await similarity_service.extract_and_normalize_tools(
-        url_list=request.mcp_server_urls,
+        server_configs=request.mcp_servers,
     )
 
     logger.info(f"Generating overlap matrix for {len(tools)} tools")
@@ -419,7 +419,7 @@ async def get_recommendations(
 
     # Extract and normalize tools
     tools = await similarity_service.extract_and_normalize_tools(
-        url_list=request.mcp_server_urls,
+        server_configs=request.mcp_servers,
         tool_names=request.tool_names,
     )
 

@@ -15,6 +15,34 @@ from pydantic import (
 
 from mcp_tef.models.enums import EmbeddingModelType, SimilarityMethod
 
+# MCP Server Configuration Model
+
+
+class MCPServerConfig(BaseModel):
+    """MCP server configuration with validation."""
+
+    url: str = Field(
+        ...,
+        min_length=1,
+        pattern=r"^https?://",
+        description="Server URL (must be http or https)",
+    )
+    transport: str = Field(
+        default="streamable-http",
+        pattern=r"^(sse|streamable-http)$",
+        description="Transport type: 'sse' or 'streamable-http'",
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "url": "http://localhost:3000/mcp",
+                "transport": "streamable-http",
+            }
+        }
+    )
+
+
 # Model Settings Models
 
 
@@ -149,26 +177,29 @@ class TestCaseCreate(BaseModel):
     expected_parameters: dict[str, Any] | None = Field(
         None, description="Expected parameter values"
     )
-    available_mcp_servers: list[str] = Field(
+    available_mcp_servers: list[MCPServerConfig] = Field(
         ...,
         min_length=1,
-        description="List of MCP server urls to make available to LLM",
+        description="List of MCP server configurations",
     )
 
     @model_validator(mode="after")
     def validate_expected_tool_fields(self) -> TestCaseCreate:
         """Ensure expected_mcp_server_url and expected_tool_name are both null or both non-null."""
-        server = self.expected_mcp_server_url
+        server_url = self.expected_mcp_server_url
         tool = self.expected_tool_name
-        if (server is None) != (tool is None):
+        if (server_url is None) != (tool is None):
             raise ValueError(
                 "expected_mcp_server_url and expected_tool_name must both be "
                 "null or both be non-null"
             )
-        if server and server not in self.available_mcp_servers:
-            raise ValueError(
-                f"expected_mcp_server_url '{server}' should be in available_mcp_servers"
-            )
+        if server_url:
+            # Validate expected server URL exists in available_mcp_servers
+            available_urls = [server.url for server in self.available_mcp_servers]
+            if server_url not in available_urls:
+                raise ValueError(
+                    f"expected_mcp_server_url '{server_url}' must be in available_mcp_servers"
+                )
         return self
 
 
@@ -181,13 +212,15 @@ class TestCaseResponse(BaseModel):
     expected_mcp_server_url: str | None = Field(None, description="Expected MCP server url")
     expected_tool_name: str | None = Field(None, description="Expected tool name")
     expected_parameters: dict[str, Any] | None = Field(None, description="Expected parameters")
-    available_mcp_servers: list[str] = Field(..., description="List of MCP server names")
+    available_mcp_servers: list[MCPServerConfig] = Field(
+        ..., description="List of MCP server configurations"
+    )
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
 
     available_tools: dict[str, list[ToolDefinition]] | None = Field(
         default=None,
-        description="Tools for the available MCP servers. Note: not persisted in a repo",
+        description="Tools for the available MCP servers",
     )
 
     model_config = ConfigDict(from_attributes=True)
@@ -390,8 +423,9 @@ class NormalizedTool(BaseModel):
 class SimilarityAnalysisRequest(BaseModel):
     """Request schema for similarity analysis."""
 
-    mcp_server_urls: list[str] = Field(
-        min_length=1, description="Array of MCP server URLs to fetch tools from"
+    mcp_servers: list[MCPServerConfig] = Field(
+        min_length=1,
+        description="List of MCP server configurations to analyze",
     )
     tool_names: list[str] | None = Field(
         None,

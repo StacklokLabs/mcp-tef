@@ -10,6 +10,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from httpx import AsyncClient
 
+from mcp_tef.models.schemas import ToolDefinition
+
 
 @pytest.mark.asyncio
 async def test_get_mcp_server_tools_direct_fetch(client: AsyncClient):
@@ -19,13 +21,13 @@ async def test_get_mcp_server_tools_direct_fetch(client: AsyncClient):
     # Mock MCPLoaderService to return tools
     with patch("mcp_tef.api.mcp_servers.MCPLoaderService") as mock_loader:
         mock_instance = mock_loader.return_value
-        mock_instance.load_tools_from_url_typed = AsyncMock(
+        mock_instance.load_tools_from_server = AsyncMock(
             return_value=[
-                {
-                    "name": "test_tool",
-                    "description": "Test tool",
-                    "parameter": {"param": "Test parameter"},
-                }
+                ToolDefinition(
+                    name="test_tool",
+                    description="Test tool",
+                    input_schema={"type": "object", "properties": {"param": {"type": "string"}}},
+                )
             ]
         )
 
@@ -39,8 +41,10 @@ async def test_get_mcp_server_tools_direct_fetch(client: AsyncClient):
         assert data["count"] == 1
         assert data["tools"][0]["name"] == "test_tool"
 
-        # Verify the service was called with correct URL
-        mock_instance.load_tools_from_url_typed.assert_called_once_with(test_server_url)
+        # Verify the service was called with correct URL and transport
+        mock_instance.load_tools_from_server.assert_called_once_with(
+            test_server_url, "streamable-http"
+        )
 
 
 @pytest.mark.asyncio
@@ -50,17 +54,17 @@ async def test_get_mcp_server_tools_pagination(client: AsyncClient):
 
     # Create 5 mock tools
     mock_tools = [
-        {
-            "name": f"tool_{i}",
-            "description": f"Tool {i}",
-            "parameter": {},
-        }
+        ToolDefinition(
+            name=f"tool_{i}",
+            description=f"Tool {i}",
+            input_schema={"type": "object"},
+        )
         for i in range(5)
     ]
 
     with patch("mcp_tef.api.mcp_servers.MCPLoaderService") as mock_loader:
         mock_instance = mock_loader.return_value
-        mock_instance.load_tools_from_url_typed = AsyncMock(return_value=mock_tools)
+        mock_instance.load_tools_from_server = AsyncMock(return_value=mock_tools)
 
         # Test limit
         response = await client.get(f"/mcp-servers/tools?server_url={test_server_url}&limit=2")
@@ -81,13 +85,12 @@ async def test_get_mcp_server_tools_pagination(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_get_mcp_server_tools_missing_url(client: AsyncClient):
-    """Test GET /mcp-servers/tools returns 400 when server_url is missing."""
+    """Test GET /mcp-servers/tools returns 422 when server_url is missing."""
     response = await client.get("/mcp-servers/tools")
 
-    assert response.status_code == 400
+    assert response.status_code == 422  # FastAPI returns 422 for missing required query parameters
     data = response.json()
-    assert "message" in data
-    assert "server_url required" in data["message"]
+    assert "detail" in data
 
 
 @pytest.mark.asyncio
@@ -97,7 +100,7 @@ async def test_get_mcp_server_tools_empty(client: AsyncClient):
 
     with patch("mcp_tef.api.mcp_servers.MCPLoaderService") as mock_loader:
         mock_instance = mock_loader.return_value
-        mock_instance.load_tools_from_url_typed = AsyncMock(return_value=[])
+        mock_instance.load_tools_from_server = AsyncMock(return_value=[])
 
         response = await client.get(f"/mcp-servers/tools?server_url={test_server_url}")
 

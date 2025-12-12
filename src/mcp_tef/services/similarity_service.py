@@ -10,7 +10,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from mcp_tef.api.errors import ValidationError
-from mcp_tef.models.schemas import NormalizedTool, ToolDefinition
+from mcp_tef.models.schemas import MCPServerConfig, NormalizedTool, ToolDefinition
 from mcp_tef.services.embedding_service import EmbeddingService
 from mcp_tef.services.mcp_loader import MCPLoaderService
 
@@ -121,13 +121,13 @@ class SimilarityService:
 
     async def extract_and_normalize_tools(
         self,
-        url_list: list[str],
+        server_configs: list[MCPServerConfig],
         tool_names: list[str] | None = None,
     ) -> list[NormalizedTool]:
-        """Extract and normalize tools from MCP server URLs.
+        """Extract and normalize tools from MCP server configurations.
 
         Args:
-            url_list: Array of MCP server URLs to fetch tools from
+            server_configs: Array of MCPServerConfig objects to fetch tools from
             tool_names: Optional list of tool names to filter. If provided, only tools
                 with matching names will be included.
 
@@ -140,19 +140,22 @@ class SimilarityService:
         if not self.mcp_loader_service:
             raise ValidationError("MCPLoaderService is required")
 
-        logger.info(f"Fetching tools from {len(url_list)} URLs")
+        logger.info(f"Fetching tools from {len(server_configs)} servers")
         if tool_names:
             logger.info(f"Filtering tools by names: {tool_names}")
 
         # Fetch tools concurrently
-        fetch_tasks = [self._fetch_tools_from_url(url) for url in url_list]
+        fetch_tasks = [
+            self._fetch_tools_from_server(server.url, server.transport) for server in server_configs
+        ]
         fetch_results = await asyncio.gather(*fetch_tasks, return_exceptions=True)
 
         # Process results
         normalized_tools = []
         tool_names_set = set(tool_names) if tool_names else None
 
-        for url, tools in zip(url_list, fetch_results, strict=False):
+        for server, tools in zip(server_configs, fetch_results, strict=False):
+            url = server.url
             if isinstance(tools, Exception):
                 logger.warning(f"Failed to fetch tools from {url}: {tools}")
                 continue
@@ -189,11 +192,12 @@ class SimilarityService:
         logger.info(f"Extracted and normalized {len(normalized_tools)} tools")
         return normalized_tools
 
-    async def _fetch_tools_from_url(self, url: str) -> list[ToolDefinition]:
-        """Fetch tools from a single MCP server URL.
+    async def _fetch_tools_from_server(self, url: str, transport: str) -> list[ToolDefinition]:
+        """Fetch tools from a single MCP server.
 
         Args:
             url: MCP server URL
+            transport: Transport protocol ('sse' or 'streamable-http')
 
         Returns:
             List of tool definitions
@@ -204,7 +208,7 @@ class SimilarityService:
         # Fetch tools using MCPLoaderService
         if not self.mcp_loader_service:
             raise ValidationError("MCPLoaderService is required")
-        return await self.mcp_loader_service.load_tools_from_url_typed(url)
+        return await self.mcp_loader_service.load_tools_from_server(url, transport)
 
     def construct_embedding_text(
         self,

@@ -7,6 +7,7 @@ from pydantic_ai import ToolCallPart, ToolReturnPart
 
 from mcp_tef.api.errors import LLMProviderError
 from mcp_tef.models.llm_models import LLMResponse, LLMToolCall
+from mcp_tef.models.schemas import MCPServerConfig
 from mcp_tef.services.llm_service import LLMService
 
 
@@ -24,8 +25,8 @@ def llm_service():
 
 @pytest.fixture
 def sample_mcp_server_urls():
-    """Sample MCP server URLs for testing."""
-    return ["http://localhost:3000"]
+    """Sample MCP server configs for testing."""
+    return [MCPServerConfig(url="http://localhost:3000", transport="streamable-http")]
 
 
 class TestLLMServiceInitialization:

@@ -30,6 +30,7 @@ from pydantic_ai.toolsets.abstract import AbstractToolset
 from mcp_tef.api.errors import LLMProviderAPIKeyError, LLMProviderError
 from mcp_tef.config.settings import DEFAULT_OLLAMA_BASE_URL, Settings
 from mcp_tef.models.llm_models import ConfidenceLevel, LLMResponse, LLMToolCall
+from mcp_tef.models.schemas import MCPServerConfig
 
 logger = structlog.get_logger(__name__)
 
@@ -80,7 +81,9 @@ class LLMService:
         self.settings = settings
         self.agent = None  # Will be initialized when connecting to MCP servers
 
-    async def connect_to_mcp_servers(self, mcp_server_urls: list[str], system_prompt: str) -> None:
+    async def connect_to_mcp_servers(
+        self, mcp_servers: list[MCPServerConfig], system_prompt: str
+    ) -> None:
         """Connect to MCP servers and initialize the agent with toolsets.
 
         Args:
@@ -89,17 +92,17 @@ class LLMService:
         Raises:
             LLMProviderError: If connection fails
         """
-        logger.info(f"Connecting to {len(mcp_server_urls)} MCP servers")
+        logger.info(f"Connecting to {len(mcp_servers)} MCP servers")
 
         try:
             toolsets = []
-            for server_url in mcp_server_urls:
+            for server in mcp_servers:
                 # Currently support sse and streamable-http (similarly in MCPLoaderService)
-                if "/sse" in server_url:
-                    mcp_server = MCPServerSSE(server_url)
+                if server.transport == "sse":
+                    mcp_server = MCPServerSSE(server.url)
                     toolsets.append(mcp_server)
                 else:
-                    mcp_server = MCPServerStreamableHTTP(server_url)
+                    mcp_server = MCPServerStreamableHTTP(server.url)
                     toolsets.append(mcp_server)
 
             # Initialize agent with all MCP server toolsets and structured output for confidence

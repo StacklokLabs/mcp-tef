@@ -12,6 +12,7 @@ import structlog
 
 from mcp_tef.api.errors import DatabaseError, ResourceNotFoundError, ValidationError
 from mcp_tef.models.schemas import (
+    MCPServerConfig,
     TestCaseCreate,
     TestCaseResponse,
 )
@@ -66,28 +67,29 @@ class TestCaseRepository:
             # Step 1: gather all tools for the MCP servers (fail fast for server connection issues)
             server_tools = {}  # server_url -> tools list
             load_server_tools_tasks = [
-                mcp_loader.load_tools_from_url(server_url)
-                for server_url in test_case.available_mcp_servers
+                mcp_loader.load_tools_from_server(server.url, server.transport)
+                for server in test_case.available_mcp_servers
             ]
             server_tools_results = await asyncio.gather(*load_server_tools_tasks)
-            for server_url, tools_list in zip(
-                test_case.available_mcp_servers, server_tools_results, strict=False
+            for server_config, tools_list in zip(
+                test_case.available_mcp_servers, server_tools_results, strict=True
             ):
-                server_tools[server_url] = tools_list
+                server_tools[server_config.url] = tools_list
 
             # Step 2: validate expected tools exist on expected server
-            actual_tool_names = [
-                tool["name"] for tool in server_tools.get(test_case.expected_mcp_server_url, [])
-            ]
-            if test_case.expected_tool_name not in actual_tool_names:
-                raise ValidationError(
-                    "Expected tool not found in expected MCP server tools",
-                    {
-                        "expected_tool_name": test_case.expected_tool_name,
-                        "expected_mcp_server_url": test_case.expected_mcp_server_url,
-                        "actual_tools": actual_tool_names,
-                    },
-                )
+            if test_case.expected_mcp_server_url:
+                actual_tool_names = [
+                    tool.name for tool in server_tools.get(test_case.expected_mcp_server_url, [])
+                ]
+                if test_case.expected_tool_name not in actual_tool_names:
+                    raise ValidationError(
+                        "Expected tool not found in expected MCP server tools",
+                        {
+                            "expected_tool_name": test_case.expected_tool_name,
+                            "expected_mcp_server_url": test_case.expected_mcp_server_url,
+                            "actual_tools": actual_tool_names,
+                        },
+                    )
 
             # Step 3-4: Insert test case and available MCP server associations
             try:
@@ -107,22 +109,23 @@ class TestCaseRepository:
                         test_case.expected_tool_name,
                         (
                             json.dumps(test_case.expected_parameters)
-                            if test_case.expected_parameters
-                            else ""
+                            if test_case.expected_parameters is not None
+                            else None
                         ),
                     ),
                 )
 
                 # Step 4: Insert MCP server associations
-                for server_url in server_tools:
+                for server_config in test_case.available_mcp_servers:
                     await self.db.execute(
                         """
-                        INSERT INTO test_case_mcp_servers (test_case_id, mcp_server_url)
-                        VALUES (?, ?)
+                        INSERT INTO test_case_mcp_servers (test_case_id, server_url, transport)
+                        VALUES (?, ?, ?)
                         """,
                         (
                             test_case_id,
-                            server_url,
+                            server_config.url,
+                            server_config.transport,
                         ),
                     )
 
@@ -184,17 +187,20 @@ class TestCaseRepository:
             if row is None:
                 raise ResourceNotFoundError("TestCase", test_case_id)
 
-            # Get MCP server urls from test_case_mcp_servers table
+            # Get MCP servers from junction table and reconstruct list
             servers_cursor = await self.db.execute(
                 """
-                SELECT mcp_server_url
+                SELECT server_url, transport
                 FROM test_case_mcp_servers
                 WHERE test_case_id = ?
                 """,
                 (test_case_id,),
             )
             server_rows = await servers_cursor.fetchall()
-            server_urls = [server_row[0] for server_row in server_rows]
+            available_mcp_servers = [
+                MCPServerConfig(url=server_url, transport=transport)
+                for server_url, transport in server_rows
+            ]
 
             return TestCaseResponse(
                 id=row[0],
@@ -203,7 +209,7 @@ class TestCaseRepository:
                 expected_mcp_server_url=row[3],
                 expected_tool_name=row[4],
                 expected_parameters=json.loads(row[5]) if row[5] else None,
-                available_mcp_servers=server_urls,
+                available_mcp_servers=available_mcp_servers,
                 created_at=datetime.fromisoformat(row[6]),
                 updated_at=datetime.fromisoformat(row[7]),
             )
@@ -253,12 +259,12 @@ class TestCaseRepository:
             if not rows:
                 return [], total
 
-            # Batch fetch all server IDs for all test cases to avoid N+1 queries
+            # Batch fetch all servers for all test cases to avoid N+1 queries
             test_case_ids = [row[0] for row in rows]
             placeholders = ",".join("?" * len(test_case_ids))
             servers_cursor = await self.db.execute(
                 f"""
-                SELECT test_case_id, mcp_server_url
+                SELECT test_case_id, server_url, transport
                 FROM test_case_mcp_servers
                 WHERE test_case_id IN ({placeholders})
                 """,  # nosec: "B608" Safe: placeholders is internally generated, values are parameterized
@@ -266,18 +272,20 @@ class TestCaseRepository:
             )
             server_associations = await servers_cursor.fetchall()
 
-            # Build mapping of test_case_id -> [server_urls]
+            # Build mapping of test_case_id -> list[MCPServerConfig]
             test_case_servers = {}
-            for test_case_id, server_url in server_associations:
+            for test_case_id, server_url, transport in server_associations:
                 if test_case_id not in test_case_servers:
                     test_case_servers[test_case_id] = []
-                test_case_servers[test_case_id].append(server_url)
+                test_case_servers[test_case_id].append(
+                    MCPServerConfig(url=server_url, transport=transport)
+                )
 
             # Build test case responses
             test_cases = []
             for row in rows:
                 test_case_id = row[0]
-                server_urls = test_case_servers.get(test_case_id, [])
+                available_mcp_servers = test_case_servers.get(test_case_id, [])
 
                 test_cases.append(
                     TestCaseResponse(
@@ -287,7 +295,7 @@ class TestCaseRepository:
                         expected_mcp_server_url=row[3],
                         expected_tool_name=row[4],
                         expected_parameters=json.loads(row[5]) if row[5] else None,
-                        available_mcp_servers=server_urls,
+                        available_mcp_servers=available_mcp_servers,
                         created_at=datetime.fromisoformat(row[6]),
                         updated_at=datetime.fromisoformat(row[7]),
                     )
@@ -302,14 +310,14 @@ class TestCaseRepository:
     async def get_test_case_servers(
         self,
         test_case_id: str,
-    ) -> list[str]:
-        """Get list of MCP servers urls associated with a test case.
+    ) -> list[MCPServerConfig]:
+        """Get MCP server configurations for test case.
 
         Args:
             test_case_id: Test case ID
 
         Returns:
-            List of MCP server urls
+            List of MCPServerConfig objects
 
         Raises:
             ResourceNotFoundError: If test case not found
@@ -319,17 +327,17 @@ class TestCaseRepository:
             # Verify test case exists
             await self.get(test_case_id)
 
-            # Get MCP server URLs from junction table
+            # Get MCP server configurations from junction table
             cursor = await self.db.execute(
                 """
-                SELECT mcp_server_url
+                SELECT server_url, transport
                 FROM test_case_mcp_servers
                 WHERE test_case_id = ?
                 """,
                 (test_case_id,),
             )
             rows = await cursor.fetchall()
-            return [row[0] for row in rows]
+            return [MCPServerConfig(url=row[0], transport=row[1]) for row in rows]
 
         except ResourceNotFoundError:
             raise

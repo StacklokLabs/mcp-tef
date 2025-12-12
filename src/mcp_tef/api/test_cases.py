@@ -8,6 +8,7 @@ from fastapi.security import APIKeyHeader
 
 from mcp_tef.config.settings import Settings, get_settings
 from mcp_tef.models.schemas import (
+    MCPServerConfig,
     PaginatedTestCaseResponse,
     TestCaseCreate,
     TestCaseResponse,
@@ -199,7 +200,7 @@ async def get_test_case(
 
 
 async def _gather_tools_for_servers(
-    server_urls: list[str], mcp_loader: MCPLoaderService
+    mcp_servers: list[MCPServerConfig], mcp_loader: MCPLoaderService
 ) -> dict[str, list[ToolDefinition]]:
     """
     Gather tools from MCP servers.
@@ -208,10 +209,10 @@ async def _gather_tools_for_servers(
         dict of server_url -> tools
     """
     gather_tools_tasks = [
-        mcp_loader.load_tools_from_url_typed(server_url) for server_url in server_urls
+        mcp_loader.load_tools_from_server(server.url, server.transport) for server in mcp_servers
     ]
     gather_tools_results = await asyncio.gather(*gather_tools_tasks)
-    return dict(zip(server_urls, gather_tools_results, strict=False))
+    return dict(zip([server.url for server in mcp_servers], gather_tools_results, strict=False))
 
 
 @router.delete(

@@ -265,7 +265,7 @@ class TestRunRepository:
     WITH test_case_ids AS (
         SELECT test_case_id
         FROM test_case_mcp_servers
-        WHERE mcp_server_url = ?
+        WHERE server_url = ?
     )
     SELECT *
     FROM test_case_mcp_servers

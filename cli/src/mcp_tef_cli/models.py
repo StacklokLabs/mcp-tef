@@ -8,7 +8,7 @@ requiring the full server as a dependency.
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 __all__ = [
     "HealthResponse",
@@ -18,6 +18,7 @@ __all__ = [
     "ToolQualityResult",
     "ToolQualityResponse",
     # Test case models
+    "MCPServerConfig",
     "TestCaseCreate",
     "TestCaseResponse",
     "PaginatedTestCaseResponse",
@@ -102,6 +103,27 @@ class ToolQualityResponse(BaseModel):
 # =============================================================================
 
 
+class MCPServerConfig(BaseModel):
+    """MCP server configuration with transport type.
+
+    Note: This model is vendored (copied) from src/mcp_tef/models/schemas.py
+    to avoid requiring the full server package as a CLI dependency.
+    Keep in sync with the main model for consistency.
+    """
+
+    url: str = Field(
+        ...,
+        min_length=1,
+        pattern=r"^https?://",
+        description="Server URL (must be http or https)",
+    )
+    transport: str = Field(
+        default="streamable-http",
+        pattern=r"^(sse|streamable-http)$",
+        description="Transport type: 'sse' or 'streamable-http'",
+    )
+
+
 class ToolDefinition(BaseModel):
     """Definition of a tool available from an MCP server."""
 
@@ -123,9 +145,29 @@ class TestCaseCreate(BaseModel):
     expected_parameters: dict | None = Field(
         default=None, description="Expected parameters as JSON object"
     )
-    available_mcp_servers: list[str] = Field(
-        ..., description="MCP server URLs available for selection", min_length=1
+    available_mcp_servers: list[MCPServerConfig] = Field(
+        ..., description="MCP server configurations available for selection", min_length=1
     )
+
+    @field_validator("available_mcp_servers", mode="before")
+    @classmethod
+    def normalize_available_mcp_servers(cls, v: Any) -> list[Any]:
+        """Convert string URLs to MCPServerConfig objects for convenience."""
+        if not isinstance(v, list):
+            return v
+
+        normalized = []
+        for item in v:
+            if isinstance(item, str):
+                # Convert string URL to MCPServerConfig dict
+                normalized.append({"url": item, "transport": "streamable-http"})
+            elif isinstance(item, dict):
+                # Already a dict, pass through (will be validated as MCPServerConfig)
+                normalized.append(item)
+            else:
+                # Already a MCPServerConfig object or other type
+                normalized.append(item)
+        return normalized
 
     @model_validator(mode="after")
     def validate_expected_tool_fields(self) -> "TestCaseCreate":
@@ -138,14 +180,13 @@ class TestCaseCreate(BaseModel):
             )
 
         # expected_server must be in available_mcp_servers
-        if (
-            self.expected_mcp_server_url
-            and self.expected_mcp_server_url not in self.available_mcp_servers
-        ):
-            raise ValueError(
-                f"expected_mcp_server_url '{self.expected_mcp_server_url}' "
-                "must be in available_mcp_servers"
-            )
+        if self.expected_mcp_server_url:
+            available_urls = [server.url for server in self.available_mcp_servers]
+            if self.expected_mcp_server_url not in available_urls:
+                raise ValueError(
+                    f"expected_mcp_server_url '{self.expected_mcp_server_url}' "
+                    "must be in available_mcp_servers"
+                )
 
         # expected_parameters requires expected_tool_name
         if self.expected_parameters and not self.expected_tool_name:
@@ -163,12 +204,34 @@ class TestCaseResponse(BaseModel):
     expected_mcp_server_url: str | None = Field(default=None, description="Expected MCP server URL")
     expected_tool_name: str | None = Field(default=None, description="Expected tool name")
     expected_parameters: dict | None = Field(default=None, description="Expected parameters")
-    available_mcp_servers: list[str] = Field(..., description="Available MCP servers")
+    available_mcp_servers: list[MCPServerConfig] = Field(
+        ..., description="Available MCP server configurations"
+    )
     available_tools: dict[str, list[ToolDefinition]] | None = Field(
         default=None, description="Available tools by server URL"
     )
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
+
+    @field_validator("available_mcp_servers", mode="before")
+    @classmethod
+    def normalize_available_mcp_servers(cls, v: Any) -> list[Any]:
+        """Convert string URLs to MCPServerConfig objects for convenience."""
+        if not isinstance(v, list):
+            return v
+
+        normalized = []
+        for item in v:
+            if isinstance(item, str):
+                # Convert string URL to MCPServerConfig dict
+                normalized.append({"url": item, "transport": "streamable-http"})
+            elif isinstance(item, dict):
+                # Already a dict, pass through (will be validated as MCPServerConfig)
+                normalized.append(item)
+            else:
+                # Already a MCPServerConfig object or other type
+                normalized.append(item)
+        return normalized
 
 
 class PaginatedTestCaseResponse(BaseModel):

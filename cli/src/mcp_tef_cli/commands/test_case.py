@@ -17,7 +17,12 @@ from mcp_tef_cli.constants import (
     EXIT_INVALID_ARGUMENTS,
     EXIT_SUCCESS,
 )
-from mcp_tef_cli.models import PaginatedTestCaseResponse, TestCaseCreate, TestCaseResponse
+from mcp_tef_cli.models import (
+    MCPServerConfig,
+    PaginatedTestCaseResponse,
+    TestCaseCreate,
+    TestCaseResponse,
+)
 from mcp_tef_cli.output import print_error, print_success
 from mcp_tef_cli.utils import handle_api_errors, resolve_tef_url
 
@@ -168,7 +173,7 @@ def format_test_case_table(tc: TestCaseResponse, title: str = "Test Case") -> No
         console.print(f"Expected Params:  {json.dumps(tc.expected_parameters)}")
     console.print("Available Servers:")
     for server in tc.available_mcp_servers:
-        console.print(f"  - {server}")
+        console.print(f"  - {server.url} ({server.transport})")
     console.print(f"Created:          {tc.created_at}")
     console.print(f"Updated:          {tc.updated_at}")
 
@@ -275,6 +280,49 @@ def parse_set_option(values: tuple[str, ...]) -> dict[str, str]:
     return result
 
 
+def parse_server_spec(server_spec: str) -> MCPServerConfig:
+    """Parse a server specification into MCPServerConfig.
+
+    Supports two formats:
+    - URL only: "http://localhost:3000/sse" (uses default transport)
+    - URL with transport: "http://localhost:3000/sse:sse"
+
+    Args:
+        server_spec: Server specification string
+
+    Returns:
+        MCPServerConfig object
+
+    Raises:
+        click.BadParameter: If format is invalid or transport is not recognized
+    """
+    # Validate basic format
+    if not server_spec.startswith(("http://", "https://")):
+        raise click.BadParameter(
+            f"Invalid server URL: '{server_spec}'. Must start with http:// or https://"
+        )
+
+    # Check if transport is specified (format: url:transport)
+    # Use rsplit to handle URLs with ports (e.g., http://localhost:8080)
+    # We only treat it as transport if the part after the last ':' is a valid transport
+    parts = server_spec.rsplit(":", 1)
+
+    if len(parts) == 2:
+        url, potential_transport = parts
+        # Check if this is actually a transport spec or just part of the URL
+        # Valid transports are 'sse' or 'streamable-http'
+        if potential_transport in ("sse", "streamable-http"):
+            # Verify the URL part is still valid (starts with http:// or https://)
+            if not url.startswith(("http://", "https://")):
+                raise click.BadParameter(
+                    f"Invalid URL in server spec: '{url}'. Must start with http:// or https://"
+                )
+            return MCPServerConfig(url=url, transport=potential_transport)
+
+    # No valid transport found, treat entire string as URL with default transport
+    return MCPServerConfig(url=server_spec)
+
+
 @test_case.command(name="create")
 @click.option("--name", default=None, help="Descriptive name for the test case")
 @click.option("--query", default=None, help="User query to evaluate")
@@ -296,7 +344,12 @@ def parse_set_option(values: tuple[str, ...]) -> dict[str, str]:
 @click.option(
     "--servers",
     default=None,
-    help="Comma-separated MCP server URLs available for selection",
+    help=(
+        "Comma-separated MCP server specifications. "
+        "Format: 'URL' or 'URL:transport'. "
+        "Transport defaults to 'streamable-http' if not specified. "
+        "Examples: 'http://localhost:3000/sse:sse' or 'http://localhost:3001'"
+    ),
 )
 @click.option(
     "--from-file",
@@ -367,7 +420,10 @@ def create(
         "name": "Test case name",              // required
         "query": "User query to evaluate",     // required
         "available_mcp_servers": [             // required, non-empty
-          "${MCP_SERVER_URL}"                  // supports variable substitution
+          {
+            "url": "${MCP_SERVER_URL}",        // required, supports variable substitution
+            "transport": "streamable-http"     // optional, defaults to "streamable-http"
+          }
         ],
         "expected_mcp_server_url": "...",      // optional (null for negative tests)
         "expected_tool_name": "tool_name",     // optional (must pair with server)
@@ -383,20 +439,27 @@ def create(
     Examples:
 
       \b
-      # Create test case with expected tool
+      # Create test case with expected tool (SSE transport)
       mtef test-case create \\
         --name "Weather test" \\
         --query "What is the weather in San Francisco?" \\
         --expected-server "http://localhost:3000/sse" \\
         --expected-tool "get_weather" \\
-        --servers "http://localhost:3000/sse"
+        --servers "http://localhost:3000/sse:sse"
+
+      \b
+      # Create test case with multiple servers (mixed transports)
+      mtef test-case create \\
+        --name "Multi-server test" \\
+        --query "Get my calendar events" \\
+        --servers "http://localhost:3000:sse,http://localhost:3001"
 
       \b
       # Create negative test case (no tool should be selected)
       mtef test-case create \\
         --name "No tool needed" \\
         --query "What is 2 + 2?" \\
-        --servers "http://localhost:3000/sse"
+        --servers "http://localhost:3000/sse:sse"
 
       \b
       # Create from JSON file (single or multiple test cases)
@@ -447,8 +510,9 @@ def create(
             print_error("--servers is required (or use --from-file)")
             raise SystemExit(EXIT_INVALID_ARGUMENTS)
 
-        # Parse servers from comma-separated string
-        server_urls = [url.strip() for url in servers.split(",") if url.strip()]
+        # Parse servers from comma-separated string and convert to MCPServerConfig
+        server_specs = [spec.strip() for spec in servers.split(",") if spec.strip()]
+        server_configs = [parse_server_spec(spec) for spec in server_specs]
 
         # Parse expected parameters JSON
         try:
@@ -463,7 +527,7 @@ def create(
                 TestCaseCreate(
                     name=name,
                     query=query,
-                    available_mcp_servers=server_urls,
+                    available_mcp_servers=server_configs,
                     expected_mcp_server_url=expected_server,
                     expected_tool_name=expected_tool,
                     expected_parameters=expected_parameters,
