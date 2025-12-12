@@ -8,7 +8,7 @@ requiring the full server as a dependency.
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 __all__ = [
     "HealthResponse",
@@ -144,6 +144,26 @@ class TestCaseCreate(BaseModel):
         ..., description="MCP server configurations available for selection", min_length=1
     )
 
+    @field_validator("available_mcp_servers", mode="before")
+    @classmethod
+    def normalize_available_mcp_servers(cls, v: Any) -> list[Any]:
+        """Convert string URLs to MCPServerConfig objects for convenience."""
+        if not isinstance(v, list):
+            return v
+
+        normalized = []
+        for item in v:
+            if isinstance(item, str):
+                # Convert string URL to MCPServerConfig dict
+                normalized.append({"url": item, "transport": "streamable-http"})
+            elif isinstance(item, dict):
+                # Already a dict, pass through (will be validated as MCPServerConfig)
+                normalized.append(item)
+            else:
+                # Already a MCPServerConfig object or other type
+                normalized.append(item)
+        return normalized
+
     @model_validator(mode="after")
     def validate_expected_tool_fields(self) -> "TestCaseCreate":
         """Validate cross-field constraints for expected tool configuration."""
@@ -187,6 +207,26 @@ class TestCaseResponse(BaseModel):
     )
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
+
+    @field_validator("available_mcp_servers", mode="before")
+    @classmethod
+    def normalize_available_mcp_servers(cls, v: Any) -> list[Any]:
+        """Convert string URLs to MCPServerConfig objects for convenience."""
+        if not isinstance(v, list):
+            return v
+
+        normalized = []
+        for item in v:
+            if isinstance(item, str):
+                # Convert string URL to MCPServerConfig dict
+                normalized.append({"url": item, "transport": "streamable-http"})
+            elif isinstance(item, dict):
+                # Already a dict, pass through (will be validated as MCPServerConfig)
+                normalized.append(item)
+            else:
+                # Already a MCPServerConfig object or other type
+                normalized.append(item)
+        return normalized
 
 
 class PaginatedTestCaseResponse(BaseModel):

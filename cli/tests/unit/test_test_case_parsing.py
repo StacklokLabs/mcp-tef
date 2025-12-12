@@ -378,7 +378,8 @@ class TestLoadTestCasesWithEnvVars:
         )
 
         assert len(test_cases) == 1
-        assert test_cases[0].available_mcp_servers == ["http://localhost:3000/sse"]
+        assert len(test_cases[0].available_mcp_servers) == 1
+        assert test_cases[0].available_mcp_servers[0].url == "http://localhost:3000/sse"
         assert test_cases[0].expected_mcp_server_url == "http://localhost:3000/sse"
 
     def test_load_multiple_with_env_vars(self, tmp_path):
@@ -404,8 +405,10 @@ class TestLoadTestCasesWithEnvVars:
         )
 
         assert len(test_cases) == 2
-        assert test_cases[0].available_mcp_servers == ["http://server:8000"]
-        assert test_cases[1].available_mcp_servers == ["http://server:8000"]
+        assert len(test_cases[0].available_mcp_servers) == 1
+        assert test_cases[0].available_mcp_servers[0].url == "http://server:8000"
+        assert len(test_cases[1].available_mcp_servers) == 1
+        assert test_cases[1].available_mcp_servers[0].url == "http://server:8000"
 
     def test_load_with_unresolved_var_fails_validation(self, tmp_path):
         """Unresolved variable that results in invalid URL fails validation."""
@@ -420,8 +423,9 @@ class TestLoadTestCasesWithEnvVars:
 
         # The unresolved ${UNDEFINED} is kept as-is, which is a valid string
         # but may not be a valid URL depending on use case
-        test_cases = load_test_cases_from_file(str(file_path), env_vars={})
-        assert test_cases[0].available_mcp_servers == ["${UNDEFINED}"]
+        # This should fail validation because ${UNDEFINED} doesn't match the URL pattern
+        with pytest.raises(BadParameter):
+            load_test_cases_from_file(str(file_path), env_vars={})
 
     def test_load_from_os_env(self, tmp_path, monkeypatch):
         """Variables are resolved from OS environment."""
@@ -437,4 +441,5 @@ class TestLoadTestCasesWithEnvVars:
 
         test_cases = load_test_cases_from_file(str(file_path))
 
-        assert test_cases[0].available_mcp_servers == ["http://from-os:9000"]
+        assert len(test_cases[0].available_mcp_servers) == 1
+        assert test_cases[0].available_mcp_servers[0].url == "http://from-os:9000"
