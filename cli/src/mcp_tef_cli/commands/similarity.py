@@ -30,7 +30,7 @@ DEFAULT_TIMEOUT = 60
 DEFAULT_TIMEOUT_WITH_RECOMMENDATIONS = 120
 
 # Table layout constants
-MIN_COLUMN_WIDTH = 6
+MIN_COLUMN_WIDTH = 5  # Minimum width to display "0.85" or "1.00" format
 ROW_LABEL_WIDTH = 25
 TABLE_BORDER_OVERHEAD = 10
 DEFAULT_CONSOLE_WIDTH = 80
@@ -134,7 +134,11 @@ def format_matrix_table(
 
     for label in labels:
         table.add_column(
-            label, justify="center", min_width=MIN_COLUMN_WIDTH, width=MIN_COLUMN_WIDTH
+            label,
+            justify="center",
+            min_width=MIN_COLUMN_WIDTH,
+            width=MIN_COLUMN_WIDTH,
+            no_wrap=True,
         )
 
     # Add rows
@@ -309,7 +313,11 @@ def format_overlap_table(response: OverlapMatrixResponse) -> None:
 
     for label in labels:
         table.add_column(
-            label, justify="center", min_width=MIN_COLUMN_WIDTH, width=MIN_COLUMN_WIDTH
+            label,
+            justify="center",
+            min_width=MIN_COLUMN_WIDTH,
+            width=MIN_COLUMN_WIDTH,
+            no_wrap=True,
         )
 
     # Add rows
