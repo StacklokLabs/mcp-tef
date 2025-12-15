@@ -413,6 +413,39 @@ class TefClient:
     # Similarity Methods
     # =========================================================================
 
+    def _convert_urls_to_server_configs(self, server_urls: list[str]) -> list[MCPServerConfig]:
+        """Convert list of URLs to MCPServerConfig objects.
+
+        Supports two formats:
+        - URL only: "http://localhost:3000/sse" (uses default transport)
+        - URL with transport: "http://localhost:3000/sse:sse"
+
+        Args:
+            server_urls: List of MCP server URLs (optionally with transport)
+
+        Returns:
+            List of MCPServerConfig objects
+        """
+        configs = []
+        for url in server_urls:
+            # Check if transport is specified (format: url:transport)
+            # Use rsplit to handle URLs with ports (e.g., http://localhost:8080)
+            parts = url.rsplit(":", 1)
+
+            if len(parts) == 2:
+                url_part, potential_transport = parts
+                # Valid transports are 'sse' or 'streamable-http'
+                if potential_transport in ("sse", "streamable-http"):
+                    # Verify the URL part is still valid (starts with http:// or https://)
+                    if url_part.startswith(("http://", "https://")):
+                        configs.append(MCPServerConfig(url=url_part, transport=potential_transport))
+                        continue
+
+            # No valid transport found, treat entire string as URL with default transport
+            configs.append(MCPServerConfig(url=url))
+
+        return configs
+
     async def analyze_similarity(
         self,
         server_urls: list[str],
@@ -438,8 +471,9 @@ class TefClient:
         Raises:
             httpx.HTTPError: If request fails
         """
+        mcp_servers = self._convert_urls_to_server_configs(server_urls)
         payload: dict = {
-            "mcp_server_urls": server_urls,
+            "mcp_servers": [config.model_dump() for config in mcp_servers],
             "similarity_threshold": threshold,
             "compute_full_similarity": compute_full_similarity,
             "include_recommendations": include_recommendations,
@@ -474,8 +508,9 @@ class TefClient:
         Raises:
             httpx.HTTPError: If request fails
         """
+        mcp_servers = self._convert_urls_to_server_configs(server_urls)
         payload = {
-            "mcp_server_urls": server_urls,
+            "mcp_servers": [config.model_dump() for config in mcp_servers],
             "similarity_threshold": threshold,
         }
 
@@ -499,8 +534,9 @@ class TefClient:
         Raises:
             httpx.HTTPError: If request fails
         """
+        mcp_servers = self._convert_urls_to_server_configs(server_urls)
         payload = {
-            "mcp_server_urls": server_urls,
+            "mcp_servers": [config.model_dump() for config in mcp_servers],
         }
 
         async with self._get_client() as client:
@@ -526,8 +562,9 @@ class TefClient:
             httpx.HTTPError: If request fails
             ValueError: If not exactly 2 tools
         """
+        mcp_servers = self._convert_urls_to_server_configs(server_urls)
         payload = {
-            "mcp_server_urls": server_urls,
+            "mcp_servers": [config.model_dump() for config in mcp_servers],
         }
         if tool_names:
             payload["tool_names"] = tool_names
