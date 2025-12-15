@@ -29,6 +29,12 @@ console = Console()
 DEFAULT_TIMEOUT = 60
 DEFAULT_TIMEOUT_WITH_RECOMMENDATIONS = 120
 
+# Table layout constants
+MIN_COLUMN_WIDTH = 6
+ROW_LABEL_WIDTH = 25
+TABLE_BORDER_OVERHEAD = 10
+DEFAULT_CONSOLE_WIDTH = 80
+
 
 def parse_server_urls(value: str) -> list[str]:
     """Parse comma-separated server URLs.
@@ -69,6 +75,26 @@ def validate_threshold(value: float) -> float:
     return value
 
 
+def calculate_column_limits(console: Console, total_tools: int) -> tuple[int, int]:
+    """Calculate how many columns can fit in console width.
+
+    Args:
+        console: Rich Console instance
+        total_tools: Total number of tools (columns) to display
+
+    Returns:
+        Tuple of (columns_to_show, columns_truncated)
+    """
+    console_width = (
+        console.width if hasattr(console, "width") and console.width else DEFAULT_CONSOLE_WIDTH
+    )
+    available_width = console_width - ROW_LABEL_WIDTH - TABLE_BORDER_OVERHEAD
+    max_columns = max(1, available_width // MIN_COLUMN_WIDTH)
+    columns_to_show = min(total_tools, max_columns)
+    columns_truncated = total_tools - columns_to_show
+    return columns_to_show, columns_truncated
+
+
 def format_matrix_table(
     response: SimilarityMatrixResponse,
     threshold: float,
@@ -92,36 +118,23 @@ def format_matrix_table(
         console.print("[yellow]No tools to analyze.[/yellow]")
         return
 
-    # Get console width (default to 80 if not available)
-    console_width = console.width if hasattr(console, "width") and console.width else 80
-
-    # Minimum column width: need space for "T52" (3 chars) + padding (2 chars) = 5
-    # But we want at least 6 to fit "0.85" format nicely
-    min_column_width = 6
-    # Row label column needs space for "T1: tool_name..." (estimate ~25 chars)
-    row_label_width = 25
-    # Table borders and padding overhead (rough estimate)
-    border_overhead = 10
-
-    # Calculate how many columns can fit
-    available_width = console_width - row_label_width - border_overhead
-    max_columns = max(1, available_width // min_column_width)
-
-    # Determine how many columns to show
+    # Calculate console layout constraints
     total_tools = len(response.tool_ids)
-    columns_to_show = min(total_tools, max_columns)
-    columns_truncated = total_tools - columns_to_show
+    columns_to_show, columns_truncated = calculate_column_limits(console, total_tools)
+    console_width = (
+        console.width if hasattr(console, "width") and console.width else DEFAULT_CONSOLE_WIDTH
+    )
 
     # Create abbreviated labels for columns
     labels = [f"T{i + 1}" for i in range(columns_to_show)]
 
     # Build table
     table = Table(show_header=True, header_style="bold")
-    table.add_column("", style="cyan", width=row_label_width, no_wrap=True)  # Row label column
+    table.add_column("", style="cyan", width=ROW_LABEL_WIDTH, no_wrap=True)  # Row label column
 
     for label in labels:
         table.add_column(
-            label, justify="center", min_width=min_column_width, width=min_column_width
+            label, justify="center", min_width=MIN_COLUMN_WIDTH, width=MIN_COLUMN_WIDTH
         )
 
     # Add rows
@@ -280,43 +293,32 @@ def format_overlap_table(response: OverlapMatrixResponse) -> None:
         console.print("[yellow]No tools to analyze.[/yellow]")
         return
 
-    # Get console width (default to 80 if not available)
-    console_width = console.width if hasattr(console, "width") and console.width else 80
-
-    # Minimum column width: need space for "T52" (3 chars) + padding (2 chars) = 5
-    # But we want at least 6 to fit "0.85" format nicely
-    min_column_width = 6
-    # Row label column needs space for "T1: tool_name..." (estimate ~25 chars)
-    row_label_width = 25
-    # Table borders and padding overhead (rough estimate)
-    border_overhead = 10
-
-    # Calculate how many columns can fit
-    available_width = console_width - row_label_width - border_overhead
-    max_columns = max(1, available_width // min_column_width)
-
-    # Determine how many columns to show
+    # Calculate console layout constraints
     total_tools = len(response.tool_ids)
-    columns_to_show = min(total_tools, max_columns)
-    columns_truncated = total_tools - columns_to_show
+    columns_to_show, columns_truncated = calculate_column_limits(console, total_tools)
+    console_width = (
+        console.width if hasattr(console, "width") and console.width else DEFAULT_CONSOLE_WIDTH
+    )
 
     # Create abbreviated labels for columns
     labels = [f"T{i + 1}" for i in range(columns_to_show)]
 
     # Build table
     table = Table(show_header=True, header_style="bold")
-    table.add_column("", style="cyan", width=row_label_width, no_wrap=True)
+    table.add_column("", style="cyan", width=ROW_LABEL_WIDTH, no_wrap=True)
 
     for label in labels:
         table.add_column(
-            label, justify="center", min_width=min_column_width, width=min_column_width
+            label, justify="center", min_width=MIN_COLUMN_WIDTH, width=MIN_COLUMN_WIDTH
         )
 
     # Add rows
     for i, tool_id in enumerate(response.tool_ids):
         row_label = f"T{i + 1}: {tool_id[:20]}..." if len(tool_id) > 20 else f"T{i + 1}: {tool_id}"
+        row_values = []
         # Only show values for columns that fit
-        row_values = [f"{score:.2f}" for score in response.matrix[i][:columns_to_show]]
+        for j in range(columns_to_show):
+            row_values.append(f"{response.matrix[i][j]:.2f}")
         table.add_row(row_label, *row_values)
 
     console.print(table)
