@@ -29,6 +29,12 @@ console = Console()
 DEFAULT_TIMEOUT = 60
 DEFAULT_TIMEOUT_WITH_RECOMMENDATIONS = 120
 
+# Table layout constants
+MIN_COLUMN_WIDTH = 7  # Minimum width to display "0.85" or "1.00" format with padding
+ROW_LABEL_WIDTH = 25
+TABLE_BORDER_OVERHEAD = 10
+DEFAULT_CONSOLE_WIDTH = 80
+
 
 def parse_server_urls(value: str) -> list[str]:
     """Parse comma-separated server URLs.
@@ -69,6 +75,26 @@ def validate_threshold(value: float) -> float:
     return value
 
 
+def calculate_column_limits(console: Console, total_tools: int) -> tuple[int, int]:
+    """Calculate how many columns can fit in console width.
+
+    Args:
+        console: Rich Console instance
+        total_tools: Total number of tools (columns) to display
+
+    Returns:
+        Tuple of (columns_to_show, columns_truncated)
+    """
+    console_width = (
+        console.width if hasattr(console, "width") and console.width else DEFAULT_CONSOLE_WIDTH
+    )
+    available_width = console_width - ROW_LABEL_WIDTH - TABLE_BORDER_OVERHEAD
+    max_columns = max(1, available_width // MIN_COLUMN_WIDTH)
+    columns_to_show = min(total_tools, max_columns)
+    columns_truncated = total_tools - columns_to_show
+    return columns_to_show, columns_truncated
+
+
 def format_matrix_table(
     response: SimilarityMatrixResponse,
     threshold: float,
@@ -92,22 +118,37 @@ def format_matrix_table(
         console.print("[yellow]No tools to analyze.[/yellow]")
         return
 
+    # Calculate console layout constraints
+    total_tools = len(response.tool_ids)
+    columns_to_show, columns_truncated = calculate_column_limits(console, total_tools)
+    console_width = (
+        console.width if hasattr(console, "width") and console.width else DEFAULT_CONSOLE_WIDTH
+    )
+
     # Create abbreviated labels for columns
-    labels = [f"T{i + 1}" for i in range(len(response.tool_ids))]
+    labels = [f"T{i + 1}" for i in range(columns_to_show)]
 
     # Build table
     table = Table(show_header=True, header_style="bold")
-    table.add_column("", style="cyan")  # Row label column
+    table.add_column("", style="cyan", width=ROW_LABEL_WIDTH, no_wrap=True)  # Row label column
 
     for label in labels:
-        table.add_column(label, justify="center")
+        table.add_column(
+            label,
+            justify="center",
+            min_width=MIN_COLUMN_WIDTH,
+            width=MIN_COLUMN_WIDTH,
+            no_wrap=True,
+        )
 
     # Add rows
     for i, tool_id in enumerate(response.tool_ids):
         row_label = f"T{i + 1}: {tool_id[:20]}..." if len(tool_id) > 20 else f"T{i + 1}: {tool_id}"
         row_values = []
 
-        for j, score in enumerate(response.matrix[i]):
+        # Only show values for columns that fit
+        for j in range(columns_to_show):
+            score = response.matrix[i][j]
             # Highlight values above threshold (excluding diagonal)
             if i != j and score >= threshold:
                 row_values.append(f"[bold yellow]*{score:.2f}*[/bold yellow]")
@@ -118,6 +159,15 @@ def format_matrix_table(
 
     console.print(table)
     console.print()
+
+    if columns_truncated > 0:
+        console.print(
+            f"[yellow]Note: {columns_truncated} column(s) truncated "
+            f"(console width: {console_width}, "
+            f"showing {columns_to_show}/{total_tools} columns)[/yellow]"
+        )
+        console.print()
+
     console.print(f"[dim]*Highlighted* values exceed threshold ({threshold})[/dim]")
     console.print()
     console.print(f"Flagged Pairs: {len(response.flagged_pairs)}")
@@ -247,23 +297,47 @@ def format_overlap_table(response: OverlapMatrixResponse) -> None:
         console.print("[yellow]No tools to analyze.[/yellow]")
         return
 
+    # Calculate console layout constraints
+    total_tools = len(response.tool_ids)
+    columns_to_show, columns_truncated = calculate_column_limits(console, total_tools)
+    console_width = (
+        console.width if hasattr(console, "width") and console.width else DEFAULT_CONSOLE_WIDTH
+    )
+
     # Create abbreviated labels for columns
-    labels = [f"T{i + 1}" for i in range(len(response.tool_ids))]
+    labels = [f"T{i + 1}" for i in range(columns_to_show)]
 
     # Build table
     table = Table(show_header=True, header_style="bold")
-    table.add_column("", style="cyan")
+    table.add_column("", style="cyan", width=ROW_LABEL_WIDTH, no_wrap=True)
 
     for label in labels:
-        table.add_column(label, justify="center")
+        table.add_column(
+            label,
+            justify="center",
+            min_width=MIN_COLUMN_WIDTH,
+            width=MIN_COLUMN_WIDTH,
+            no_wrap=True,
+        )
 
     # Add rows
     for i, tool_id in enumerate(response.tool_ids):
         row_label = f"T{i + 1}: {tool_id[:20]}..." if len(tool_id) > 20 else f"T{i + 1}: {tool_id}"
-        row_values = [f"{score:.2f}" for score in response.matrix[i]]
+        row_values = []
+        # Only show values for columns that fit
+        for j in range(columns_to_show):
+            row_values.append(f"{response.matrix[i][j]:.2f}")
         table.add_row(row_label, *row_values)
 
     console.print(table)
+
+    if columns_truncated > 0:
+        console.print()
+        console.print(
+            f"[yellow]Note: {columns_truncated} column(s) truncated "
+            f"(console width: {console_width}, "
+            f"showing {columns_to_show}/{total_tools} columns)[/yellow]"
+        )
 
 
 def format_recommend_table(response: DifferentiationRecommendationResponse) -> None:
