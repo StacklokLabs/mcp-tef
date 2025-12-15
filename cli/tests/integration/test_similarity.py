@@ -629,7 +629,13 @@ class TestCommonOptions:
         assert result.exit_code == EXIT_SUCCESS
         assert route.called
         request_body = json.loads(route.calls[0].request.content)
-        assert len(request_body["mcp_server_urls"]) == 2
+        assert "mcp_servers" in request_body
+        assert len(request_body["mcp_servers"]) == 2
+        # Verify each server config has url and transport
+        for server_config in request_body["mcp_servers"]:
+            assert "url" in server_config
+            assert "transport" in server_config
+            assert server_config["transport"] in ("sse", "streamable-http")
 
     def test_missing_server_urls(self):
         """Missing --server-urls shows error."""
