@@ -6,23 +6,25 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 import httpx
-from pydantic import BaseModel, Field
-
-from mcp_tef_cli.models import (
+from mcp_tef_models.schemas import (
     DifferentiationRecommendationResponse,
-    HealthResponse,
     MCPServerConfig,
     ModelSettingsCreate,
     OverlapMatrixResponse,
     PaginatedTestCaseResponse,
     PaginatedTestRunResponse,
-    ServerInfo,
     SimilarityAnalysisResponse,
     SimilarityMatrixResponse,
     TestCaseCreate,
     TestCaseResponse,
     TestRunExecuteRequest,
     TestRunResponse,
+)
+from pydantic import BaseModel, Field
+
+from mcp_tef_cli.models import (
+    HealthResponse,
+    ServerInfo,
     ToolQualityResponse,
 )
 

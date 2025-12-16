@@ -19,7 +19,11 @@ dependencies = [
     "fastembed>=0.7.4",
     "scikit-learn>=1.8.0",
     "cryptography>=46.0.3",
+    "mcp-tef-models",
 ]
+
+[tool.uv.sources]
+mcp-tef-models = { path = "./mcp-tef-models", editable = true }
 
 [project.scripts]
 tef = "mcp_tef.__main__:main"

@@ -4,6 +4,13 @@ import asyncio
 import json
 
 import click
+from mcp_tef_models.schemas import (
+    DifferentiationRecommendation,
+    DifferentiationRecommendationResponse,
+    OverlapMatrixResponse,
+    SimilarityAnalysisResponse,
+    SimilarityMatrixResponse,
+)
 from rich.console import Console
 from rich.table import Table
 
@@ -12,13 +19,6 @@ from mcp_tef_cli.constants import (
     DEFAULT_CONTAINER_NAME,
     EXIT_INVALID_ARGUMENTS,
     EXIT_SUCCESS,
-)
-from mcp_tef_cli.models import (
-    DifferentiationRecommendation,
-    DifferentiationRecommendationResponse,
-    OverlapMatrixResponse,
-    SimilarityAnalysisResponse,
-    SimilarityMatrixResponse,
 )
 from mcp_tef_cli.output import print_error, print_success
 from mcp_tef_cli.utils import handle_api_errors, resolve_tef_url

@@ -7,6 +7,12 @@ import re
 from pathlib import Path
 
 import click
+from mcp_tef_models.schemas import (
+    MCPServerConfig,
+    PaginatedTestCaseResponse,
+    TestCaseCreate,
+    TestCaseResponse,
+)
 from pydantic import ValidationError
 from rich.console import Console
 from rich.table import Table
@@ -16,12 +22,6 @@ from mcp_tef_cli.constants import (
     DEFAULT_CONTAINER_NAME,
     EXIT_INVALID_ARGUMENTS,
     EXIT_SUCCESS,
-)
-from mcp_tef_cli.models import (
-    MCPServerConfig,
-    PaginatedTestCaseResponse,
-    TestCaseCreate,
-    TestCaseResponse,
 )
 from mcp_tef_cli.output import print_error, print_success
 from mcp_tef_cli.utils import handle_api_errors, resolve_tef_url

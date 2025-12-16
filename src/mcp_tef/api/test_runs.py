@@ -2,8 +2,8 @@
 
 import structlog
 from fastapi import APIRouter, Depends, Query, Request
+from mcp_tef_models.schemas import PaginatedTestRunResponse, TestRunResponse
 
-from mcp_tef.models.schemas import PaginatedTestRunResponse, TestRunResponse
 from mcp_tef.storage.test_run_repository import TestRunRepository
 
 logger = structlog.get_logger(__name__)

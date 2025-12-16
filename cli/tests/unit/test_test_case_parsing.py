@@ -2,6 +2,7 @@
 
 import pytest
 from click import BadParameter
+from mcp_tef_models.schemas import TestCaseCreate
 from pydantic import ValidationError
 
 from mcp_tef_cli.commands.test_case import (
@@ -10,7 +11,6 @@ from mcp_tef_cli.commands.test_case import (
     parse_set_option,
     substitute_env_vars,
 )
-from mcp_tef_cli.models import TestCaseCreate
 
 
 class TestCaseCreateValidation:

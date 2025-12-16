@@ -5,10 +5,8 @@ from typing import Any, Literal, cast
 
 import structlog
 from fastapi import APIRouter, Depends, Request
-
-from mcp_tef.config.settings import Settings, get_settings
-from mcp_tef.models.enums import SimilarityMethod
-from mcp_tef.models.schemas import (
+from mcp_tef_models.enums import SimilarityMethod
+from mcp_tef_models.schemas import (
     DifferentiationRecommendationResponse,
     NormalizedTool,
     OverlapMatrixResponse,
@@ -16,6 +14,8 @@ from mcp_tef.models.schemas import (
     SimilarityAnalysisResponse,
     SimilarityMatrixResponse,
 )
+
+from mcp_tef.config.settings import Settings, get_settings
 from mcp_tef.services.embedding_service import EmbeddingService
 from mcp_tef.services.llm_service import LLMService
 from mcp_tef.services.mcp_loader import MCPLoaderService

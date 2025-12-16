@@ -5,6 +5,7 @@ import json
 import os
 
 import click
+from mcp_tef_models.schemas import PaginatedTestRunResponse, TestRunResponse
 from rich.console import Console
 from rich.table import Table
 
@@ -14,7 +15,6 @@ from mcp_tef_cli.constants import (
     EXIT_INVALID_ARGUMENTS,
     EXIT_SUCCESS,
 )
-from mcp_tef_cli.models import PaginatedTestRunResponse, TestRunResponse
 from mcp_tef_cli.output import print_error, print_info, print_success, print_warning
 from mcp_tef_cli.utils import handle_api_errors, resolve_tef_url
 

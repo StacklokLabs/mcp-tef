@@ -4,6 +4,7 @@ import os
 from collections.abc import Sequence
 
 import structlog
+from mcp_tef_models.schemas import MCPServerConfig
 from pydantic import BaseModel, Field
 from pydantic_ai import (
     Agent,
@@ -30,7 +31,6 @@ from pydantic_ai.toolsets.abstract import AbstractToolset
 from mcp_tef.api.errors import LLMProviderAPIKeyError, LLMProviderError
 from mcp_tef.config.settings import DEFAULT_OLLAMA_BASE_URL, Settings
 from mcp_tef.models.llm_models import ConfidenceLevel, LLMResponse, LLMToolCall
-from mcp_tef.models.schemas import MCPServerConfig
 
 logger = structlog.get_logger(__name__)
 
