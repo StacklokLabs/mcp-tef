@@ -43,6 +43,9 @@ USER app
 # Copy source code
 COPY --chown=app:app src/ ./src/
 
+# Copy mcp-tef-models package
+COPY --chown=app:app mcp-tef-models/ ./mcp-tef-models/
+
 # Sync the project
 RUN --mount=type=cache,target=/home/app/.cache/uv,uid=1000,gid=1000 \
     --mount=type=bind,source=uv.lock,target=uv.lock \
