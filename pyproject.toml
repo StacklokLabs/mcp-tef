@@ -5,7 +5,7 @@ description = "MCP Tool Evaluation System - Validate tool selection effectivenes
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "fastapi>=0.115.0",
+    "fastapi>=0.124.4",
     "pydantic>=2.12.5",
     "pydantic-ai>=0.0.13",
     "pydantic-evals>=0.8.1",
