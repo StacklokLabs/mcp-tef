@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import builtins
 import json
 from datetime import datetime
 from uuid import uuid4
@@ -224,7 +225,7 @@ class TestCaseRepository:
         self,
         offset: int = 0,
         limit: int = 100,
-    ) -> tuple[list[TestCaseResponse], int]:
+    ) -> tuple[builtins.list[TestCaseResponse], int]:
         """List test cases with pagination.
 
         Args:
@@ -310,7 +311,7 @@ class TestCaseRepository:
     async def get_test_case_servers(
         self,
         test_case_id: str,
-    ) -> list[MCPServerConfig]:
+    ) -> builtins.list[MCPServerConfig]:
         """Get MCP server configurations for test case.
 
         Args:

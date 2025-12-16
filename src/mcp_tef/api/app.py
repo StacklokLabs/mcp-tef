@@ -76,7 +76,7 @@ app.state.settings = settings
 
 # Add CORS middleware
 app.add_middleware(
-    CORSMiddleware,
+    CORSMiddleware,  # type: ignore[arg-type]  # ty limitation with FastAPI middleware factory types
     allow_origins=["*"],  # Configure appropriately for production
     allow_credentials=True,
     allow_methods=["*"],
@@ -84,8 +84,8 @@ app.add_middleware(
 )
 
 # Register exception handlers
-app.add_exception_handler(MCPEvalException, mcp_eval_exception_handler)
-app.add_exception_handler(Exception, generic_exception_handler)
+app.add_exception_handler(MCPEvalException, mcp_eval_exception_handler)  # type: ignore[arg-type]  # ty limitation with async handler types
+app.add_exception_handler(Exception, generic_exception_handler)  # type: ignore[arg-type]  # ty limitation with async handler types
 
 # Register routers
 app.include_router(mcp_servers.router, prefix="/mcp-servers", tags=["mcp-servers"])

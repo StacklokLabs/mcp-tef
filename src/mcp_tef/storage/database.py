@@ -42,6 +42,9 @@ class DatabaseManager:
 
     async def _initialize_schema(self) -> None:
         """Create database schema if it doesn't exist."""
+        if self._connection is None:
+            raise RuntimeError("Database connection not established. Call connect() first.")
+
         schema_path = Path(__file__).parent / "schema.sql"
 
         with open(schema_path) as f:

@@ -5,6 +5,7 @@ from typing import Literal
 
 import httpx
 import structlog
+from fastembed import TextEmbedding
 
 from mcp_tef.api.errors import EmbeddingGenerationError
 
@@ -44,15 +45,13 @@ class EmbeddingService:
         self.timeout = timeout
 
         # Initialize fastembed model if using local backend
-        self._fastembed_model = None
+        self._fastembed_model: None | TextEmbedding = None
         if model_type == "fastembed":
             self._init_fastembed()
 
     def _init_fastembed(self) -> None:
         """Initialize fastembed model (lazy loading)."""
         try:
-            from fastembed import TextEmbedding
-
             logger.info(f"Initializing fastembed model: {self.model_name}")
             self._fastembed_model = TextEmbedding(model_name=self.model_name)
             logger.info("Fastembed model initialized successfully")
@@ -117,11 +116,13 @@ class EmbeddingService:
             if self._fastembed_model is None:
                 self._init_fastembed()
 
+            if self._fastembed_model is None:
+                raise EmbeddingGenerationError("Fastembed model is not initialized")
+
             # Run in thread pool to avoid blocking async loop
+            model = self._fastembed_model
             loop = asyncio.get_event_loop()
-            embeddings = await loop.run_in_executor(
-                None, lambda: list(self._fastembed_model.embed([text]))
-            )
+            embeddings = await loop.run_in_executor(None, lambda: list(model.embed([text])))
             return embeddings[0].tolist()
 
         except Exception as e:
@@ -141,11 +142,14 @@ class EmbeddingService:
             if self._fastembed_model is None:
                 self._init_fastembed()
 
+            if self._fastembed_model is None:
+                raise EmbeddingGenerationError("Fastembed model is not initialized")
+
             # Run in thread pool to avoid blocking async loop
+            # Assign to local variable to help type checker understand it's not None in lambda
+            model = self._fastembed_model
             loop = asyncio.get_event_loop()
-            embeddings = await loop.run_in_executor(
-                None, lambda: list(self._fastembed_model.embed(texts))
-            )
+            embeddings = await loop.run_in_executor(None, lambda: list(model.embed(texts)))
             return [emb.tolist() for emb in embeddings]
 
         except Exception as e:

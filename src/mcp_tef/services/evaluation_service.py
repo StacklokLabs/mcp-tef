@@ -195,7 +195,10 @@ class EvaluationService:
 
             # Resolve expected tool ID from MCP server URL, tool name, and test run ID
             expected_tool_id: str | None = None
-            if test_case.expected_mcp_server_url is not None:
+            if (
+                test_case.expected_mcp_server_url is not None
+                and test_case.expected_tool_name is not None
+            ):
                 try:
                     expected_tool_def = await self.tool_repo.get_by_server_url_and_test_run(
                         test_case.expected_mcp_server_url, test_case.expected_tool_name, test_run.id
