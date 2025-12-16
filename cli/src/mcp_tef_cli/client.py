@@ -14,7 +14,6 @@ from mcp_tef_models.schemas import (
     PaginatedTestCaseResponse,
     PaginatedTestRunResponse,
     SimilarityAnalysisResponse,
-    SimilarityMatrixResponse,
     TestCaseCreate,
     TestCaseResponse,
     TestRunExecuteRequest,
@@ -492,34 +491,6 @@ class TefClient:
             response = await client.post("/similarity/analyze", json=payload)
             response.raise_for_status()
             return SimilarityAnalysisResponse.model_validate(response.json())
-
-    async def get_similarity_matrix(
-        self,
-        server_urls: list[str],
-        threshold: float = 0.85,
-    ) -> SimilarityMatrixResponse:
-        """Generate similarity matrix for tool pairs.
-
-        Args:
-            server_urls: List of MCP server URLs
-            threshold: Threshold for flagging similar pairs
-
-        Returns:
-            SimilarityMatrixResponse with matrix data
-
-        Raises:
-            httpx.HTTPError: If request fails
-        """
-        mcp_servers = self._convert_urls_to_server_configs(server_urls)
-        payload = {
-            "mcp_servers": [config.model_dump() for config in mcp_servers],
-            "similarity_threshold": threshold,
-        }
-
-        async with self._get_client() as client:
-            response = await client.post("/similarity/matrix", json=payload)
-            response.raise_for_status()
-            return SimilarityMatrixResponse.model_validate(response.json())
 
     async def get_overlap_matrix(
         self,

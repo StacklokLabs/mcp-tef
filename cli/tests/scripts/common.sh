@@ -328,7 +328,7 @@ deploy_mcp_server() {
     fi
 
     log_info "Deploying MCP server: ${name}"
-    thv run "$name"
+    thv run "$name" --host 0.0.0.0
 
     # Poll for server to be running
     log_info "Waiting for '${name}' to be ready (timeout: ${timeout}s)..."

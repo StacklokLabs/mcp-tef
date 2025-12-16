@@ -147,38 +147,6 @@ async def test_analyze_similarity_contract(client, sample_url_list):
 
 
 @pytest.mark.asyncio
-async def test_generate_similarity_matrix_contract(client, sample_url_list):
-    """Test POST /similarity/matrix contract."""
-    response = await client.post(
-        "/similarity/matrix",
-        json={
-            "mcp_servers": [
-                {"url": s.url, "transport": s.transport}
-                if hasattr(s, "url")
-                else {"url": s, "transport": "streamable-http"}
-                for s in sample_url_list
-            ],
-            "similarity_threshold": 0.85,
-        },
-    )
-
-    assert response.status_code == 200
-    data = response.json()
-
-    # Required fields per OpenAPI spec
-    required_fields = ["tool_ids", "matrix", "threshold", "flagged_pairs", "generated_at"]
-    for field in required_fields:
-        assert field in data
-
-    # Type validation
-    assert isinstance(data["tool_ids"], list)
-    assert isinstance(data["matrix"], list)
-    assert isinstance(data["threshold"], (int, float))
-    assert isinstance(data["flagged_pairs"], list)
-    assert isinstance(data["generated_at"], str)
-
-
-@pytest.mark.asyncio
 async def test_generate_overlap_matrix_contract(client, sample_url_list):
     """Test POST /similarity/overlap-matrix contract."""
     response = await client.post(
@@ -233,21 +201,6 @@ async def test_analyze_similarity_request_validation(client):
         json={
             "mcp_server_urls": ["http://example.com/mcp1", "http://example.com/mcp2"],
             "similarity_threshold": 1.5,  # > 1.0
-        },
-    )
-
-    assert response.status_code == 422
-
-
-@pytest.mark.asyncio
-async def test_similarity_matrix_request_validation(client):
-    """Test request validation for /similarity/matrix."""
-    # Invalid threshold
-    response = await client.post(
-        "/similarity/matrix",
-        json={
-            "mcp_server_urls": ["http://example.com/mcp1", "http://example.com/mcp2"],
-            "similarity_threshold": -0.1,  # < 0.0
         },
     )
 

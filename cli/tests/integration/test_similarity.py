@@ -12,7 +12,6 @@ from mcp_tef_cli.constants import (
     EXIT_INVALID_ARGUMENTS,
     EXIT_REQUEST_TIMEOUT,
     EXIT_SUCCESS,
-    EXIT_TEF_SERVER_UNREACHABLE,
 )
 
 pytestmark = [pytest.mark.integration]
@@ -301,107 +300,6 @@ class TestSimilarityAnalyzeCommand:
         assert "Request timed out" in result.output
 
 
-class TestSimilarityMatrixCommand:
-    """Test similarity matrix CLI command."""
-
-    @respx.mock
-    def test_matrix_success(self):
-        """Successful matrix generation displays table."""
-        respx.post("http://localhost:8000/similarity/matrix").mock(
-            return_value=httpx.Response(200, json=mock_matrix_response())
-        )
-
-        runner = CliRunner()
-        result = runner.invoke(
-            similarity,
-            [
-                "matrix",
-                "--url",
-                "http://localhost:8000",
-                "--server-urls",
-                "http://localhost:3000/sse",
-            ],
-        )
-
-        assert result.exit_code == EXIT_SUCCESS
-        assert "Similarity Matrix" in result.output
-
-    @respx.mock
-    def test_matrix_json_output(self):
-        """JSON format outputs valid JSON."""
-        respx.post("http://localhost:8000/similarity/matrix").mock(
-            return_value=httpx.Response(200, json=mock_matrix_response())
-        )
-
-        runner = CliRunner()
-        result = runner.invoke(
-            similarity,
-            [
-                "matrix",
-                "--url",
-                "http://localhost:8000",
-                "--server-urls",
-                "http://localhost:3000/sse",
-                "--format",
-                "json",
-            ],
-        )
-
-        assert result.exit_code == EXIT_SUCCESS
-        data = json.loads(result.output)
-        assert "tool_ids" in data
-        assert "matrix" in data
-        assert len(data["tool_ids"]) == 3
-        assert len(data["matrix"]) == 3
-
-    @respx.mock
-    def test_matrix_with_threshold(self):
-        """Custom threshold is applied."""
-        route = respx.post("http://localhost:8000/similarity/matrix").mock(
-            return_value=httpx.Response(200, json=mock_matrix_response())
-        )
-
-        runner = CliRunner()
-        result = runner.invoke(
-            similarity,
-            [
-                "matrix",
-                "--url",
-                "http://localhost:8000",
-                "--server-urls",
-                "http://localhost:3000/sse",
-                "--threshold",
-                "0.75",
-            ],
-        )
-
-        assert result.exit_code == EXIT_SUCCESS
-        assert route.called
-        request_body = json.loads(route.calls[0].request.content)
-        assert request_body["similarity_threshold"] == 0.75
-
-    @respx.mock
-    def test_matrix_http_error(self):
-        """HTTP error is handled gracefully."""
-        respx.post("http://localhost:8000/similarity/matrix").mock(
-            return_value=httpx.Response(500, text="Internal Server Error")
-        )
-
-        runner = CliRunner()
-        result = runner.invoke(
-            similarity,
-            [
-                "matrix",
-                "--url",
-                "http://localhost:8000",
-                "--server-urls",
-                "http://localhost:3000/sse",
-            ],
-        )
-
-        assert result.exit_code == EXIT_TEF_SERVER_UNREACHABLE
-
-
 class TestSimilarityOverlapCommand:
     """Test similarity overlap CLI command."""
 
@@ -565,15 +463,15 @@ class TestCommonOptions:
     @respx.mock
     def test_insecure_flag(self):
         """--insecure flag is accepted."""
-        respx.post("http://localhost:8000/similarity/matrix").mock(
-            return_value=httpx.Response(200, json=mock_matrix_response())
+        respx.post("http://localhost:8000/similarity/overlap-matrix").mock(
+            return_value=httpx.Response(200, json=mock_overlap_response())
         )
 
         runner = CliRunner()
         result = runner.invoke(
             similarity,
             [
-                "matrix",
+                "overlap",
                 "--url",
                 "http://localhost:8000",
                 "--server-urls",
@@ -587,15 +485,15 @@ class TestCommonOptions:
     @respx.mock
     def test_custom_timeout(self):
         """--timeout option is accepted."""
-        respx.post("http://localhost:8000/similarity/matrix").mock(
-            return_value=httpx.Response(200, json=mock_matrix_response())
+        respx.post("http://localhost:8000/similarity/overlap-matrix").mock(
+            return_value=httpx.Response(200, json=mock_overlap_response())
         )
 
         runner = CliRunner()
         result = runner.invoke(
             similarity,
             [
-                "matrix",
+                "overlap",
                 "--url",
                 "http://localhost:8000",
                 "--server-urls",
@@ -610,15 +508,15 @@ class TestCommonOptions:
     @respx.mock
     def test_multiple_server_urls(self):
         """Multiple server URLs are parsed correctly."""
-        route = respx.post("http://localhost:8000/similarity/matrix").mock(
-            return_value=httpx.Response(200, json=mock_matrix_response())
+        route = respx.post("http://localhost:8000/similarity/overlap-matrix").mock(
+            return_value=httpx.Response(200, json=mock_overlap_response())
         )
 
         runner = CliRunner()
         result = runner.invoke(
             similarity,
             [
-                "matrix",
+                "overlap",
                 "--url",
                 "http://localhost:8000",
                 "--server-urls",
@@ -643,7 +541,7 @@ class TestCommonOptions:
         result = runner.invoke(
             similarity,
             [
-                "matrix",
+                "overlap",
                 "--url",
                 "http://localhost:8000",
             ],
