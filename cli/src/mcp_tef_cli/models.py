@@ -1,60 +1,18 @@
-"""CLI-specific models and re-exports from mcp-tef-models.
+"""CLI-specific models for mcp-tef CLI.
 
-This module contains CLI-specific models and re-exports shared models from
-mcp_tef_models for convenience. All shared models should be imported from
-mcp_tef_models directly.
+This module contains only CLI-specific models. Shared models should be
+imported directly from mcp_tef_models.
 """
 
-# Re-export shared models from mcp_tef_models for convenience
-from mcp_tef_models.schemas import (  # noqa: F401
-    DifferentiationIssue,
-    DifferentiationRecommendation,
-    DifferentiationRecommendationResponse,
-    MCPServerConfig,
-    ModelSettingsCreate,
-    ModelSettingsResponse,
-    OverlapMatrixResponse,
-    PaginatedTestCaseResponse,
-    PaginatedTestRunResponse,
-    RecommendationItem,
-    SimilarityAnalysisResponse,
-    SimilarityMatrixResponse,
-    TestCaseCreate,
-    TestCaseResponse,
-    TestRunExecuteRequest,
-    TestRunResponse,
-    ToolDefinition,
-    ToolPair,
-)
 from pydantic import BaseModel, Field
 
 __all__ = [
-    # CLI-specific models
     "HealthResponse",
     "ServerInfo",
     "EvaluationDimensionResult",
     "EvaluationResult",
     "ToolQualityResult",
     "ToolQualityResponse",
-    # Re-exported shared models
-    "DifferentiationIssue",
-    "DifferentiationRecommendation",
-    "DifferentiationRecommendationResponse",
-    "MCPServerConfig",
-    "ModelSettingsCreate",
-    "ModelSettingsResponse",
-    "OverlapMatrixResponse",
-    "PaginatedTestCaseResponse",
-    "PaginatedTestRunResponse",
-    "RecommendationItem",
-    "SimilarityAnalysisResponse",
-    "SimilarityMatrixResponse",
-    "TestCaseCreate",
-    "TestCaseResponse",
-    "TestRunExecuteRequest",
-    "TestRunResponse",
-    "ToolDefinition",
-    "ToolPair",
 ]
 
 
