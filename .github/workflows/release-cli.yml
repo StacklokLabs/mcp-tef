@@ -87,7 +87,7 @@ jobs:
           uv run --with twine twine check dist/*
 
       - name: Create or Update GitHub Release
-        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
         with:
           tag_name: ${{ github.event.release.tag_name || github.ref_name }}
           files: |
