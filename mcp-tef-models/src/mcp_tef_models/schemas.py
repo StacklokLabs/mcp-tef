@@ -238,6 +238,9 @@ class TestCaseCreate(BaseModel):
                 raise ValueError(
                     f"expected_mcp_server_url '{server_url}' must be in available_mcp_servers"
                 )
+        # Validate expected_parameters requires expected_tool_name
+        if self.expected_parameters and not self.expected_tool_name:
+            raise ValueError("expected_parameters requires expected_tool_name to be set")
         return self
 
 

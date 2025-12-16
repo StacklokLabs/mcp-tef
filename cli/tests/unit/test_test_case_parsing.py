@@ -40,7 +40,7 @@ class TestCaseCreateValidation:
 
     def test_only_server_provided_raises(self):
         """Only server without tool raises ValidationError."""
-        with pytest.raises(ValidationError, match="both be provided or both omitted"):
+        with pytest.raises(ValidationError, match="both be null or both be non-null"):
             TestCaseCreate(
                 name="Test",
                 query="Query",
@@ -50,7 +50,7 @@ class TestCaseCreateValidation:
 
     def test_only_tool_provided_raises(self):
         """Only tool without server raises ValidationError."""
-        with pytest.raises(ValidationError, match="both be provided or both omitted"):
+        with pytest.raises(ValidationError, match="both be null or both be non-null"):
             TestCaseCreate(
                 name="Test",
                 query="Query",
