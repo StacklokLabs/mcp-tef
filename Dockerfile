@@ -31,7 +31,7 @@ RUN groupadd --gid 1000 app && \
     useradd --uid 1000 --gid app --shell /bin/bash --create-home app
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv@sha256:5cb6b54d2bc3fe2eb9a8483db958a0b9eebf9edff68adedb369df8e7b98711a2 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv@sha256:5713fa8217f92b80223bc83aac7db36ec80a84437dbc0d04bbc659cae030d8c9 /uv /uvx /bin/
 
 # Set working directory and change ownership
 WORKDIR /app
