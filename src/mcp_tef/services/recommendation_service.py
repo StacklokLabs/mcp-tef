@@ -3,14 +3,14 @@
 from typing import Any
 
 import structlog
-
-from mcp_tef.api.errors import LLMProviderError
-from mcp_tef.models.schemas import (
+from mcp_tef_models.schemas import (
     DifferentiationIssue,
     DifferentiationRecommendation,
     NormalizedTool,
     RecommendationItem,
 )
+
+from mcp_tef.api.errors import LLMProviderError
 from mcp_tef.services.llm_service import LLMService
 from mcp_tef.services.similarity_service import calculate_jaccard_similarity
 

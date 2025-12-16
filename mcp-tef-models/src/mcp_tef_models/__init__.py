@@ -1,11 +1,15 @@
-"""Pydantic models for API request/response validation.
+"""Shared Pydantic models for mcp-tef server and CLI."""
 
-This module re-exports models from mcp_tef_models for backward compatibility.
-New code should import directly from mcp_tef_models.
-"""
-
-# Re-export all schemas from mcp_tef_models for backward compatibility
-from mcp_tef_models.schemas import (  # noqa: F401
+from mcp_tef_models.enums import (
+    Classification,
+    ConfidenceCategory,
+    EmbeddingModelType,
+    MCPServerStatus,
+    ModelClass,
+    SimilarityMethod,
+    TestRunStatus,
+)
+from mcp_tef_models.schemas import (
     DifferentiationIssue,
     DifferentiationRecommendation,
     DifferentiationRecommendationResponse,
@@ -36,6 +40,15 @@ from mcp_tef_models.schemas import (  # noqa: F401
 )
 
 __all__ = [
+    # Enums
+    "Classification",
+    "ConfidenceCategory",
+    "EmbeddingModelType",
+    "MCPServerStatus",
+    "ModelClass",
+    "SimilarityMethod",
+    "TestRunStatus",
+    # Schemas
     "DifferentiationIssue",
     "DifferentiationRecommendation",
     "DifferentiationRecommendationResponse",

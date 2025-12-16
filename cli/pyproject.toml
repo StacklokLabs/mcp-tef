@@ -24,7 +24,11 @@ dependencies = [
     "pydantic>=2.12.5",
     "pydantic-settings>=2.12.0",
     "urllib3>=2.6.2",
+    "mcp-tef-models",
 ]
+
+[tool.uv.sources]
+mcp-tef-models = { path = "../mcp-tef-models", editable = true }
 
 [project.scripts]
 mtef = "mcp_tef_cli:main"

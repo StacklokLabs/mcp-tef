@@ -1,5 +1,6 @@
 """Application configuration management using Pydantic BaseSettings."""
 
+from mcp_tef_models.enums import EmbeddingModelType
 from pydantic import BaseModel, Field
 from pydantic_settings import (
     BaseSettings,
@@ -7,8 +8,6 @@ from pydantic_settings import (
     PydanticBaseSettingsSource,
     SettingsConfigDict,
 )
-
-from mcp_tef.models.enums import EmbeddingModelType
 
 # Default Ollama base URL
 DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434/v1"

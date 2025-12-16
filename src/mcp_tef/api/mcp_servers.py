@@ -5,12 +5,12 @@ import asyncio
 import structlog
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.security import APIKeyHeader
+from mcp_tef_models.schemas import (
+    MCPServerToolsResponse,
+)
 
 from mcp_tef.api.errors import BadRequestError
 from mcp_tef.config.settings import Settings, get_settings
-from mcp_tef.models.schemas import (
-    MCPServerToolsResponse,
-)
 from mcp_tef.services.llm_service import LLMService
 from mcp_tef.services.mcp_loader import MCPLoaderService
 from mcp_tef.services.tool_quality_service import (

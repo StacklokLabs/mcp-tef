@@ -6,11 +6,11 @@ from typing import Any
 
 import numpy as np
 import structlog
+from mcp_tef_models.schemas import MCPServerConfig, NormalizedTool, ToolDefinition
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from mcp_tef.api.errors import ValidationError
-from mcp_tef.models.schemas import MCPServerConfig, NormalizedTool, ToolDefinition
 from mcp_tef.services.embedding_service import EmbeddingService
 from mcp_tef.services.mcp_loader import MCPLoaderService
 

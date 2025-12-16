@@ -6,16 +6,16 @@ import asyncio
 import time
 
 import structlog
-
-from mcp_tef.api.errors import ResourceNotFoundError, ToolIngestionError
-from mcp_tef.config.settings import Settings
-from mcp_tef.models.llm_models import ConfidenceLevel, LLMToolCall
-from mcp_tef.models.schemas import (
+from mcp_tef_models.schemas import (
     ModelSettingsCreate,
     TestRunResponse,
     ToolDefinitionCreate,
     ToolDefinitionResponse,
 )
+
+from mcp_tef.api.errors import ResourceNotFoundError, ToolIngestionError
+from mcp_tef.config.settings import Settings
+from mcp_tef.models.llm_models import ConfidenceLevel, LLMToolCall
 from mcp_tef.services.confidence_analyzer import ConfidenceAnalyzer
 from mcp_tef.services.llm_service import LLMService
 from mcp_tef.services.mcp_loader import MCPLoaderService

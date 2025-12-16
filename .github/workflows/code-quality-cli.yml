@@ -31,7 +31,10 @@ jobs:
         with:
           version: 3.x
 
-      - name: Install dependencies
+      - name: Install root dependencies
+        run: task install
+
+      - name: Install CLI dependencies
         run: task install:cli
 
       - name: Format check

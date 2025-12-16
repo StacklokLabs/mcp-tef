@@ -5,9 +5,9 @@ from mcp import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamablehttp_client
 from mcp.types import ListToolsResult
+from mcp_tef_models.schemas import ToolDefinition
 
 from mcp_tef.api.errors import LLMProviderError
-from mcp_tef.models.schemas import ToolDefinition
 from mcp_tef.services.json_schema_utils import extract_parameter_descriptions
 
 logger = structlog.get_logger(__name__)

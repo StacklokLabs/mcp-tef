@@ -2,11 +2,11 @@ import json
 from collections.abc import AsyncIterator
 
 import structlog
+from mcp_tef_models.schemas import ToolDefinition
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 
 from mcp_tef.config.prompts import EVALUATE_TOOL_DESCRIPTION_PROMPT
-from mcp_tef.models.schemas import ToolDefinition
 from mcp_tef.services.llm_service import LLMService
 from mcp_tef.services.mcp_loader import MCPLoaderService
 

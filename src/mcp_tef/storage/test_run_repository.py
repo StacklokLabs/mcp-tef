@@ -7,13 +7,13 @@ from uuid import uuid4
 
 import aiosqlite
 import structlog
-
-from mcp_tef.api.errors import DatabaseError, ResourceNotFoundError
-from mcp_tef.models.schemas import (
+from mcp_tef_models.schemas import (
     ModelSettingsResponse,
     TestRunResponse,
     ToolEnrichedResponse,
 )
+
+from mcp_tef.api.errors import DatabaseError, ResourceNotFoundError
 
 logger = structlog.get_logger(__name__)
 
