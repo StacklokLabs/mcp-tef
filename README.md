@@ -45,6 +45,10 @@ uv run python -m mcp_tef
 - **Custom certs**: `--tls-cert-file` and `--tls-key-file` flags
 - **Development**: `--tls-enabled=false` for HTTP (⚠️ not for production)
 
+**Transport Support:**
+- **Supported**: SSE and streamable-http transports only
+- **stdio servers**: mcp-tef does not support stdio servers directly, but you can use stdio-based MCP servers through [ToolHive](https://docs.stacklok.com/toolhive/guides-mcp/run-mcp-servers), which runs stdio servers and exposes them via SSE or streamable-http endpoints that mcp-tef can connect to
+
 See [docs/testing-with-ollama.md](docs/testing-with-ollama.md) and [docs/tls-configuration.md](docs/tls-configuration.md) for details.
 
 ## Core Workflows

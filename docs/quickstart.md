@@ -143,16 +143,19 @@ Use your actual MCP server URLs - no need to register servers first!
 curl -k -X POST https://localhost:8000/test-cases \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Weather query test",
-    "query": "What is the weather in San Francisco?",
-    "expected_mcp_server_url": "https://my-mcp-server.com/sse",
-    "expected_tool_name": "get_weather",
+    "name": "GitHub repository search",
+    "query": "Find repositories related to MCP tools",
+    "expected_mcp_server_url": "http://localhost:8080/github/mcp",
+    "expected_tool_name": "search_repositories",
     "expected_parameters": {
-      "location": "San Francisco"
+      "query": "mcp tool topic:mcp stars:>5",
+      "sort": "stars"
     },
     "available_mcp_servers": [
-      "https://my-mcp-server.com/sse",
-      "https://another-server.com/sse"
+      {
+        "url": "http://localhost:8080/github/mcp",
+        "transport": "streamable-http"
+      }
     ]
   }'
 ```
@@ -161,12 +164,12 @@ curl -k -X POST https://localhost:8000/test-cases \
 
 ```bash
 mtef test-case create \
-  --name "Weather query test" \
-  --query "What is the weather in San Francisco?" \
-  --expected-server "https://my-mcp-server.com/sse" \
-  --expected-tool "get_weather" \
-  --expected-params '{"location": "San Francisco"}' \
-  --servers "https://my-mcp-server.com/sse,https://another-server.com/sse"
+  --name "GitHub repository search" \
+  --query "Find repositories related to MCP tools" \
+  --expected-server "http://localhost:8080/github/mcp" \
+  --expected-tool "search_repositories" \
+  --expected-params '{"query": "mcp tool topic:mcp stars:>5", "sort": "stars"}' \
+  --servers "http://localhost:8080/github/mcp:streamable-http"
 ```
 
 > **Note**: The `--servers` flag accepts comma-separated URLs. See [CLI documentation](../cli/README.md) for more examples.
@@ -178,14 +181,19 @@ mtef test-case create \
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
-  "name": "Weather query test",
-  "query": "What is the weather in San Francisco?",
-  "expected_mcp_server_url": "https://my-mcp-server.com/sse",
-  "expected_tool_name": "get_weather",
-  "expected_parameters": {"location": "San Francisco"},
+  "name": "GitHub repository search",
+  "query": "Find repositories related to MCP tools",
+  "expected_mcp_server_url": "http://localhost:8080/github/mcp",
+  "expected_tool_name": "search_repositories",
+  "expected_parameters": {
+    "query": "mcp tool topic:mcp stars:>5",
+    "sort": "stars"
+  },
   "available_mcp_servers": [
-    "https://my-mcp-server.com/sse",
-    "https://another-server.com/sse"
+    {
+      "url": "http://localhost:8080/github/mcp",
+      "transport": "streamable-http"
+    }
   ],
   "created_at": "2025-11-10T10:00:00Z",
   "updated_at": "2025-11-10T10:00:00Z"
@@ -204,7 +212,7 @@ Execute the test with runtime API key and model configuration:
 **Option A: Using the REST API (curl)**
 
 ```bash
-# Using OpenRouter (or OpenAI, Anthropic)
+# Using OpenRouter (recommended for production testing with frontier models)
 curl -k -X POST https://localhost:8000/test-cases/550e8400-e29b-41d4-a716-446655440000/run \
   -H "Content-Type: application/json" \
   -H "X-Model-API-Key: sk-or-v1-..." \
@@ -218,7 +226,7 @@ curl -k -X POST https://localhost:8000/test-cases/550e8400-e29b-41d4-a716-446655
     }
   }'
 
-# Using Ollama (local, no API key needed)
+# Using Ollama (local testing, no API key needed)
 curl -k -X POST https://localhost:8000/test-cases/550e8400-e29b-41d4-a716-446655440000/run \
   -H "Content-Type: application/json" \
   -d '{
@@ -235,13 +243,13 @@ curl -k -X POST https://localhost:8000/test-cases/550e8400-e29b-41d4-a716-446655
 **Option B: Using the CLI**
 
 ```bash
-# Using OpenRouter
+# Using OpenRouter (recommended for production testing with frontier models)
 mtef test-run execute 550e8400-e29b-41d4-a716-446655440000 \
   --model-provider openrouter \
   --model-name anthropic/claude-3.5-sonnet \
   --api-key sk-or-v1-...
 
-# Using Ollama (no API key needed)
+# Using Ollama (local testing, no API key needed)
 mtef test-run execute 550e8400-e29b-41d4-a716-446655440000 \
   --model-provider ollama \
   --model-name llama3.2:3b
@@ -381,8 +389,10 @@ curl -k -X POST https://localhost:8000/similarity/analyze \
   -H "Content-Type: application/json" \
   -d '{
     "url_list": [
-      "https://my-server-1.com/sse",
-      "https://my-server-2.com/sse"
+      "http://localhost:8080/fetch/mcp:streamable-http",
+      "http://localhost:8080/toolhive-doc-mcp/mcp:streamable-http",
+      "http://localhost:8080/mcp-optimizer/mcp:streamable-http",
+      "http://localhost:8080/github/mcp:streamable-http"
     ],
     "similarity_threshold": 0.85,
     "include_recommendations": true
@@ -393,7 +403,7 @@ curl -k -X POST https://localhost:8000/similarity/analyze \
 
 ```bash
 mtef similarity analyze \
-  --server-urls "https://my-server-1.com/sse,https://my-server-2.com/sse" \
+  --server-urls "http://localhost:8080/fetch/mcp:streamable-http,http://localhost:8080/toolhive-doc-mcp/mcp:streamable-http,http://localhost:8080/mcp-optimizer/mcp:streamable-http,http://localhost:8080/github/mcp:streamable-http" \
   --threshold 0.85 \
   --recommendations
 ```
@@ -503,7 +513,7 @@ For visualization or analysis of all pairwise similarities:
 curl -k -X POST https://localhost:8000/similarity/matrix \
   -H "Content-Type: application/json" \
   -d '{
-    "url_list": ["https://my-server.com/sse"],
+    "url_list": ["http://localhost:8080/github/mcp:streamable-http"],
     "similarity_threshold": 0.7
   }'
 ```
@@ -512,7 +522,7 @@ curl -k -X POST https://localhost:8000/similarity/matrix \
 
 ```bash
 mtef similarity matrix \
-  --server-urls "https://my-server.com/sse" \
+  --server-urls "http://localhost:8080/github/mcp:streamable-http" \
   --threshold 0.7
 ```
 
@@ -547,37 +557,38 @@ curl -k -X POST https://localhost:8000/similarity/overlap-matrix \
 **Using the REST API (curl)**
 
 ```bash
-# Single server
-curl -k "https://localhost:8000/mcp-servers/tools/quality?server_urls=https://my-server.com/sse&model_provider=openrouter&model_name=anthropic/claude-3.5-sonnet" \
+# Single server (recommended: use frontier models for production testing)
+curl -k "https://localhost:8000/mcp-servers/tools/quality?server_urls=http://localhost:8080/github/mcp:streamable-http&model_provider=openrouter&model_name=anthropic/claude-3.5-sonnet" \
   -H "X-Model-API-Key: sk-or-v1-..."
 
 # Multiple servers at once
-curl -k "https://localhost:8000/mcp-servers/tools/quality?server_urls=https://server1.com/sse&server_urls=https://server2.com/sse&model_provider=openrouter" \
+curl -k "https://localhost:8000/mcp-servers/tools/quality?server_urls=http://localhost:8080/fetch/mcp:streamable-http&server_urls=http://localhost:8080/github/mcp:streamable-http&model_provider=openrouter&model_name=anthropic/claude-3.5-sonnet" \
   -H "X-Model-API-Key: sk-or-v1-..."
 
-# Using Ollama (no API key)
-curl -k "https://localhost:8000/mcp-servers/tools/quality?server_urls=https://my-server.com/sse&model_provider=ollama&model_name=llama3.2:3b"
+# Using Ollama (local testing, no API key)
+curl -k "https://localhost:8000/mcp-servers/tools/quality?server_urls=http://localhost:8080/github/mcp:streamable-http&model_provider=ollama&model_name=llama3.2:3b"
 ```
 
 **Using the CLI**
 
 ```bash
-# Single server with OpenRouter
+# Single server with OpenRouter (recommended for production testing)
 mtef tool-quality \
-  --server-urls "https://my-server.com/sse" \
+  --server-urls "http://localhost:8080/github/mcp:streamable-http" \
   --model-provider openrouter \
   --model-name anthropic/claude-3.5-sonnet \
   --api-key sk-or-v1-...
 
 # Multiple servers (comma-separated)
 mtef tool-quality \
-  --server-urls "https://server1.com/sse,https://server2.com/sse" \
+  --server-urls "http://localhost:8080/fetch/mcp:streamable-http,http://localhost:8080/github/mcp:streamable-http" \
   --model-provider openrouter \
+  --model-name anthropic/claude-3.5-sonnet \
   --api-key sk-or-v1-...
 
-# Using Ollama (no API key)
+# Using Ollama (local testing, no API key)
 mtef tool-quality \
-  --server-urls "https://my-server.com/sse" \
+  --server-urls "http://localhost:8080/github/mcp:streamable-http" \
   --model-provider ollama \
   --model-name llama3.2:3b
 ```
@@ -833,8 +844,11 @@ uv run python -m mcp_tef
 
 **Debug**:
 ```bash
-# Test MCP server directly
-curl https://your-mcp-server.com/sse
+# Test MCP server directly (streamable-http transport, recommended)
+curl http://localhost:8080/your-server/mcp
+
+# Or test SSE transport (deprecated but still supported)
+curl http://localhost:8080/your-server/sse
 
 # Check test run error message
 curl -k https://localhost:8000/test-runs/{run_id}
@@ -843,7 +857,7 @@ curl -k https://localhost:8000/test-runs/{run_id}
 
 **Common causes**:
 - MCP server is down
-- Wrong URL (should end with `/sse` for SSE transport)
+- Wrong URL format (use `http://host:port/path/mcp:streamable-http` for streamable-http transport, or `/sse` for SSE transport)
 - Server returns invalid MCP protocol response
 - Network/firewall blocks connection
 
