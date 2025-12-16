@@ -1,26 +1,9 @@
 """Enums for mcp-tef models.
 
-This module re-exports enums from mcp_tef_models for backward compatibility.
-New code should import directly from mcp_tef_models.
+This module is deprecated. New code should import directly from mcp_tef_models.enums.
 """
 
-# Re-export all enums from mcp_tef_models for backward compatibility
-from mcp_tef_models.enums import (  # noqa: F401
-    Classification,
-    ConfidenceCategory,
-    EmbeddingModelType,
-    MCPServerStatus,
-    ModelClass,
-    SimilarityMethod,
-    TestRunStatus,
-)
+# This file is kept for backward compatibility but should not be used in new code.
+# All enums have been moved to mcp_tef_models.enums
 
-__all__ = [
-    "Classification",
-    "ConfidenceCategory",
-    "EmbeddingModelType",
-    "MCPServerStatus",
-    "ModelClass",
-    "SimilarityMethod",
-    "TestRunStatus",
-]
+__all__: list[str] = []
