@@ -74,7 +74,7 @@ dev = [
     "pytest-cov>=7.0.0",
     "respx>=0.22.0",
     "ruff>=0.14.9",
-    "ty>=0.0.1a18",
+    "ty>=0.0.1a35",
 ]
 security = [
     "bandit[toml]>=1.9.2",

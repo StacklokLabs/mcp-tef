@@ -2,6 +2,7 @@
 
 import os
 from collections.abc import Sequence
+from typing import Any
 
 import structlog
 from mcp_tef_models.schemas import MCPServerConfig
@@ -119,8 +120,22 @@ class LLMService:
                 self.provider, f"Failed to connect to MCP servers: {str(e)}", e
             ) from e
 
-    def _format_prompt_part(self, title: str, content: str, timestamp: str) -> str:
-        return f"\n{'-' * 30} {title} {'-' * 30}\n\nTimestamp: {timestamp}\n{content}\n"
+    def _format_prompt_part(
+        self, title: str, content: str | dict[str, Any] | Any, timestamp: str | None
+    ) -> str:
+        """Format a prompt part for logging.
+
+        Args:
+            title: Section title
+            content: Content to format (will be converted to string)
+            timestamp: Optional timestamp
+
+        Returns:
+            Formatted string
+        """
+        timestamp_str = str(timestamp) if timestamp is not None else "N/A"
+        content_str = str(content) if content is not None else ""
+        return f"\n{'-' * 30} {title} {'-' * 30}\n\nTimestamp: {timestamp_str}\n{content_str}\n"
 
     def _parse_agent_messages(self, result: AgentRunResult) -> tuple[list[LLMToolCall], str]:
         """Parse agent messages to extract tool calls and raw response.

@@ -320,38 +320,45 @@ class RecommendationService:
 
     async def _generate_revised_description(
         self,
-        tool: NormalizedTool,
-        other_tool: NormalizedTool,
+        tool: NormalizedTool | dict[str, Any],
+        other_tool: NormalizedTool | dict[str, Any],
         guidance: str,
     ) -> str:
         """Generate LLM-improved description for a tool.
 
         Args:
-            tool: Tool to generate description for
-            other_tool: Other tool to differentiate from
+            tool: Tool to generate description for (NormalizedTool object or dict)
+            other_tool: Other tool to differentiate from (NormalizedTool object or dict)
             guidance: Specific guidance for improvement
 
         Returns:
             Improved tool description
         """
+        tool_name = self._get_tool_attr(tool, "name")
+        tool_description = self._get_tool_attr(tool, "description")
+        tool_parameters = self._get_tool_attr(tool, "parameters") or {}
+        other_tool_name = self._get_tool_attr(other_tool, "name")
+        other_tool_description = self._get_tool_attr(other_tool, "description")
+        other_tool_parameters = self._get_tool_attr(other_tool, "parameters") or {}
+
         if not self.llm_service:
             # Fall back to slightly improved rule-based description
             return (
-                f"{tool.description} "
-                f"(Note: Use this tool specifically for {tool.name.replace('_', ' ')}, "
-                f"not for {other_tool.name.replace('_', ' ')})"
+                f"{tool_description} "
+                f"(Note: Use this tool specifically for {tool_name.replace('_', ' ')}, "
+                f"not for {other_tool_name.replace('_', ' ')})"
             )
 
         # Build context about the tool's parameters
         params_summary = (
             "No parameters"
-            if not tool.parameters
-            else (f"Parameters: {', '.join(tool.parameters.keys())}")
+            if not tool_parameters
+            else (f"Parameters: {', '.join(tool_parameters.keys())}")
         )
         other_params_summary = (
             "No parameters"
-            if not other_tool.parameters
-            else (f"Parameters: {', '.join(other_tool.parameters.keys())}")
+            if not other_tool_parameters
+            else (f"Parameters: {', '.join(other_tool_parameters.keys())}")
         )
 
         # Create system prompt for the agent
@@ -373,13 +380,13 @@ Guidelines:
 Improve the description for this tool to better differentiate it from a similar tool.
 
 TOOL TO IMPROVE:
-Name: {tool.name}
-Current Description: {tool.description}
+Name: {tool_name}
+Current Description: {tool_description}
 {params_summary}
 
 SIMILAR TOOL TO DIFFERENTIATE FROM:
-Name: {other_tool.name}
-Description: {other_tool.description}
+Name: {other_tool_name}
+Description: {other_tool_description}
 {other_params_summary}
 
 SPECIFIC GUIDANCE:
@@ -389,8 +396,8 @@ Provide an improved description that clearly differentiates this tool:"""
 
         try:
             # Create an agent with the system prompt
-            # Use output_type=str to accept plain text responses (important for Ollama models)
-            agent = self.llm_service.make_agent(system_prompt=system_prompt, output_type=str)
+            # Note: output_type=None for plain text responses (important for Ollama models)
+            agent = self.llm_service.make_agent(system_prompt=system_prompt, output_type=None)
 
             # Run the agent to generate the improved description
             result = await agent.run(user_prompt)
@@ -400,8 +407,8 @@ Provide an improved description that clearly differentiates this tool:"""
 
             logger.info(
                 "Generated improved description via LLM",
-                tool_name=tool.name,
-                original_length=len(tool.description),
+                tool_name=tool_name,
+                original_length=len(tool_description),
                 improved_length=len(improved_description),
             )
 
@@ -410,31 +417,31 @@ Provide an improved description that clearly differentiates this tool:"""
         except (LLMProviderError, TimeoutError) as e:
             logger.warning(
                 "Failed to generate LLM description, using fallback",
-                tool_name=tool.name,
+                tool_name=tool_name,
                 error=str(e),
             )
             return (
-                f"{tool.description} "
-                f"(Note: Use this tool specifically for {tool.name.replace('_', ' ')}, "
-                f"not for {other_tool.name.replace('_', ' ')})"
+                f"{tool_description} "
+                f"(Note: Use this tool specifically for {tool_name.replace('_', ' ')}, "
+                f"not for {other_tool_name.replace('_', ' ')})"
             )
 
     def _generate_apply_commands(
         self,
-        tool: NormalizedTool,
+        tool: NormalizedTool | dict[str, Any],
         revised_description: str,
     ) -> list[str]:
         """Generate executable commands or JSON patches to apply changes.
 
         Args:
-            tool: Tool definition
+            tool: Tool definition (NormalizedTool object or dict)
             revised_description: Revised description text
 
         Returns:
             List of commands/patches to apply the change
         """
-        tool_name = tool.name
-        server_url = tool.server_url or "unknown"
+        tool_name = self._get_tool_attr(tool, "name")
+        server_url = self._get_tool_attr(tool, "server_url") or "unknown"
 
         # Generate both command-line style and JSON patch format
         commands = []
