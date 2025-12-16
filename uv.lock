@@ -1584,7 +1584,7 @@ requires-dist = [
     { name = "mcp", extras = ["cli"], specifier = ">=1.17.0" },
     { name = "pydantic", specifier = ">=2.9.0" },
     { name = "pydantic-ai", specifier = ">=0.0.13" },
-    { name = "pydantic-evals", specifier = ">=0.0.2" },
+    { name = "pydantic-evals", specifier = ">=0.8.1" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "scikit-learn", specifier = ">=1.7.2" },
     { name = "structlog", specifier = ">=25.5.0" },
