@@ -15,14 +15,16 @@ from mcp_tef_models.schemas import (
 
 from mcp_tef.api.errors import ResourceNotFoundError, ToolIngestionError
 from mcp_tef.config.settings import Settings
-from mcp_tef.models.llm_models import ConfidenceLevel, LLMToolCall
+from mcp_tef.models.llm_models import ConfidenceLevel
 from mcp_tef.services.confidence_analyzer import ConfidenceAnalyzer
 from mcp_tef.services.llm_service import LLMService
 from mcp_tef.services.mcp_loader import MCPLoaderService
 from mcp_tef.services.parameter_validator import ParameterValidator
+from mcp_tef.services.tool_call_matcher import ToolCallMatcher, ToolCallMatchResult
 from mcp_tef.storage.model_settings_repository import ModelSettingsRepository
 from mcp_tef.storage.test_case_repository import TestCaseRepository
 from mcp_tef.storage.test_run_repository import TestRunRepository
+from mcp_tef.storage.tool_call_match_repository import ToolCallMatchRepository
 from mcp_tef.storage.tool_repository import ToolRepository
 
 logger = structlog.get_logger(__name__)
@@ -37,6 +39,7 @@ class EvaluationService:
         test_run_repo: TestRunRepository,
         model_settings_repo: ModelSettingsRepository,
         tool_repo: ToolRepository,
+        tool_call_match_repo: ToolCallMatchRepository,
         mcp_loader: MCPLoaderService,
         settings: Settings,
     ):
@@ -47,6 +50,7 @@ class EvaluationService:
             test_run_repo: Test run repository
             model_settings_repo: Model settings repository
             tool_repo: Tool repository
+            tool_call_match_repo: Tool call match repository
             mcp_loader: MCP loader service for live tool discovery
             settings: Application settings
         """
@@ -54,10 +58,12 @@ class EvaluationService:
         self.test_run_repo = test_run_repo
         self.model_settings_repo = model_settings_repo
         self.tool_repo = tool_repo
+        self.tool_call_match_repo = tool_call_match_repo
         self.mcp_loader = mcp_loader
         self.settings = settings
         self.parameter_validator = ParameterValidator()
         self.confidence_analyzer = ConfidenceAnalyzer()
+        self.tool_call_matcher = ToolCallMatcher()
 
     async def create_test(
         self, test_case_id: str, model_settings: ModelSettingsCreate
@@ -155,91 +161,78 @@ class EvaluationService:
             # Query LLM with tool mapping
             llm_response = await llm_service.select_tool(test_case.query)
 
-            # Extract selected tool and parameters from LLM response
-            selected_tool: LLMToolCall | None = None
-            selected_tool_id: str | None = None
-            extracted_parameters: dict | None = None
+            # Match expected tool calls against actual LLM tool calls
+            expected_calls = test_case.expected_tool_calls or []
+            actual_calls = llm_response.tool_calls
 
-            if len(llm_response.tool_calls) > 0:
-                candidate_tool_calls = [
-                    tool_call
-                    for tool_call in llm_response.tool_calls
-                    if tool_call.name == test_case.expected_tool_name
-                ]
+            # Choose matching algorithm based on order_dependent_matching flag
+            if test_case.order_dependent_matching:
+                match_results = self.tool_call_matcher.match_order_dependent(
+                    expected_calls, actual_calls
+                )
+            else:
+                match_results = self.tool_call_matcher.match_order_independent(
+                    expected_calls, actual_calls
+                )
 
-                if len(candidate_tool_calls) == 0:
-                    candidate_tool_calls = llm_response.tool_calls
-
-                if len(candidate_tool_calls) > 1:
-                    logger.warning(
-                        f"LLM returned multiple tool calls, using the first one: "
-                        f"{candidate_tool_calls}"
+            # Store tool_call_matches in database
+            for match_result in match_results:
+                # Resolve expected_tool_call_id
+                expected_call_id = None
+                if match_result.expected_call and match_result.expected_index is not None:
+                    expected_call_id = await self._get_expected_call_id(
+                        test_case.id, match_result.expected_index
                     )
 
-                selected_tool = candidate_tool_calls[0]
-                extracted_parameters = selected_tool.parameters
+                # Resolve actual_tool_id
+                actual_tool_id = None
+                if match_result.actual_call:
+                    try:
+                        tool_def = await self.tool_repo.get_by_name_and_test_run(
+                            match_result.actual_call.name, test_run.id
+                        )
+                        actual_tool_id = tool_def.id
+                    except ResourceNotFoundError:
+                        logger.warning(
+                            "Could not resolve actual tool ID",
+                            tool_name=match_result.actual_call.name,
+                            test_run_id=test_run.id,
+                        )
 
-                # Resolve selected tool ID from tool name and test run ID
-                try:
-                    tool_def = await self.tool_repo.get_by_name_and_test_run(
-                        selected_tool.name, test_run.id
-                    )
-                    selected_tool_id = tool_def.id
-                except ResourceNotFoundError as e:
-                    logger.warning(
-                        "Failed to resolve selected tool ID",
-                        tool_name=selected_tool.name,
-                        test_run_id=test_run.id,
-                        error=str(e),
-                    )
+                # Insert tool_call_match record
+                await self.tool_call_match_repo.create(
+                    test_run_id=test_run.id,
+                    expected_tool_call_id=expected_call_id,
+                    actual_tool_id=actual_tool_id,
+                    match_type=match_result.match_type,
+                    parameter_correctness=match_result.parameter_correctness,
+                    actual_parameters=match_result.actual_call.parameters
+                    if match_result.actual_call
+                    else None,
+                    parameter_justification=match_result.parameter_justification,
+                )
 
-            # Resolve expected tool ID from MCP server URL, tool name, and test run ID
-            expected_tool_id: str | None = None
-            if (
-                test_case.expected_mcp_server_url is not None
-                and test_case.expected_tool_name is not None
-            ):
-                try:
-                    expected_tool_def = await self.tool_repo.get_by_server_url_and_test_run(
-                        test_case.expected_mcp_server_url, test_case.expected_tool_name, test_run.id
-                    )
-                    expected_tool_id = expected_tool_def.id
-                except ResourceNotFoundError as e:
-                    logger.warning(
-                        "Failed to resolve expected tool ID",
-                        server_url=test_case.expected_mcp_server_url,
-                        tool_name=test_case.expected_tool_name,
-                        test_run_id=test_run.id,
-                        error=str(e),
-                    )
+            # Calculate aggregate metrics from match results
+            avg_param_correctness = self._calculate_avg_parameter_correctness(match_results)
+            overall_classification = self._aggregate_classification(match_results)
 
-            # Classify result
-            classification = self._classify_result(expected_tool_id, selected_tool_id)
-
-            # Evaluate parameter correctness if expected_tool and expected_parameters exist
-            parameter_correctness = self._evaluate_parameters(
-                expected_params=test_case.expected_parameters,
-                actual_params=extracted_parameters,
-            )
-
-            # Calculate confidence_score description based on
-            # llm_confidence and parameter_correctness
+            # Calculate confidence_score description
             confidence_score = None
-            if llm_response.confidence_level and parameter_correctness is not None:
+            if llm_response.confidence_level and avg_param_correctness is not None:
                 if (
                     llm_response.confidence_level == ConfidenceLevel.HIGH
-                    and parameter_correctness == 10
+                    and avg_param_correctness == 10
                 ):
                     confidence_score = "robust description"
                 elif (
                     llm_response.confidence_level == ConfidenceLevel.HIGH
-                    and parameter_correctness == 0
+                    and avg_param_correctness == 0
                 ):
                     confidence_score = "misleading description"
                 else:
                     confidence_score = "needs clarity"
 
-            # Calculate execution time (ensure it's at least 1ms to satisfy CHECK constraint)
+            # Calculate execution time
             execution_time_ms = max(1, int((time.time() - start_time) * 1000))
 
             # Update test run with results
@@ -247,16 +240,16 @@ class EvaluationService:
                 test_run.id,
                 status="completed",
                 llm_response_raw=llm_response.raw_response,
-                selected_tool_id=selected_tool_id,
-                extracted_parameters=extracted_parameters,
                 llm_confidence=llm_response.confidence_level,
-                parameter_correctness=parameter_correctness,
+                avg_parameter_correctness=avg_param_correctness,
                 confidence_score=confidence_score,
-                classification=classification,
+                classification=overall_classification,
                 execution_time_ms=execution_time_ms,
             )
 
-            logger.info(f"Test run {test_run.id} completed with classification: {classification}")
+            logger.info(
+                f"Test run {test_run.id} completed with classification: {overall_classification}"
+            )
 
             return test_run
 
@@ -437,86 +430,79 @@ class EvaluationService:
         # expected_tool_id is not None and selected_tool_id != expected_tool_id
         return "FN"  # False Negative: expected tool was NOT selected
 
-    def _evaluate_parameters(
-        self,
-        expected_params: dict | None,
-        actual_params: dict | None,
-    ) -> float:
-        """Evaluate parameter correctness and return a score from 0 to 10.
-
-        Scoring criteria:
-        - Completeness: Are all required parameters present?
-        - Correctness: Do parameter values match expected values?
-        - Type conformance: Do values match schema types?
-        - Hallucination check: Are there unexpected extra parameters?
-
-        Each category contributes up to 2.5 points for a total of 10 points.
+    async def _get_expected_call_id(self, test_case_id: str, expected_index: int) -> str | None:
+        """Get the ID of an expected tool call by its sequence order.
 
         Args:
-            expected_params: Expected parameter values from test case
-            actual_params: Parameters extracted by LLM
+            test_case_id: Test case ID
+            expected_index: Sequence order of the expected tool call
 
         Returns:
-            Score from 0 to 10
+            Expected tool call ID or None if not found
         """
-        # If no expected parameters defined, return perfect score
-        if expected_params is None or not expected_params:
-            return 10.0
+        try:
+            return await self.tool_call_match_repo.get_expected_call_id(
+                test_case_id=test_case_id,
+                sequence_order=expected_index,
+            )
+        except Exception as e:
+            logger.warning(
+                "Failed to get expected call ID",
+                test_case_id=test_case_id,
+                expected_index=expected_index,
+                error=str(e),
+            )
+            return None
 
-        # If no actual parameters provided but expected ones exist, return 0
-        if actual_params is None or not actual_params:
-            return 0.0
-
-        # Calculate score based on parameter matching
-        total_expected = len(expected_params)
-
-        completeness_params = 0
-        correctness_params = 0
-        conformance_params = 0
-
-        # Check each expected parameter
-        for param_name, expected_value in expected_params.items():
-            if param_name in actual_params:
-                completeness_params += 1
-                actual_value = actual_params[param_name]
-
-                # Normalize values for comparison (handle type differences)
-                if self._normalize_value(actual_value) == self._normalize_value(expected_value):
-                    correctness_params += 1
-
-                # For type conformance, we can do a basic type check
-                if type(actual_value) is type(expected_value):
-                    conformance_params += 1
-
-        total_score = 0
-        total_score += 2.5 * (completeness_params / total_expected)
-        total_score += 2.5 * (correctness_params / total_expected)
-        total_score += 2.5 * (conformance_params / total_expected)
-
-        # Penalty for hallucinated parameters (unexpected extras)
-        extra_params = set(actual_params.keys()) - set(expected_params.keys())
-        # If no extra parameters, award bonus points
-        if not extra_params:
-            total_score += 2.5
-
-        return total_score
-
-    def _normalize_value(self, value) -> str:
-        """Normalize a value for comparison.
+    def _calculate_avg_parameter_correctness(
+        self, match_results: list[ToolCallMatchResult]
+    ) -> float | None:
+        """Calculate average parameter correctness across TP matches.
 
         Args:
-            value: Value to normalize
+            match_results: List of ToolCallMatchResult objects
 
         Returns:
-            Normalized string representation
+            Average parameter correctness score (0-10) or None if no TP matches
         """
-        if value is None:
-            return "null"
-        if isinstance(value, bool):
-            return str(value).lower()
-        if isinstance(value, (int, float)):
-            return str(value)
-        if isinstance(value, str):
-            return value.strip().lower()
-        # For complex types, convert to string
-        return str(value).strip().lower()
+        tp_scores = [
+            result.parameter_correctness
+            for result in match_results
+            if result.match_type == "TP" and result.parameter_correctness is not None
+        ]
+
+        if not tp_scores:
+            return None
+
+        return sum(tp_scores) / len(tp_scores)
+
+    def _aggregate_classification(self, match_results: list[ToolCallMatchResult]) -> str:
+        """Aggregate per-tool-call classifications into overall test result.
+
+        Rules:
+        - If all matches are TP or TN → TP (or TN if no tools)
+        - If any FN exists → FN
+        - If any FP exists (and no FN) → FP
+        - Mixed cases TN and TP in results → TP
+
+        Args:
+            match_results: List of ToolCallMatchResult objects
+
+        Returns:
+            Overall classification (TP/FP/TN/FN)
+        """
+        if not match_results:
+            return "TN"
+
+        match_types = {result.match_type for result in match_results}
+
+        if match_types == {"TN"}:
+            return "TN"
+        if match_types == {"TP"}:
+            return "TP"
+        if "FN" in match_types:
+            return "FN"
+        if "FP" in match_types:
+            return "FP"
+
+        return "TP"  # Default to TP for mixed cases

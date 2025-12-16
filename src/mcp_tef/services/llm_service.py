@@ -151,7 +151,7 @@ class LLMService:
         """
         current_tool_call = None
         current_tool_name = None
-        tool_calls = []
+        tool_calls: list[LLMToolCall] = []
         raw_response = ""
 
         for message in result.all_messages():
@@ -222,7 +222,13 @@ class LLMService:
                             "UNIDENTIFIED PART", type(part).__name__, timestamp
                         )
 
-        return tool_calls, raw_response
+        # Remove any 'final_result' tool calls from the returned list. This is the tool call
+        # that Pydantic AI uses to return the final structured output
+        final_tool_calls = [
+            tool_call for tool_call in tool_calls if tool_call.name != "final_result"
+        ]
+
+        return final_tool_calls, raw_response
 
     async def select_tool(self, query: str) -> LLMResponse:
         """Ask LLM to select a tool for the given query.

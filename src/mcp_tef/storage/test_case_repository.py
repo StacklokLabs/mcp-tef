@@ -11,6 +11,7 @@ from uuid import uuid4
 import aiosqlite
 import structlog
 from mcp_tef_models.schemas import (
+    ExpectedToolCall,
     MCPServerConfig,
     TestCaseCreate,
     TestCaseResponse,
@@ -77,46 +78,66 @@ class TestCaseRepository:
             ):
                 server_tools[server_config.url] = tools_list
 
-            # Step 2: validate expected tools exist on expected server
-            if test_case.expected_mcp_server_url:
-                actual_tool_names = [
-                    tool.name for tool in server_tools.get(test_case.expected_mcp_server_url, [])
-                ]
-                if test_case.expected_tool_name not in actual_tool_names:
-                    raise ValidationError(
-                        "Expected tool not found in expected MCP server tools",
-                        {
-                            "expected_tool_name": test_case.expected_tool_name,
-                            "expected_mcp_server_url": test_case.expected_mcp_server_url,
-                            "actual_tools": actual_tool_names,
-                        },
-                    )
+            # Step 2: validate all expected tool calls exist on their servers
+            if test_case.expected_tool_calls:
+                for i, expected_call in enumerate(test_case.expected_tool_calls):
+                    actual_tool_names = [
+                        tool.name for tool in server_tools.get(expected_call.mcp_server_url, [])
+                    ]
+                    if expected_call.tool_name not in actual_tool_names:
+                        raise ValidationError(
+                            "Expected tool not found in MCP server",
+                            {
+                                "index": i,
+                                "tool_name": expected_call.tool_name,
+                                "mcp_server_url": expected_call.mcp_server_url,
+                                "available_tools": actual_tool_names,
+                            },
+                        )
 
-            # Step 3-4: Insert test case and available MCP server associations
+            # Step 3-5: Insert test case, expected tool calls, and MCP server associations
             try:
                 # Step 3: Insert test case
                 await self.db.execute(
                     """
                     INSERT INTO test_cases
-                    (id, name, query, expected_mcp_server_url,
-                     expected_tool_name, expected_parameters)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    (id, name, query, order_dependent_matching)
+                    VALUES (?, ?, ?, ?)
                     """,
                     (
                         test_case_id,
                         test_case.name,
                         test_case.query,
-                        test_case.expected_mcp_server_url,
-                        test_case.expected_tool_name,
-                        (
-                            json.dumps(test_case.expected_parameters)
-                            if test_case.expected_parameters is not None
-                            else None
-                        ),
+                        test_case.order_dependent_matching,
                     ),
                 )
 
-                # Step 4: Insert MCP server associations
+                # Step 4: Insert expected tool calls
+                if test_case.expected_tool_calls:
+                    for sequence_order, expected_call in enumerate(test_case.expected_tool_calls):
+                        expected_call_id = str(uuid4())
+                        await self.db.execute(
+                            """
+                            INSERT INTO expected_tool_calls
+                            (id, test_case_id, mcp_server_url, tool_name,
+                             parameters, sequence_order)
+                            VALUES (?, ?, ?, ?, ?, ?)
+                            """,
+                            (
+                                expected_call_id,
+                                test_case_id,
+                                expected_call.mcp_server_url,
+                                expected_call.tool_name,
+                                (
+                                    json.dumps(expected_call.parameters)
+                                    if expected_call.parameters is not None
+                                    else None
+                                ),
+                                sequence_order,
+                            ),
+                        )
+
+                # Step 5: Insert MCP server associations
                 for server_config in test_case.available_mcp_servers:
                     await self.db.execute(
                         """
@@ -176,8 +197,7 @@ class TestCaseRepository:
         try:
             cursor = await self.db.execute(
                 """
-                SELECT id, name, query, expected_mcp_server_url,
-                       expected_tool_name, expected_parameters, created_at, updated_at
+                SELECT id, name, query, order_dependent_matching, created_at, updated_at
                 FROM test_cases
                 WHERE id = ?
                 """,
@@ -187,6 +207,30 @@ class TestCaseRepository:
 
             if row is None:
                 raise ResourceNotFoundError("TestCase", test_case_id)
+
+            # Get expected tool calls from expected_tool_calls table
+            expected_calls_cursor = await self.db.execute(
+                """
+                SELECT mcp_server_url, tool_name, parameters
+                FROM expected_tool_calls
+                WHERE test_case_id = ?
+                ORDER BY sequence_order ASC
+                """,
+                (test_case_id,),
+            )
+            expected_calls_rows = await expected_calls_cursor.fetchall()
+            expected_tool_calls = (
+                [
+                    ExpectedToolCall(
+                        mcp_server_url=call_row[0],
+                        tool_name=call_row[1],
+                        parameters=json.loads(call_row[2]) if call_row[2] else None,
+                    )
+                    for call_row in expected_calls_rows
+                ]
+                if expected_calls_rows
+                else None
+            )
 
             # Get MCP servers from junction table and reconstruct list
             servers_cursor = await self.db.execute(
@@ -207,12 +251,11 @@ class TestCaseRepository:
                 id=row[0],
                 name=row[1],
                 query=row[2],
-                expected_mcp_server_url=row[3],
-                expected_tool_name=row[4],
-                expected_parameters=json.loads(row[5]) if row[5] else None,
+                order_dependent_matching=bool(row[3]),
+                expected_tool_calls=expected_tool_calls,
                 available_mcp_servers=available_mcp_servers,
-                created_at=datetime.fromisoformat(row[6]),
-                updated_at=datetime.fromisoformat(row[7]),
+                created_at=datetime.fromisoformat(row[4]),
+                updated_at=datetime.fromisoformat(row[5]),
             )
 
         except ResourceNotFoundError:
@@ -247,8 +290,7 @@ class TestCaseRepository:
             # Get paginated results
             cursor = await self.db.execute(
                 """
-                SELECT id, name, query, expected_mcp_server_url,
-                       expected_tool_name, expected_parameters, created_at, updated_at
+                SELECT id, name, query, order_dependent_matching, created_at, updated_at
                 FROM test_cases
                 ORDER BY created_at DESC
                 LIMIT ? OFFSET ?
@@ -260,9 +302,12 @@ class TestCaseRepository:
             if not rows:
                 return [], total
 
-            # Batch fetch all servers for all test cases to avoid N+1 queries
+            # Batch fetch all servers and expected tool calls for all test cases
+            # to avoid N+1 queries
             test_case_ids = [row[0] for row in rows]
             placeholders = ",".join("?" * len(test_case_ids))
+
+            # Fetch servers
             servers_cursor = await self.db.execute(
                 f"""
                 SELECT test_case_id, server_url, transport
@@ -273,6 +318,18 @@ class TestCaseRepository:
             )
             server_associations = await servers_cursor.fetchall()
 
+            # Fetch expected tool calls
+            expected_calls_cursor = await self.db.execute(
+                f"""
+                SELECT test_case_id, mcp_server_url, tool_name, parameters, sequence_order
+                FROM expected_tool_calls
+                WHERE test_case_id IN ({placeholders})
+                ORDER BY test_case_id, sequence_order ASC
+                """,  # nosec: "B608" Safe: placeholders is internally generated, values are parameterized
+                test_case_ids,
+            )
+            expected_calls_associations = await expected_calls_cursor.fetchall()
+
             # Build mapping of test_case_id -> list[MCPServerConfig]
             test_case_servers = {}
             for test_case_id, server_url, transport in server_associations:
@@ -282,23 +339,42 @@ class TestCaseRepository:
                     MCPServerConfig(url=server_url, transport=transport)
                 )
 
+            # Build mapping of test_case_id -> list[ExpectedToolCall]
+            test_case_expected_calls = {}
+            for (
+                test_case_id,
+                server_url,
+                tool_name,
+                params,
+                _seq_order,
+            ) in expected_calls_associations:
+                if test_case_id not in test_case_expected_calls:
+                    test_case_expected_calls[test_case_id] = []
+                test_case_expected_calls[test_case_id].append(
+                    ExpectedToolCall(
+                        mcp_server_url=server_url,
+                        tool_name=tool_name,
+                        parameters=json.loads(params) if params else None,
+                    )
+                )
+
             # Build test case responses
             test_cases = []
             for row in rows:
                 test_case_id = row[0]
                 available_mcp_servers = test_case_servers.get(test_case_id, [])
+                expected_tool_calls = test_case_expected_calls.get(test_case_id)
 
                 test_cases.append(
                     TestCaseResponse(
                         id=test_case_id,
                         name=row[1],
                         query=row[2],
-                        expected_mcp_server_url=row[3],
-                        expected_tool_name=row[4],
-                        expected_parameters=json.loads(row[5]) if row[5] else None,
+                        order_dependent_matching=bool(row[3]),
+                        expected_tool_calls=expected_tool_calls,
                         available_mcp_servers=available_mcp_servers,
-                        created_at=datetime.fromisoformat(row[6]),
-                        updated_at=datetime.fromisoformat(row[7]),
+                        created_at=datetime.fromisoformat(row[4]),
+                        updated_at=datetime.fromisoformat(row[5]),
                     )
                 )
 

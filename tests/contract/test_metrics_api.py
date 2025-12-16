@@ -120,7 +120,6 @@ async def test_runs_with_known_data(test_db):
         )
 
         # Create tool definition for selected tool (if any)
-        selected_tool_id = None
         if outcome["selected_tool"]:
             from mcp_tef.models.schemas import ToolDefinitionCreate
 
@@ -131,18 +130,15 @@ async def test_runs_with_known_data(test_db):
                 mcp_server_url=server_url,
                 test_run_id=test_run.id,
             )
-            created_tool = await tool_repo.create(tool_def)
-            selected_tool_id = created_tool.id
+            await tool_repo.create(tool_def)
 
         # Update test run with results
         await test_run_repo.update_status(
             test_run_id=test_run.id,
             status="completed",
-            selected_tool_id=selected_tool_id,
-            extracted_parameters=outcome["selected_params"],
             confidence_score=outcome["confidence_score"],
             classification=outcome["classification"],
-            parameter_correctness=outcome["parameter_correctness"],
+            avg_parameter_correctness=outcome["parameter_correctness"],
             execution_time_ms=outcome["execution_time_ms"],
         )
 
@@ -246,14 +242,12 @@ async def test_runs_for_filtering(test_db):
         mcp_server_url=server_url_1,
         test_run_id=test_run_1.id,
     )
-    created_tool_1 = await tool_repo.create(tool_1)
+    await tool_repo.create(tool_1)
 
     # Update test_run_1 with results
     await test_run_repo.update_status(
         test_run_id=test_run_1.id,
         status="completed",
-        selected_tool_id=created_tool_1.id,
-        extracted_parameters={"param": "value"},
         confidence_score="robust description",
         execution_time_ms=100,
     )
@@ -271,14 +265,12 @@ async def test_runs_for_filtering(test_db):
         mcp_server_url=server_url_2,
         test_run_id=test_run_2.id,
     )
-    created_tool_2 = await tool_repo.create(tool_2)
+    await tool_repo.create(tool_2)
 
     # Update test_run_2 with results
     await test_run_repo.update_status(
         test_run_id=test_run_2.id,
         status="completed",
-        selected_tool_id=created_tool_2.id,
-        extracted_parameters={"param": "value"},
         confidence_score="robust description",
         execution_time_ms=100,
     )

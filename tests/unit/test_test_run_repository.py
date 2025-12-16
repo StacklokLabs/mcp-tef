@@ -56,9 +56,13 @@ class TestTestRunRepositoryQuery:
         test_case_data = TestCaseCreate(
             name="Test Case 1",
             query="What is the weather?",
-            expected_mcp_server_url="http://localhost:3000",
-            expected_tool_name="get_weather",
-            expected_parameters={"location": "San Francisco"},
+            expected_tool_calls=[
+                {
+                    "mcp_server_url": "http://localhost:3000",
+                    "tool_name": "get_weather",
+                    "parameters": {"location": "San Francisco"},
+                }
+            ],
             available_mcp_servers=[
                 {"url": "http://localhost:3000", "transport": "streamable-http"}
             ],
@@ -85,9 +89,13 @@ class TestTestRunRepositoryQuery:
         test_case_data = TestCaseCreate(
             name="Test Case 2",
             query="Get calendar events",
-            expected_mcp_server_url="http://localhost:4000",
-            expected_tool_name="get_events",
-            expected_parameters={"date": "2025-01-01"},
+            expected_tool_calls=[
+                {
+                    "mcp_server_url": "http://localhost:4000",
+                    "tool_name": "get_events",
+                    "parameters": {"date": "2025-01-01"},
+                }
+            ],
             available_mcp_servers=[
                 {"url": "http://localhost:4000", "transport": "streamable-http"}
             ],
@@ -181,13 +189,6 @@ class TestTestRunRepositoryQuery:
 
     async def test_query_by_mcp_server_url(self, test_db, test_run_id_1, weather_tool_id):
         """Test querying by MCP server URL."""
-        # Update test_run_1 to have selected_tool_id pointing to weather tool
-        await test_db.execute(
-            "UPDATE test_runs SET selected_tool_id = ? WHERE id = ?",
-            (weather_tool_id, test_run_id_1),
-        )
-        await test_db.commit()
-
         repo = TestRunRepository(test_db)
         results = await repo.query(mcp_server_url="http://localhost:3000")
 
@@ -196,13 +197,6 @@ class TestTestRunRepositoryQuery:
 
     async def test_query_by_tool_name(self, test_db, test_run_id_2, calendar_tool_id):
         """Test querying by tool name."""
-        # Update test_run_2 to have selected_tool_id pointing to calendar tool
-        await test_db.execute(
-            "UPDATE test_runs SET selected_tool_id = ? WHERE id = ?",
-            (calendar_tool_id, test_run_id_2),
-        )
-        await test_db.commit()
-
         repo = TestRunRepository(test_db)
         results = await repo.query(tool_name="get_events")
 
@@ -213,13 +207,6 @@ class TestTestRunRepositoryQuery:
         self, test_db, test_run_id_1, weather_tool_id
     ):
         """Test querying by both tool name and MCP server URL."""
-        # Update test run to have selected tool
-        await test_db.execute(
-            "UPDATE test_runs SET selected_tool_id = ? WHERE id = ?",
-            (weather_tool_id, test_run_id_1),
-        )
-        await test_db.commit()
-
         repo = TestRunRepository(test_db)
         results = await repo.query(tool_name="get_weather", mcp_server_url="http://localhost:3000")
 
@@ -252,9 +239,13 @@ class TestTestRunRepositoryQuery:
         test_case_data = TestCaseCreate(
             name="Pagination Test Case",
             query="Test pagination",
-            expected_mcp_server_url="http://localhost:5000",
-            expected_tool_name="test_tool",
-            expected_parameters={},
+            expected_tool_calls=[
+                {
+                    "mcp_server_url": "http://localhost:5000",
+                    "tool_name": "test_tool",
+                    "parameters": {},
+                }
+            ],
             available_mcp_servers=[
                 {"url": "http://localhost:5000", "transport": "streamable-http"}
             ],
@@ -310,41 +301,6 @@ class TestTestRunRepositoryQuery:
         assert model_settings.system_prompt == "You are a helpful assistant"
         assert isinstance(model_settings.created_at, datetime)
 
-    async def test_query_includes_selected_tool(self, test_db, test_run_id_1, weather_tool_id):
-        """Test that query results include selected tool data."""
-        # Update test run with selected tool and extracted parameters
-        extracted_params = {"location": "San Francisco", "units": "celsius"}
-        await test_db.execute(
-            """UPDATE test_runs
-               SET selected_tool_id = ?, extracted_parameters = ?
-               WHERE id = ?""",
-            (weather_tool_id, json.dumps(extracted_params), test_run_id_1),
-        )
-        await test_db.commit()
-
-        repo = TestRunRepository(test_db)
-        results = await repo.query(test_run_id=test_run_id_1)
-
-        assert len(results) == 1
-        selected_tool = results[0].selected_tool
-        assert selected_tool is not None
-        assert selected_tool.id == weather_tool_id
-        assert selected_tool.name == "get_weather"
-        assert selected_tool.mcp_server_url == "http://localhost:3000"
-        assert selected_tool.parameters == extracted_params
-
-    async def test_query_includes_expected_tool(self, test_db, test_run_id_1, weather_tool_id):
-        """Test that query results include expected tool data from test case."""
-        repo = TestRunRepository(test_db)
-        results = await repo.query(test_run_id=test_run_id_1)
-
-        assert len(results) == 1
-        expected_tool = results[0].expected_tool
-        assert expected_tool is not None
-        assert expected_tool.name == "get_weather"
-        assert expected_tool.mcp_server_url == "http://localhost:3000"
-        assert expected_tool.parameters == {"location": "San Francisco"}
-
     async def test_query_includes_all_tools(self, test_db, test_run_id_1, weather_tool_id):
         """Test that query results include all tools available in test run."""
         # Create additional tools for the same test run
@@ -394,26 +350,13 @@ class TestTestRunRepositoryQuery:
         assert results[0].model_settings is None
         assert results[0].status == "pending"
 
-    async def test_query_handles_null_selected_tool(self, test_db, test_run_id_1):
-        """Test that query handles test runs without selected tool."""
-        repo = TestRunRepository(test_db)
-
-        # Test run created without selected_tool_id
-        results = await repo.query(test_run_id=test_run_id_1)
-
-        assert len(results) == 1
-        assert results[0].selected_tool is None
-        assert results[0].extracted_parameters is None
-
     async def test_query_with_all_test_run_fields(self, test_db, test_run_id_1, weather_tool_id):
         """Test that query returns all test run fields correctly."""
         # Update test run with all optional fields
         await test_db.execute(
             """UPDATE test_runs SET
-               selected_tool_id = ?,
-               extracted_parameters = ?,
                llm_confidence = ?,
-               parameter_correctness = ?,
+               avg_parameter_correctness = ?,
                confidence_score = ?,
                classification = ?,
                execution_time_ms = ?,
@@ -422,8 +365,6 @@ class TestTestRunRepositoryQuery:
                completed_at = CURRENT_TIMESTAMP
                WHERE id = ?""",
             (
-                weather_tool_id,
-                json.dumps({"location": "SF"}),
                 "high",
                 9.5,
                 "robust description",
@@ -442,7 +383,7 @@ class TestTestRunRepositoryQuery:
         assert len(results) == 1
         tr = results[0]
         assert tr.llm_confidence == "high"
-        assert tr.parameter_correctness == 9.5
+        assert tr.avg_parameter_correctness == 9.5
         assert tr.confidence_score == "robust description"
         assert tr.classification == "TP"
         assert tr.execution_time_ms == 1250
@@ -454,13 +395,6 @@ class TestTestRunRepositoryQuery:
         self, test_db, test_case_id, test_run_id_1, weather_tool_id
     ):
         """Test combining multiple query filters."""
-        # Update test run with selected tool
-        await test_db.execute(
-            "UPDATE test_runs SET selected_tool_id = ? WHERE id = ?",
-            (weather_tool_id, test_run_id_1),
-        )
-        await test_db.commit()
-
         repo = TestRunRepository(test_db)
 
         # Query with test_case_id + mcp_server_url

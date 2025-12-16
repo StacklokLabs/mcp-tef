@@ -32,8 +32,13 @@ async def test_case_id(client: AsyncClient) -> str:
             json={
                 "name": "Test case",
                 "query": "Test query",
-                "expected_mcp_server_url": mcp_server_url,
-                "expected_tool_name": "test_tool",
+                "expected_tool_calls": [
+                    {
+                        "mcp_server_url": mcp_server_url,
+                        "tool_name": "test_tool",
+                        "parameters": None,
+                    }
+                ],
                 "available_mcp_servers": [{"url": mcp_server_url, "transport": "streamable-http"}],
             },
         )
@@ -277,16 +282,10 @@ async def test_fire_and_forget_execution(
         assert data["created_at"] is not None
         # These should be None initially since test hasn't run yet
         assert data["llm_response_raw"] is None
-        assert data["selected_tool"] is None
-        assert data["extracted_parameters"] is None
         assert data["classification"] is None
         assert data["execution_time_ms"] is None
         assert data["error_message"] is None
         assert data["completed_at"] is None
-        # expected_tool is always populated from test case data (available immediately)
-        assert data["expected_tool"] is not None
-        assert data["expected_tool"]["name"] == "test_tool"
-        assert data["expected_tool"]["mcp_server_url"] == "http://localhost:3000"
         # tools list is populated during background ingestion
         # (happens very quickly, may already be done)
         assert isinstance(data["tools"], list)
@@ -350,15 +349,10 @@ async def test_polling_for_test_completion(
         # Test should eventually complete
         assert status == "completed", f"Test did not complete after {poll_count} polls"
         assert data["llm_response_raw"] is not None
-        assert data["selected_tool"] is not None
-        assert data["selected_tool"]["id"] is not None
-        assert data["selected_tool"]["name"] is not None
-        assert data["extracted_parameters"] == {"param": "value"}
         assert data["classification"] in ["TP", "FP", "TN", "FN"]
         assert data["execution_time_ms"] is not None
         assert data["execution_time_ms"] >= 1
         # New enriched fields
-        assert data["expected_tool"] is not None
         assert isinstance(data["tools"], list)
         assert data["completed_at"] is not None
 

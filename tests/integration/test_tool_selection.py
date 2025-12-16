@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from httpx import AsyncClient
+from pydantic_ai import ToolCallPart, ToolReturnPart
 
 from mcp_tef.models.schemas import ToolDefinition
 
@@ -71,9 +72,13 @@ async def test_tool_selection_workflow(client: AsyncClient, test_mcp_server_url:
             json={
                 "name": "Weather query test",
                 "query": "What's the weather in San Francisco?",
-                "expected_mcp_server_url": test_mcp_server_url,
-                "expected_tool_name": "test_tool",
-                "expected_parameters": {"location": "San Francisco"},
+                "expected_tool_calls": [
+                    {
+                        "mcp_server_url": test_mcp_server_url,
+                        "tool_name": "test_tool",
+                        "parameters": {"location": "San Francisco"},
+                    }
+                ],
                 "available_mcp_servers": [
                     {"url": test_mcp_server_url, "transport": "streamable-http"}
                 ],
@@ -169,8 +174,12 @@ async def test_multiple_tools_selection(client: AsyncClient, test_mcp_server_url
             json={
                 "name": "Multi-tool test",
                 "query": "Search for Python tutorials",
-                "expected_mcp_server_url": test_mcp_server_url,
-                "expected_tool_name": "search",
+                "expected_tool_calls": [
+                    {
+                        "mcp_server_url": test_mcp_server_url,
+                        "tool_name": "search",
+                    }
+                ],
                 "available_mcp_servers": [
                     {"url": test_mcp_server_url, "transport": "streamable-http"}
                 ],
@@ -249,8 +258,12 @@ async def test_concurrent_api_key_isolation(client: AsyncClient, test_mcp_server
             json={
                 "name": "Concurrent API key test",
                 "query": "Test concurrent execution",
-                "expected_mcp_server_url": test_mcp_server_url,
-                "expected_tool_name": "concurrent_test_tool",
+                "expected_tool_calls": [
+                    {
+                        "mcp_server_url": test_mcp_server_url,
+                        "tool_name": "concurrent_test_tool",
+                    }
+                ],
                 "available_mcp_servers": [
                     {"url": test_mcp_server_url, "transport": "streamable-http"}
                 ],
@@ -307,3 +320,148 @@ async def test_concurrent_api_key_isolation(client: AsyncClient, test_mcp_server
         # Verify API keys are NOT in responses (security check)
         for run in [run_1, run_2, run_3]:
             assert "api_key" not in run.json().get("model_settings", {})
+
+
+@pytest.mark.asyncio
+async def test_actual_parameters_and_justification_storage(
+    client: AsyncClient, test_mcp_server_url: str
+):
+    """Test that actual_parameters and parameter_justification are stored and retrieved."""
+    with (
+        patch("mcp_tef.api.test_cases.MCPLoaderService") as mock_loader_api,
+        patch("mcp_tef.services.evaluation_service.MCPLoaderService") as mock_loader_eval,
+        patch("mcp_tef.services.llm_service.Agent") as mock_agent_class,
+    ):
+        # Mock for test case creation
+        mock_loader_api_instance = mock_loader_api.return_value
+        mock_loader_api_instance.load_tools_from_server = AsyncMock(
+            return_value=[
+                ToolDefinition(
+                    name="weather_tool",
+                    description="Get weather information",
+                    input_schema={
+                        "type": "object",
+                        "properties": {
+                            "location": {"type": "string"},
+                            "units": {"type": "string"},
+                        },
+                        "required": ["location"],
+                    },
+                )
+            ]
+        )
+
+        # Mock for test execution
+        mock_loader_eval_instance = mock_loader_eval.return_value
+        mock_loader_eval_instance.load_tools_from_server = AsyncMock(
+            return_value=[
+                ToolDefinition(
+                    name="weather_tool",
+                    description="Get weather information",
+                    input_schema={
+                        "type": "object",
+                        "properties": {
+                            "location": {"type": "string"},
+                            "units": {"type": "string"},
+                        },
+                        "required": ["location"],
+                    },
+                )
+            ]
+        )
+
+        # Mock LLM to return different parameters than expected
+        mock_agent = MagicMock()
+        mock_agent_class.return_value = mock_agent
+
+        # Mock Pydantic AI response with tool call and return parts
+        mock_tool_call_part = MagicMock(spec=ToolCallPart)
+        mock_tool_call_part.tool_name = "weather_tool"
+        mock_tool_call_part.args_as_dict = MagicMock(
+            return_value={"location": "NYC", "units": "fahrenheit"}
+        )
+        mock_tool_call_part.timestamp = None
+
+        mock_tool_return_part = MagicMock(spec=ToolReturnPart)
+        mock_tool_return_part.tool_name = "weather_tool"
+        mock_tool_return_part.content = "Weather data"
+        mock_tool_return_part.model_response_object = MagicMock(
+            return_value={"temperature": 55, "condition": "cloudy"}
+        )
+        mock_tool_return_part.timestamp = None
+
+        mock_message_1 = MagicMock()
+        mock_message_1.parts = [mock_tool_call_part]
+
+        mock_message_2 = MagicMock()
+        mock_message_2.parts = [mock_tool_return_part]
+
+        mock_result = MagicMock()
+        mock_result.all_messages = MagicMock(return_value=[mock_message_1, mock_message_2])
+        mock_agent.run = AsyncMock(return_value=mock_result)
+
+        # Create test case with different expected parameters
+        test_case_response = await client.post(
+            "/test-cases",
+            json={
+                "name": "Weather parameter test",
+                "query": "What's the weather in San Francisco?",
+                "expected_tool_calls": [
+                    {
+                        "mcp_server_url": test_mcp_server_url,
+                        "tool_name": "weather_tool",
+                        "parameters": {"location": "San Francisco", "units": "celsius"},
+                    }
+                ],
+                "available_mcp_servers": [
+                    {"url": test_mcp_server_url, "transport": "streamable-http"}
+                ],
+            },
+        )
+        assert test_case_response.status_code == 201
+        test_case_id = test_case_response.json()["id"]
+
+        # Run test
+        run_response = await client.post(
+            f"/test-cases/{test_case_id}/run",
+            headers={"X-Model-API-Key": "test-api-key"},
+            json={
+                "model_settings": {
+                    "provider": "openai",
+                    "model": "gpt-4",
+                    "timeout": 30,
+                    "temperature": 0.4,
+                    "max_retries": 3,
+                }
+            },
+        )
+        assert run_response.status_code == 201
+        test_run_id = run_response.json()["id"]
+
+        # Fetch test run to get tool_call_matches (created by background task)
+        status_response = await client.get(f"/test-runs/{test_run_id}")
+        assert status_response.status_code == 200
+        run_data = status_response.json()
+
+        # Verify tool_call_matches includes new fields
+        assert "tool_call_matches" in run_data
+        matches = run_data["tool_call_matches"]
+        assert len(matches) == 1
+
+        match = matches[0]
+        assert match["match_type"] == "TP"
+
+        # Verify actual_parameters field exists and has correct values
+        assert "actual_parameters" in match
+        assert match["actual_parameters"] is not None
+        assert match["actual_parameters"]["location"] == "NYC"
+        assert match["actual_parameters"]["units"] == "fahrenheit"
+
+        # Verify parameter_justification field exists and explains the mismatch
+        assert "parameter_justification" in match
+        assert match["parameter_justification"] is not None
+        assert "Incorrect values" in match["parameter_justification"]
+
+        # Verify parameter_correctness is less than perfect due to mismatch
+        assert match["parameter_correctness"] is not None
+        assert match["parameter_correctness"] < 10.0

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import click
 from mcp_tef_models.schemas import (
+    ExpectedToolCall,
     MCPServerConfig,
     PaginatedTestCaseResponse,
     TestCaseCreate,
@@ -50,6 +51,38 @@ def parse_json_params(value: str | None) -> dict | None:
         return json.loads(value)
     except json.JSONDecodeError as e:
         raise click.BadParameter(f"Invalid JSON: {e}") from e
+
+
+def parse_expected_tool_calls(value: str | None) -> list[ExpectedToolCall] | None:
+    """Parse expected tool calls from JSON string.
+
+    Args:
+        value: JSON string or None (array of tool call objects)
+
+    Returns:
+        List of ExpectedToolCall objects or None
+
+    Raises:
+        click.BadParameter: If JSON is invalid or validation fails
+    """
+    if value is None:
+        return None
+
+    try:
+        data = json.loads(value)
+    except json.JSONDecodeError as e:
+        raise click.BadParameter(f"Invalid JSON in expected-tool-calls: {e}") from e
+
+    if not isinstance(data, list):
+        raise click.BadParameter("Expected tool calls must be a JSON array")
+
+    try:
+        return [ExpectedToolCall.model_validate(item) for item in data]
+    except ValidationError as e:
+        errors = "; ".join(
+            f"{'.'.join(str(loc) for loc in err['loc'])}: {err['msg']}" for err in e.errors()
+        )
+        raise click.BadParameter(f"Invalid tool call format: {errors}") from e
 
 
 def substitute_env_vars(content: str, env_vars: dict[str, str] | None = None) -> str:
@@ -167,10 +200,21 @@ def format_test_case_table(tc: TestCaseResponse, title: str = "Test Case") -> No
     console.print(f"ID:               {tc.id}")
     console.print(f"Name:             {tc.name}")
     console.print(f"Query:            {tc.query}")
-    console.print(f"Expected Server:  {tc.expected_mcp_server_url or '(none)'}")
-    console.print(f"Expected Tool:    {tc.expected_tool_name or '(none)'}")
-    if tc.expected_parameters:
-        console.print(f"Expected Params:  {json.dumps(tc.expected_parameters)}")
+
+    # Display expected tool calls
+    if tc.expected_tool_calls:
+        count = len(tc.expected_tool_calls)
+        plural = "s" if count != 1 else ""
+        console.print(f"Expected Tools:   ({count} tool call{plural})")
+        for i, tool_call in enumerate(tc.expected_tool_calls, 1):
+            console.print(f"  [{i}] {tool_call.mcp_server_url} → {tool_call.tool_name}")
+            if tool_call.parameters:
+                console.print(f"      Parameters: {json.dumps(tool_call.parameters)}")
+        if tc.order_dependent_matching:
+            console.print("      [Order-dependent matching enabled]")
+    else:
+        console.print("Expected Tools:   (none - negative test)")
+
     console.print("Available Servers:")
     for server in tc.available_mcp_servers:
         console.print(f"  - {server.url} ({server.transport})")
@@ -205,16 +249,25 @@ def format_test_case_list_table(response: PaginatedTestCaseResponse) -> None:
     table.add_column("ID", style="dim")
     table.add_column("Name", style="cyan")
     table.add_column("Query")
-    table.add_column("Expected Tool")
+    table.add_column("Expected Tools")
 
     for tc in response.items:
         # Truncate long query
         query = tc.query[:30] + "..." if len(tc.query) > 30 else tc.query
+
+        # Format expected tools display
+        expected_tools_display = "(none)"
+        if tc.expected_tool_calls:
+            if len(tc.expected_tool_calls) == 1:
+                expected_tools_display = tc.expected_tool_calls[0].tool_name
+            else:
+                expected_tools_display = f"{len(tc.expected_tool_calls)} tools"
+
         table.add_row(
             tc.id,
             tc.name,
             query,
-            tc.expected_tool_name or "(none)",
+            expected_tools_display,
         )
 
     console.print()
@@ -327,19 +380,19 @@ def parse_server_spec(server_spec: str) -> MCPServerConfig:
 @click.option("--name", default=None, help="Descriptive name for the test case")
 @click.option("--query", default=None, help="User query to evaluate")
 @click.option(
-    "--expected-server",
+    "--expected-tool-calls",
     default=None,
-    help="Expected MCP server URL (null for negative tests)",
+    help=(
+        "Expected tool calls as JSON array. "
+        'Format: \'[{"mcp_server_url":"...","tool_name":"...","parameters":{...}}]\'. '
+        "Omit for negative tests (no tools expected)."
+    ),
 )
 @click.option(
-    "--expected-tool",
-    default=None,
-    help="Expected tool name (null for negative tests)",
-)
-@click.option(
-    "--expected-params",
-    default=None,
-    help="Expected parameters as JSON object",
+    "--order-dependent",
+    is_flag=True,
+    default=False,
+    help="Require tool calls to match in exact order (default: order-independent)",
 )
 @click.option(
     "--servers",
@@ -396,9 +449,8 @@ def parse_server_spec(server_spec: str) -> MCPServerConfig:
 def create(
     name: str | None,
     query: str | None,
-    expected_server: str | None,
-    expected_tool: str | None,
-    expected_params: str | None,
+    expected_tool_calls: str | None,
+    order_dependent: bool,
     servers: str | None,
     from_file: str | None,
     set_vars: tuple[str, ...],
@@ -425,9 +477,14 @@ def create(
             "transport": "streamable-http"     // optional, defaults to "streamable-http"
           }
         ],
-        "expected_mcp_server_url": "...",      // optional (null for negative tests)
-        "expected_tool_name": "tool_name",     // optional (must pair with server)
-        "expected_parameters": {"key": "val"}  // optional (requires tool)
+        "expected_tool_calls": [               // optional (null/empty for negative tests)
+          {
+            "mcp_server_url": "...",           // required for each tool call
+            "tool_name": "tool_name",          // required for each tool call
+            "parameters": {"key": "val"}       // optional parameters
+          }
+        ],
+        "order_dependent_matching": false      // optional, defaults to false
       }
 
     \b
@@ -443,16 +500,21 @@ def create(
       mtef test-case create \\
         --name "Weather test" \\
         --query "What is the weather in San Francisco?" \\
-        --expected-server "http://localhost:3000/sse" \\
-        --expected-tool "get_weather" \\
+        --expected-tool-calls \\
+          '[{"mcp_server_url":"http://localhost:3000/sse",\\
+             "tool_name":"get_weather"}]' \\
         --servers "http://localhost:3000/sse:sse"
 
       \b
-      # Create test case with multiple servers (mixed transports)
+      # Create test case with multiple expected tools (order-dependent)
       mtef test-case create \\
-        --name "Multi-server test" \\
-        --query "Get my calendar events" \\
-        --servers "http://localhost:3000:sse,http://localhost:3001"
+        --name "Multi-tool test" \\
+        --query "Fetch data and analyze it" \\
+        --expected-tool-calls \\
+          '[{"mcp_server_url":"http://localhost:3000","tool_name":"fetch"},\\
+            {"mcp_server_url":"http://localhost:3000","tool_name":"analyze"}]' \\
+        --order-dependent \\
+        --servers "http://localhost:3000"
 
       \b
       # Create negative test case (no tool should be selected)
@@ -474,11 +536,10 @@ def create(
     # Determine input mode: file-based or parameter-based
     if from_file:
         # File-based creation - load and validate from JSON file
-        if any([name, query, servers, expected_server, expected_tool, expected_params]):
+        if any([name, query, servers, expected_tool_calls, order_dependent]):
             print_error(
                 "Cannot combine --from-file with other test case options "
-                "(--name, --query, --servers, --expected-server, --expected-tool, "
-                "--expected-params)"
+                "(--name, --query, --servers, --expected-tool-calls, --order-dependent)"
             )
             raise SystemExit(EXIT_INVALID_ARGUMENTS)
 
@@ -514,11 +575,11 @@ def create(
         server_specs = [spec.strip() for spec in servers.split(",") if spec.strip()]
         server_configs = [parse_server_spec(spec) for spec in server_specs]
 
-        # Parse expected parameters JSON
+        # Parse expected tool calls JSON
         try:
-            expected_parameters = parse_json_params(expected_params)
+            parsed_tool_calls = parse_expected_tool_calls(expected_tool_calls)
         except click.BadParameter as e:
-            print_error("Invalid expected parameters", str(e))
+            print_error("Invalid expected tool calls", str(e))
             raise SystemExit(EXIT_INVALID_ARGUMENTS) from e
 
         # Build TestCaseCreate model - Pydantic validates all constraints
@@ -528,9 +589,8 @@ def create(
                     name=name,
                     query=query,
                     available_mcp_servers=server_configs,
-                    expected_mcp_server_url=expected_server,
-                    expected_tool_name=expected_tool,
-                    expected_parameters=expected_parameters,
+                    expected_tool_calls=parsed_tool_calls,
+                    order_dependent_matching=order_dependent,
                 )
             ]
         except ValidationError as e:
@@ -555,9 +615,8 @@ def create(
                 name=tc.name,
                 query=tc.query,
                 available_mcp_servers=tc.available_mcp_servers,
-                expected_mcp_server_url=tc.expected_mcp_server_url,
-                expected_tool_name=tc.expected_tool_name,
-                expected_parameters=tc.expected_parameters,
+                expected_tool_calls=tc.expected_tool_calls,
+                order_dependent_matching=tc.order_dependent_matching,
             )
         finally:
             await client.close()
@@ -764,23 +823,6 @@ def get(
             format_test_case_json(result)
         else:
             format_test_case_table(result, title="Test Case Details")
-
-            # Verbose output - show available tools
-            if verbose and result.available_tools:
-                console.print()
-                console.print("[bold]Available Tools by Server:[/bold]")
-                for server_url, tools in result.available_tools.items():
-                    console.print()
-                    console.print(f"[cyan]Server: {server_url}[/cyan]")
-                    if tools:
-                        tool_table = Table(show_header=True)
-                        tool_table.add_column("Tool Name", style="cyan")
-                        tool_table.add_column("Description")
-                        for tool in tools:
-                            tool_table.add_row(tool.name, tool.description or "(no description)")
-                        console.print(tool_table)
-                    else:
-                        console.print("  (no tools)")
 
         raise SystemExit(EXIT_SUCCESS)
 

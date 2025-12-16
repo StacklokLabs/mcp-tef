@@ -79,32 +79,47 @@ def format_test_run_table(tr: TestRunResponse, show_pending_hint: bool = False) 
         console.print(f"Classification:   {format_classification(tr.classification)}")
         console.print()
 
-        # Expected
-        if tr.expected_tool:
-            console.print("[bold]Expected:[/bold]")
-            console.print(f"  Server:         {tr.expected_tool.mcp_server_url}")
-            console.print(f"  Tool:           {tr.expected_tool.name}")
-            if tr.expected_tool.parameters:
-                console.print(f"  Parameters:     {json.dumps(tr.expected_tool.parameters)}")
-        else:
-            console.print("[bold]Expected:[/bold]  (no tool expected - negative test)")
+        # Display multiple tool call matches
+        if tr.tool_call_matches:
+            console.print(f"[bold]Tool Call Matches ({len(tr.tool_call_matches)}):[/bold]")
+            for i, match in enumerate(tr.tool_call_matches, 1):
+                console.print()
+                console.print(f"  [bold]Match {i}: {match.match_type}[/bold]")
 
-        console.print()
+                # Expected
+                if match.expected_tool_call:
+                    console.print("    Expected:")
+                    console.print(f"      Server: {match.expected_tool_call.mcp_server_url}")
+                    console.print(f"      Tool:   {match.expected_tool_call.tool_name}")
+                    if match.expected_tool_call.parameters:
+                        console.print(
+                            f"      Params: {json.dumps(match.expected_tool_call.parameters)}"
+                        )
+                else:
+                    console.print("    Expected: (none)")
 
-        # Selected
-        if tr.selected_tool:
-            console.print("[bold]Selected (LLM):[/bold]")
-            console.print(f"  Server:         {tr.selected_tool.mcp_server_url}")
-            console.print(f"  Tool:           {tr.selected_tool.name}")
-            if tr.selected_tool.parameters:
-                console.print(f"  Parameters:     {json.dumps(tr.selected_tool.parameters)}")
+                # Actual
+                if match.actual_tool_call:
+                    console.print("    Actual:")
+                    console.print(f"      Server: {match.actual_tool_call.mcp_server_url}")
+                    console.print(f"      Tool:   {match.actual_tool_call.name}")
+                    if match.actual_parameters:
+                        console.print(f"      Params: {json.dumps(match.actual_parameters)}")
+                else:
+                    console.print("    Actual:   (none)")
+
+                # Parameter correctness for this match
+                if match.parameter_correctness is not None:
+                    console.print(f"    Param Score: {match.parameter_correctness}/10")
+                    if match.parameter_justification:
+                        console.print(f"    Justification: {match.parameter_justification}")
         else:
-            console.print("[bold]Selected (LLM):[/bold]  (none)")
+            console.print("[bold]Tool Call Matches:[/bold] (none)")
 
         console.print()
 
         # Evaluation metrics
-        console.print("[bold]Evaluation:[/bold]")
+        console.print("[bold]Overall Evaluation:[/bold]")
         tool_match = (
             tr.classification == "TP" or tr.classification == "TN" if tr.classification else None
         )
@@ -117,8 +132,10 @@ def format_test_run_table(tr: TestRunResponse, show_pending_hint: bool = False) 
 
         if tr.llm_confidence:
             console.print(f"  Confidence:     {tr.llm_confidence} ({tr.confidence_score or '-'})")
-        if tr.parameter_correctness is not None:
-            console.print(f"  Param Score:    {tr.parameter_correctness}/10")
+
+        # Average parameter correctness
+        if tr.avg_parameter_correctness is not None:
+            console.print(f"  Avg Param Score: {tr.avg_parameter_correctness}/10")
 
         console.print()
 
@@ -177,7 +194,7 @@ def format_test_run_list_table(response: PaginatedTestRunResponse) -> None:
     table.add_column("ID", style="dim")
     table.add_column("Status")
     table.add_column("Classification")
-    table.add_column("Selected Tool")
+    table.add_column("Selected Tools")
     table.add_column("Confidence")
     table.add_column("Time (ms)", justify="right")
 
@@ -189,11 +206,20 @@ def format_test_run_list_table(response: PaginatedTestRunResponse) -> None:
             "running": "blue",
         }.get(tr.status, "")
 
+        # Format selected tools display
+        selected_tools_display = "(none)"
+        if tr.tool_call_matches:
+            actual_tools = [m.actual_tool_call for m in tr.tool_call_matches if m.actual_tool_call]
+            if len(actual_tools) == 1:
+                selected_tools_display = actual_tools[0].name
+            elif len(actual_tools) > 1:
+                selected_tools_display = f"{len(actual_tools)} tools"
+
         table.add_row(
             tr.id,
             f"[{status_style}]{tr.status}[/{status_style}]" if status_style else tr.status,
             tr.classification or "-",
-            tr.selected_tool.name if tr.selected_tool else "(none)",
+            selected_tools_display,
             tr.confidence_score or "-",
             f"{tr.execution_time_ms:,}" if tr.execution_time_ms else "-",
         )

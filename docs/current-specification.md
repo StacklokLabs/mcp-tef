@@ -611,15 +611,22 @@ class ToolDefinitionResponse(BaseModel):
     updated_at: datetime
 ```
 
+#### Expected Tool Call
+```python
+class ExpectedToolCall(BaseModel):
+    mcp_server_url: str
+    tool_name: str
+    parameters: dict[str, Any] | None  # None = don't validate parameters
+```
+
 #### Test Case
 ```python
 class TestCaseResponse(BaseModel):
     id: str
     name: str
     query: str
-    expected_mcp_server_name: str
-    expected_tool_name: str
-    expected_parameters: dict[str, Any] | None
+    expected_tool_calls: list[ExpectedToolCall] | None  # None or [] = expect no tools
+    order_dependent_matching: bool  # False = order-independent (default)
     created_at: datetime
     updated_at: datetime
 ```
@@ -643,8 +650,10 @@ class TestRunResponse(BaseModel):
     test_case_id: str
     model_settings: ModelSettingsResponse  # Embedded settings
     status: str  # 'pending', 'running', 'completed', 'failed'
-    confidence_score: float | None
-    classification: str | None  # 'TP', 'FP', 'TN', 'FN'
+    llm_confidence: str | None  # 'high', 'low'
+    avg_parameter_correctness: float | None  # 0.0-10.0, averaged across TP matches
+    confidence_score: str | None  # 'robust description', 'needs clarity', 'misleading description'
+    classification: str | None  # 'TP', 'FP', 'TN', 'FN' (overall, aggregated from matches)
     execution_time_ms: int | None
     error_message: str | None
     created_at: datetime
@@ -685,16 +694,26 @@ CREATE TABLE tool_definitions (
     FOREIGN KEY (test_run_id) REFERENCES test_runs(id) ON DELETE CASCADE
 );
 
--- Test Cases (no model_id)
+-- Test Cases (supports multiple expected tool calls)
 CREATE TABLE test_cases (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     query TEXT NOT NULL,
-    expected_mcp_server_name TEXT NOT NULL,
-    expected_tool_name TEXT NOT NULL,
-    expected_parameters TEXT,
+    order_dependent_matching BOOLEAN NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Expected Tool Calls (normalized storage for 0-N expected tools per test case)
+CREATE TABLE expected_tool_calls (
+    id TEXT PRIMARY KEY,
+    test_case_id TEXT NOT NULL,
+    mcp_server_url TEXT NOT NULL,
+    tool_name TEXT NOT NULL,
+    parameters TEXT,  -- JSON, can be NULL
+    sequence_order INTEGER NOT NULL,  -- 0-indexed for order-dependent matching
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (test_case_id) REFERENCES test_cases(id) ON DELETE CASCADE
 );
 
 -- Model Settings (non-credential configuration)
@@ -708,24 +727,39 @@ CREATE TABLE model_settings (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Test Runs (with model_settings_id)
+-- Test Runs (multi-tool evaluation support)
 CREATE TABLE test_runs (
     id TEXT PRIMARY KEY,
     test_case_id TEXT NOT NULL,
     model_settings_id TEXT,
     status TEXT NOT NULL DEFAULT 'pending',
     llm_response_raw TEXT,
-    selected_tool_id TEXT,
-    extracted_parameters TEXT,
-    confidence_score REAL,
-    classification TEXT,
+    llm_confidence TEXT CHECK (llm_confidence IS NULL OR llm_confidence IN ('high', 'low')),
+    avg_parameter_correctness REAL CHECK (avg_parameter_correctness IS NULL OR (avg_parameter_correctness >= 0 AND avg_parameter_correctness <= 10)),
+    confidence_score TEXT CHECK (confidence_score IS NULL OR confidence_score IN ('robust description', 'needs clarity', 'misleading description')),
+    classification TEXT CHECK (classification IS NULL OR classification IN ('TP', 'FP', 'TN', 'FN')),
     execution_time_ms INTEGER,
     error_message TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP,
     FOREIGN KEY (test_case_id) REFERENCES test_cases(id) ON DELETE CASCADE,
-    FOREIGN KEY (model_settings_id) REFERENCES model_settings(id) ON DELETE SET NULL,
-    FOREIGN KEY (selected_tool_id) REFERENCES tool_definitions(id)
+    FOREIGN KEY (model_settings_id) REFERENCES model_settings(id) ON DELETE SET NULL
+);
+
+-- Tool Call Matches (per-tool-call evaluation results)
+CREATE TABLE tool_call_matches (
+    id TEXT PRIMARY KEY,
+    test_run_id TEXT NOT NULL,
+    expected_tool_call_id TEXT,  -- NULL for FP
+    actual_tool_id TEXT,  -- NULL for FN/TN (FK to tool_definitions)
+    match_type TEXT NOT NULL CHECK (match_type IN ('TP', 'FP', 'FN', 'TN')),
+    parameter_correctness REAL CHECK (parameter_correctness IS NULL OR (parameter_correctness >= 0 AND parameter_correctness <= 10)),
+    actual_parameters TEXT,  -- JSON, NULL for FN/TN
+    parameter_justification TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (test_run_id) REFERENCES test_runs(id) ON DELETE CASCADE,
+    FOREIGN KEY (expected_tool_call_id) REFERENCES expected_tool_calls(id) ON DELETE SET NULL,
+    FOREIGN KEY (actual_tool_id) REFERENCES tool_definitions(id) ON DELETE SET NULL
 );
 
 -- Junction table for test case MCP servers

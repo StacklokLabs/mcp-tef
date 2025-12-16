@@ -1,18 +1,14 @@
 """FastAPI router for test case endpoints."""
 
-import asyncio
-
 import structlog
 from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
 from fastapi.security import APIKeyHeader
 from mcp_tef_models.schemas import (
-    MCPServerConfig,
     PaginatedTestCaseResponse,
     TestCaseCreate,
     TestCaseResponse,
     TestRunExecuteRequest,
     TestRunResponse,
-    ToolDefinition,
 )
 
 from mcp_tef.config.settings import Settings, get_settings
@@ -21,6 +17,7 @@ from mcp_tef.services.mcp_loader import MCPLoaderService
 from mcp_tef.storage.model_settings_repository import ModelSettingsRepository
 from mcp_tef.storage.test_case_repository import TestCaseRepository
 from mcp_tef.storage.test_run_repository import TestRunRepository
+from mcp_tef.storage.tool_call_match_repository import ToolCallMatchRepository
 from mcp_tef.storage.tool_repository import ToolRepository
 
 logger = structlog.get_logger(__name__)
@@ -83,6 +80,7 @@ def get_evaluation_service(
         test_run_repo=TestRunRepository(db),
         model_settings_repo=ModelSettingsRepository(db),
         tool_repo=ToolRepository(db),
+        tool_call_match_repo=ToolCallMatchRepository(db),
         mcp_loader=MCPLoaderService(timeout=settings.mcp_server_timeout),
         settings=settings,
     )
@@ -176,7 +174,6 @@ async def list_test_cases(
 )
 async def get_test_case(
     test_case_id: str,
-    mcp_loader: MCPLoaderService = Depends(get_mcp_loader_service),
     repo: TestCaseRepository = Depends(get_test_case_repository),
 ) -> TestCaseResponse:
     """Get a specific test case.
@@ -184,7 +181,6 @@ async def get_test_case(
     Args:
         test_case_id: Test case ID
         repo: Test case repository instance
-        mcp_server_repo: MCP server repository instance
 
     Returns:
         Test case
@@ -192,27 +188,7 @@ async def get_test_case(
     Raises:
         ResourceNotFoundError: If test case not found
     """
-    response = await repo.get(test_case_id)
-    response.available_tools = await _gather_tools_for_servers(
-        response.available_mcp_servers, mcp_loader
-    )
-    return response
-
-
-async def _gather_tools_for_servers(
-    mcp_servers: list[MCPServerConfig], mcp_loader: MCPLoaderService
-) -> dict[str, list[ToolDefinition]]:
-    """
-    Gather tools from MCP servers.
-
-    Returns:
-        dict of server_url -> tools
-    """
-    gather_tools_tasks = [
-        mcp_loader.load_tools_from_server(server.url, server.transport) for server in mcp_servers
-    ]
-    gather_tools_results = await asyncio.gather(*gather_tools_tasks)
-    return dict(zip([server.url for server in mcp_servers], gather_tools_results, strict=False))
+    return await repo.get(test_case_id)
 
 
 @router.delete(

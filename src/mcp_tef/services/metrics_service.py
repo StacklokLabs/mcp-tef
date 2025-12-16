@@ -68,7 +68,7 @@ class MetricsService:
             classification = test_run.classification
             execution_time_ms = test_run.execution_time_ms
             confidence_score = test_run.confidence_score
-            parameter_correctness = test_run.parameter_correctness
+            avg_parameter_correctness = test_run.avg_parameter_correctness
 
             # Collect test run ID
             test_run_ids.append(test_run_id)
@@ -97,8 +97,8 @@ class MetricsService:
                     misleading_count += 1
 
             # Collect parameter correctness values (0-10 scale)
-            if parameter_correctness is not None:
-                parameter_correctness_values.append(parameter_correctness)
+            if avg_parameter_correctness is not None:
+                parameter_correctness_values.append(avg_parameter_correctness)
 
         # Calculate metrics with division-by-zero handling
         precision = self._calculate_precision(tp_count, fp_count)
@@ -193,3 +193,128 @@ class MetricsService:
         if not parameter_correctness_values:
             return 0.0
         return sum(parameter_correctness_values) / len(parameter_correctness_values)
+
+    async def calculate_tool_call_level_summary(
+        self,
+        test_run_id: str | None = None,
+        test_case_id: str | None = None,
+        mcp_server_url: str | None = None,
+        tool_name: str | None = None,
+        limit: int = 1000,
+    ) -> MetricsSummary:
+        """Calculate metrics at the per-tool-call level (granular).
+
+        This method queries the tool_call_matches table directly to calculate
+        metrics at the individual tool call level, rather than aggregating
+        at the test case level.
+
+        Args:
+            test_run_id: Filter by test run ID
+            test_case_id: Filter by test case ID
+            mcp_server_url: Filter by MCP server URL
+            tool_name: Filter by tool name
+            limit: Maximum number of matches to include (default: 1000)
+
+        Returns:
+            Aggregated metrics summary at tool-call level
+        """
+        # Build query with filters
+        conditions = []
+        params = []
+
+        if test_run_id:
+            conditions.append("tcm.test_run_id = ?")
+            params.append(test_run_id)
+
+        if test_case_id:
+            conditions.append("tr.test_case_id = ?")
+            params.append(test_case_id)
+
+        if mcp_server_url:
+            conditions.append("(etc.mcp_server_url = ? OR td.mcp_server_url = ?)")
+            params.extend([mcp_server_url, mcp_server_url])
+
+        if tool_name:
+            conditions.append("(etc.tool_name = ? OR td.name = ?)")
+            params.extend([tool_name, tool_name])
+
+        where_clause = " AND ".join(conditions) if conditions else "1=1"
+
+        query = f"""
+            SELECT
+                tcm.match_type,
+                tcm.parameter_correctness,
+                tcm.test_run_id
+            FROM tool_call_matches tcm
+            INNER JOIN test_runs tr ON tcm.test_run_id = tr.id
+            LEFT JOIN expected_tool_calls etc ON tcm.expected_tool_call_id = etc.id
+            LEFT JOIN tool_definitions td ON tcm.actual_tool_id = td.id
+            WHERE {where_clause}
+            LIMIT ?
+        """  # nosec: "B608" Safe: where_clause built from controlled conditions, values parameterized
+
+        params.append(limit)
+
+        cursor = await self._test_run_repo.db.execute(query, tuple(params))
+        rows = await cursor.fetchall()
+
+        # Initialize counters
+        total_matches = len(rows)
+        tp_count = 0
+        fp_count = 0
+        tn_count = 0
+        fn_count = 0
+        parameter_correctness_values: list[float] = []
+        test_run_ids_set: set[str] = set()
+
+        # Process matches
+        for row in rows:
+            match_type = row[0]
+            parameter_correctness = row[1]
+            test_run_id_val = row[2]
+
+            # Count classifications
+            if match_type == "TP":
+                tp_count += 1
+            elif match_type == "FP":
+                fp_count += 1
+            elif match_type == "TN":
+                tn_count += 1
+            elif match_type == "FN":
+                fn_count += 1
+
+            # Collect parameter correctness for TP matches
+            if parameter_correctness is not None and match_type == "TP":
+                parameter_correctness_values.append(parameter_correctness)
+
+            # Track unique test run IDs
+            if test_run_id_val:
+                test_run_ids_set.add(test_run_id_val)
+
+        # Calculate metrics
+        precision = self._calculate_precision(tp_count, fp_count)
+        recall = self._calculate_recall(tp_count, fn_count)
+        f1_score = self._calculate_f1_score(precision, recall)
+        parameter_accuracy = self._calculate_parameter_accuracy(parameter_correctness_values)
+
+        summary = MetricsSummary(
+            total_tests=total_matches,
+            true_positives=tp_count,
+            false_positives=fp_count,
+            true_negatives=tn_count,
+            false_negatives=fn_count,
+            precision=precision,
+            recall=recall,
+            f1_score=f1_score,
+            parameter_accuracy=parameter_accuracy,
+            average_execution_time_ms=0.0,
+            robust_description_count=0,
+            needs_clarity_count=0,
+            misleading_description_count=0,
+            test_run_ids=list(test_run_ids_set),
+        )
+        logger.debug(
+            f"Calculated tool-call level metrics: {total_matches} matches: "
+            f"{json.dumps(summary.model_dump())}"
+        )
+        return summary
