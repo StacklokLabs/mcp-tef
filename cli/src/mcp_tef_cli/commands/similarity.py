@@ -9,7 +9,6 @@ from mcp_tef_models.schemas import (
     DifferentiationRecommendationResponse,
     OverlapMatrixResponse,
     SimilarityAnalysisResponse,
-    SimilarityMatrixResponse,
 )
 from rich.console import Console
 from rich.table import Table
@@ -96,7 +95,7 @@ def calculate_column_limits(console: Console, total_tools: int) -> tuple[int, in
 
 
 def format_matrix_table(
-    response: SimilarityMatrixResponse,
+    response: SimilarityAnalysisResponse,
     threshold: float,
 ) -> None:
     """Format and print similarity matrix as a table.

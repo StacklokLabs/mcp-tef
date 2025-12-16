@@ -505,26 +505,6 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
 
-  /similarity/matrix:
-    post:
-      tags: [similarity]
-      summary: Generate similarity matrix
-      description: Returns complete pairwise similarity matrix for all tools
-      operationId: generateSimilarityMatrix
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SimilarityAnalysisRequest'
-      responses:
-        '200':
-          description: Similarity matrix generated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SimilarityMatrixResponse'
-
   /similarity/overlap-matrix:
     post:
       tags: [similarity]
@@ -1072,32 +1052,6 @@ components:
           items:
             type: object
           nullable: true
-
-    SimilarityMatrixResponse:
-      type: object
-      required: [tool_ids, matrix, threshold, generated_at]
-      properties:
-        tool_ids:
-          type: array
-          items:
-            type: string
-        matrix:
-          type: array
-          items:
-            type: array
-            items:
-              type: number
-              format: float
-        threshold:
-          type: number
-          format: float
-        flagged_pairs:
-          type: array
-          items:
-            type: object
-        generated_at:
-          type: string
-          format: date-time
 
     OverlapMatrixResponse:
       type: object
