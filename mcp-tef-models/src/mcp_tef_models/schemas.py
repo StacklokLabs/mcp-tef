@@ -201,6 +201,26 @@ class TestCaseCreate(BaseModel):
         description="List of MCP server configurations",
     )
 
+    @field_validator("available_mcp_servers", mode="before")
+    @classmethod
+    def normalize_available_mcp_servers(cls, v: Any) -> list[Any]:
+        """Convert string URLs to MCPServerConfig objects for convenience."""
+        if not isinstance(v, list):
+            return v
+
+        normalized = []
+        for item in v:
+            if isinstance(item, str):
+                # Convert string URL to MCPServerConfig dict
+                normalized.append({"url": item, "transport": "streamable-http"})
+            elif isinstance(item, dict):
+                # Already a dict, pass through (will be validated as MCPServerConfig)
+                normalized.append(item)
+            else:
+                # Already a MCPServerConfig object or other type
+                normalized.append(item)
+        return normalized
+
     @model_validator(mode="after")
     def validate_expected_tool_fields(self) -> TestCaseCreate:
         """Ensure expected_mcp_server_url and expected_tool_name are both null or both non-null."""
@@ -240,6 +260,26 @@ class TestCaseResponse(BaseModel):
         default=None,
         description="Tools for the available MCP servers",
     )
+
+    @field_validator("available_mcp_servers", mode="before")
+    @classmethod
+    def normalize_available_mcp_servers(cls, v: Any) -> list[Any]:
+        """Convert string URLs to MCPServerConfig objects for convenience."""
+        if not isinstance(v, list):
+            return v
+
+        normalized = []
+        for item in v:
+            if isinstance(item, str):
+                # Convert string URL to MCPServerConfig dict
+                normalized.append({"url": item, "transport": "streamable-http"})
+            elif isinstance(item, dict):
+                # Already a dict, pass through (will be validated as MCPServerConfig)
+                normalized.append(item)
+            else:
+                # Already a MCPServerConfig object or other type
+                normalized.append(item)
+        return normalized
 
     model_config = ConfigDict(from_attributes=True)
 

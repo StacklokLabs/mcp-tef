@@ -47,6 +47,7 @@ def mock_test_run_response(
         "id": test_run_id,
         "test_case_id": test_case_id,
         "model_settings": {
+            "created_at": "2024-01-01T00:00:00Z",
             "id": "settings-123",
             "provider": "openrouter",
             "model": "anthropic/claude-sonnet-4-5-20250929",
