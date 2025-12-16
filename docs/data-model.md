@@ -1,8 +1,8 @@
 # Data Model: MCP Tool Evaluation System
 
-**Generated**: 2025-11-10
-**Status**: Consolidated from all specifications
-**Git Commit**: 859d728254fc64586c05039908056c6b4bec1709
+**Generated**: 2025-12-16
+**Status**: Consolidated from all specifications (updated for multiple-tool-evals)
+**Git Commit**: multiple-tool-evals branch
 
 ## Overview
 
@@ -44,12 +44,25 @@ This document defines all entities, relationships, and data structures for the M
 │ id (PK)          │     │
 │ name             │     │
 │ query            │     │
-│ expected_server  │     │
-│ expected_tool    │     │
-│ expected_params  │     │
+│ order_dependent  │     │
 │ created_at       │     │
 │ updated_at       │     │
 └──────────────────┘     │
+         ▲               │
+         │ FK            │
+         │               │
+┌─────────┴────────────┐ │
+│ expected_tool_calls  │ │
+│──────────────────────│ │
+│ id (PK)              │ │
+│ test_case_id (FK)    │ │
+│ mcp_server_url       │ │
+│ tool_name            │ │
+│ parameters           │ │
+│ sequence_order       │ │
+│ created_at           │ │
+└──────────────────────┘ │
+                         │
          ▲               │
          │ FK            │
          │               │
@@ -60,7 +73,8 @@ This document defines all entities, relationships, and data structures for the M
 │ test_case_id(FK) │     │  │
 │ model_settings_id│     │  │ FK: test_run_id
 │ status           │     │  │
-│ selected_tool_id │     │  │
+│ llm_confidence   │     │  │
+│ avg_param_corr   │     │  │
 │ confidence_score │     │  │
 │ classification   │     │  │
 │ execution_time   │     │  │
@@ -68,6 +82,22 @@ This document defines all entities, relationships, and data structures for the M
 │ created_at       │     │  │
 │ completed_at     │     │  │
 └──────────────────┘     │  │
+         ▲               │  │
+         │               │  │
+         │               │  │
+┌────────┴───────────┐   │  │
+│ tool_call_matches  │   │  │
+│────────────────────│   │  │
+│ id (PK)            │   │  │
+│ test_run_id (FK)   │───┘  │
+│ expected_call_id   │      │
+│ actual_tool_id     │      │
+│ match_type         │      │
+│ param_correctness  │      │
+│ actual_parameters  │      │
+│ param_justification│      │
+│ created_at         │      │
+└────────────────────┘      │
          ▲               │  │
          │               │  │
          └───────────────┼──┼─────┐
@@ -200,9 +230,9 @@ failed → active (connectivity check succeeded on update)
 
 ### 3. Test Case
 
-**Purpose**: Query-based test scenario with expected tool selection
+**Purpose**: Query-based test scenario with expected tool selection(s)
 
-**Source**: 001-this-is-an, 003-remove-api-key
+**Source**: 001-this-is-an, 003-remove-api-key, multiple-tool-evals
 
 **Fields**:
 | Field | Type | Constraints | Description |
@@ -210,26 +240,26 @@ failed → active (connectivity check succeeded on update)
 | id | TEXT | PK | UUID identifier |
 | name | TEXT | NOT NULL | Test case name |
 | query | TEXT | NOT NULL | User query to evaluate |
-| expected_mcp_server_name | TEXT | NOT NULL | Expected server selection |
-| expected_tool_name | TEXT | NOT NULL | Expected tool selection |
-| expected_parameters | TEXT | NULL | Expected parameters (JSON) |
+| order_dependent_matching | BOOLEAN | NOT NULL, DEFAULT 0 | Whether tool call order matters |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT NOW | Creation timestamp |
 | updated_at | TIMESTAMP | NOT NULL, DEFAULT NOW | Update timestamp |
 
 **Relationships**:
 - Many-to-many with `mcp_servers` (via test_case_mcp_servers)
 - One-to-many with `test_runs`
+- **multiple-tool-evals**: One-to-many with `expected_tool_calls`
 
 **Business Rules**:
 - **003-remove-api-key**: No model_id foreign key (removed for simplification)
 - Model configuration provided at runtime during test execution
 - Test case is model-agnostic (can be executed with any LLM provider)
+- **multiple-tool-evals**: Can expect 0-N tool calls (stored in expected_tool_calls table)
+- **multiple-tool-evals**: Empty expected_tool_calls = expect no tools (TN case)
 
 **Validation**:
 - query: Non-empty string
-- expected_mcp_server_name: Non-empty string
-- expected_tool_name: Non-empty string
-- expected_parameters: Valid JSON or NULL
+- order_dependent_matching: Boolean (0 = order-independent, 1 = order-dependent)
+- Maximum 100 expected tool calls per test case
 
 ---
 
@@ -252,7 +282,43 @@ failed → active (connectivity check succeeded on update)
 
 ---
 
-### 5. Model Settings
+### 5. Expected Tool Call
+
+**Purpose**: Individual expected tool call within a test case
+
+**Source**: multiple-tool-evals
+
+**Fields**:
+| Field | Type | Constraints | Description |
+|-------|------|-------------|-------------|
+| id | TEXT | PK | UUID identifier |
+| test_case_id | TEXT | FK to test_cases, NOT NULL | Parent test case |
+| mcp_server_url | TEXT | NOT NULL | MCP server URL that provides this tool |
+| tool_name | TEXT | NOT NULL | Tool name expected to be selected |
+| parameters | TEXT | NULL | Expected parameter values (JSON) |
+| sequence_order | INTEGER | NOT NULL | 0-indexed order for order-dependent matching |
+| created_at | TIMESTAMP | NOT NULL, DEFAULT NOW | Creation timestamp |
+
+**Relationships**:
+- Many-to-one with `test_cases` (via test_case_id)
+- One-to-many with `tool_call_matches` (via expected_tool_call_id)
+
+**Business Rules**:
+- Multiple expected tool calls per test case for multi-tool scenarios
+- `parameters` NULL = don't validate parameters (only check tool selection)
+- `sequence_order` used when `test_cases.order_dependent_matching = true`
+- `mcp_server_url` must reference a server in test_case_mcp_servers
+- Cascade delete when parent test case is deleted
+
+**Validation**:
+- mcp_server_url: Non-empty string, must exist in available_mcp_servers
+- tool_name: Non-empty string
+- parameters: Valid JSON or NULL
+- sequence_order: Non-negative integer
+
+---
+
+### 6. Model Settings
 
 **Purpose**: Non-credential LLM configuration for audit trail
 
@@ -292,11 +358,11 @@ failed → active (connectivity check succeeded on update)
 
 ---
 
-### 6. Test Run
+### 7. Test Run
 
 **Purpose**: Execution instance of a test case
 
-**Source**: All features (001, 003, 004)
+**Source**: All features (001, 003, 004, multiple-tool-evals)
 
 **Fields**:
 | Field | Type | Constraints | Description |
@@ -306,10 +372,10 @@ failed → active (connectivity check succeeded on update)
 | model_settings_id | TEXT | FK to model_settings, NULL | LLM configuration used |
 | status | TEXT | NOT NULL, DEFAULT 'pending' | Execution status |
 | llm_response_raw | TEXT | NULL | Raw LLM response (JSON) |
-| selected_tool_id | TEXT | FK to tool_definitions, NULL | Tool selected by LLM |
-| extracted_parameters | TEXT | NULL | Parameters extracted (JSON) |
-| confidence_score | REAL | NULL, CHECK (0.0-1.0) | LLM confidence score |
-| classification | TEXT | NULL, CHECK IN ('TP','FP','TN','FN') | Evaluation result |
+| llm_confidence | TEXT | NULL, CHECK IN ('high','low') | LLM-reported confidence |
+| avg_parameter_correctness | REAL | NULL, CHECK (0.0-10.0) | Average param score across matches |
+| confidence_score | TEXT | NULL, CHECK IN ('robust description','needs clarity','misleading description') | Confidence category |
+| classification | TEXT | NULL, CHECK IN ('TP','FP','TN','FN') | Overall evaluation result |
 | execution_time_ms | INTEGER | NULL, CHECK (> 0) | Execution duration |
 | error_message | TEXT | NULL | Error details if failed |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT NOW | Creation timestamp |
@@ -318,8 +384,8 @@ failed → active (connectivity check succeeded on update)
 **Relationships**:
 - Many-to-one with `test_cases`
 - **003-remove-api-key**: Many-to-one with `model_settings`
-- Many-to-one with `tool_definitions` (via selected_tool_id)
 - **004-decouple-tool-ingestion**: One-to-many with `tool_definitions` (via test_run_id)
+- **multiple-tool-evals**: One-to-many with `tool_call_matches`
 - One-to-one with `evaluation_results`
 
 **Business Rules**:
@@ -327,6 +393,8 @@ failed → active (connectivity check succeeded on update)
 - **003-remove-api-key**: API key provided at runtime via header (not stored)
 - Status set to 'failed' if any tool ingestion fails
 - **004-decouple-tool-ingestion**: All ingested tools linked via test_run_id for point-in-time snapshot
+- **multiple-tool-evals**: Overall `classification` determined by aggregating tool_call_matches
+- **multiple-tool-evals**: `avg_parameter_correctness` computed from all TP matches
 
 **State Transitions**:
 ```
@@ -342,7 +410,48 @@ pending → running → failed (error)
 
 ---
 
-### 7. Evaluation Result
+### 8. Tool Call Match
+
+**Purpose**: Per-tool-call evaluation result (TP/FP/FN/TN classification)
+
+**Source**: multiple-tool-evals
+
+**Fields**:
+| Field | Type | Constraints | Description |
+|-------|------|-------------|-------------|
+| id | TEXT | PK | UUID identifier |
+| test_run_id | TEXT | FK to test_runs, NOT NULL | Parent test run |
+| expected_tool_call_id | TEXT | FK to expected_tool_calls, NULL | Expected call (NULL for FP) |
+| actual_tool_id | TEXT | FK to tool_definitions, NULL | Actual tool selected (NULL for FN/TN) |
+| match_type | TEXT | NOT NULL, CHECK IN ('TP','FP','FN','TN') | Match classification |
+| parameter_correctness | REAL | NULL, CHECK (0.0-10.0) | Parameter score (0-10) |
+| actual_parameters | TEXT | NULL | Actual parameters extracted (JSON) |
+| parameter_justification | TEXT | NULL | Explanation of parameter score |
+| created_at | TIMESTAMP | NOT NULL, DEFAULT NOW | Creation timestamp |
+
+**Relationships**:
+- Many-to-one with `test_runs` (via test_run_id)
+- Many-to-one with `expected_tool_calls` (via expected_tool_call_id)
+- Many-to-one with `tool_definitions` (via actual_tool_id)
+
+**Business Rules**:
+- **TP (True Positive)**: Expected tool correctly selected, parameters evaluated
+- **FP (False Positive)**: Unexpected tool selected (expected_tool_call_id = NULL)
+- **FN (False Negative)**: Expected tool not selected (actual_tool_id = NULL)
+- **TN (True Negative)**: No tools expected and none selected (both IDs NULL)
+- Cascade delete when parent test_run is deleted
+- `parameter_correctness` only populated for TP matches
+- `parameter_justification` explains scoring rationale
+
+**Matching Algorithm**:
+- **Order-independent** (default): Greedy best-fit matching by tool name + server
+- **Order-dependent**: Sequential matching respecting sequence_order
+- Unmatched expected calls → FN
+- Unmatched actual calls → FP
+
+---
+
+### 9. Evaluation Result
 
 **Purpose**: Detailed evaluation analysis for a completed test run
 
@@ -469,6 +578,12 @@ All entities have corresponding Pydantic models for API validation:
 - `EvaluationResultResponse`
 - `MetricsSummaryResponse`
 
+**From multiple-tool-evals**:
+- `ExpectedToolCall` (nested in TestCaseCreate)
+- `ToolCallMatchResponse`
+- Updated `TestCaseCreate` with `expected_tool_calls` list and `order_dependent_matching`
+- Updated `TestRunResponse` with `avg_parameter_correctness`
+
 **From 002-inter-tool-similarity**:
 - `SimilarityAnalysisRequest`
 - `SimilarityScoreResponse`
@@ -499,8 +614,10 @@ All entities have corresponding Pydantic models for API validation:
 ### Indexes
 - `mcp_servers`: name, url
 - `tool_definitions`: name, mcp_server_id, test_run_id
-- `test_cases`: expected_mcp_server_name, expected_tool_name
+- `test_cases`: (no additional indexes beyond PK)
+- `expected_tool_calls`: test_case_id, mcp_server_url, tool_name
 - `test_runs`: test_case_id, status, created_at, model_settings_id
+- `tool_call_matches`: test_run_id, match_type
 - `test_case_mcp_servers`: composite (test_case_id, mcp_server_id)
 
 ### Constraints
@@ -543,9 +660,19 @@ All entities have corresponding Pydantic models for API validation:
 - **Modified**: Tools ingested at test execution, not server registration
 - Point-in-time tool snapshots per test run
 
+### multiple-tool-evals
+- **Added**: expected_tool_calls table (normalized storage for 0-N expected tools)
+- **Added**: tool_call_matches table (per-tool-call TP/FP/FN/TN results)
+- **Removed**: test_cases.expected_mcp_server_url, expected_tool_name, expected_parameters
+- **Added**: test_cases.order_dependent_matching flag
+- **Removed**: test_runs.selected_tool_id, extracted_parameters, parameter_correctness
+- **Added**: test_runs.llm_confidence, avg_parameter_correctness
+- **Added**: ToolCallMatcher service for order-independent/dependent matching
+- Supports multi-tool evaluation with greedy best-fit matching
+
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2025-11-10  
-**Git Commit**: 859d728254fc64586c05039908056c6b4bec1709
+**Document Version**: 2.0
+**Last Updated**: 2025-12-16
+**Git Commit**: multiple-tool-evals branch
 

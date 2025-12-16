@@ -298,8 +298,13 @@ async def test_run_id(client):
             json={
                 "name": "Fixture test case",
                 "query": "Test query for fixture",
-                "expected_mcp_server_url": "http://localhost:9999",
-                "expected_tool_name": "fixture_tool",
+                "expected_tool_calls": [
+                    {
+                        "mcp_server_url": "http://localhost:9999",
+                        "tool_name": "fixture_tool",
+                        "parameters": None,
+                    }
+                ],
                 "available_mcp_servers": [
                     {"url": "http://localhost:9999", "transport": "streamable-http"}
                 ],

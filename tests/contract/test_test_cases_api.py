@@ -36,9 +36,13 @@ async def test_create_test_case(client: AsyncClient, mcp_server_url: str):
         payload = {
             "name": "Test weather query",
             "query": "What is the weather in San Francisco?",
-            "expected_mcp_server_url": mcp_server_url,
-            "expected_tool_name": "test_tool",
-            "expected_parameters": {"location": "San Francisco"},
+            "expected_tool_calls": [
+                {
+                    "mcp_server_url": mcp_server_url,
+                    "tool_name": "test_tool",
+                    "parameters": {"location": "San Francisco"},
+                }
+            ],
             "available_mcp_servers": [{"url": mcp_server_url, "transport": "streamable-http"}],
         }
 
@@ -49,9 +53,10 @@ async def test_create_test_case(client: AsyncClient, mcp_server_url: str):
         assert "id" in data
         assert data["name"] == payload["name"]
         assert data["query"] == payload["query"]
-        assert data["expected_mcp_server_url"] == mcp_server_url
-        assert data["expected_tool_name"] == "test_tool"
-        assert data["expected_parameters"] == payload["expected_parameters"]
+        assert len(data["expected_tool_calls"]) == 1
+        assert data["expected_tool_calls"][0]["mcp_server_url"] == mcp_server_url
+        assert data["expected_tool_calls"][0]["tool_name"] == "test_tool"
+        assert data["expected_tool_calls"][0]["parameters"] == {"location": "San Francisco"}
         assert data["available_mcp_servers"] == [
             {"url": mcp_server_url, "transport": "streamable-http"}
         ]

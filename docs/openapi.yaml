@@ -743,12 +743,34 @@ components:
           format: date-time
 
     # ==========================================================================
-    # TEST CASES (001 base, 003: removed model_id)
+    # TEST CASES (001 base, 003: removed model_id, multiple-tool-evals: multi-tool support)
     # ==========================================================================
-    
+
+    ExpectedToolCall:
+      type: object
+      required: [mcp_server_url, tool_name]
+      properties:
+        mcp_server_url:
+          type: string
+          minLength: 1
+          description: MCP server URL that provides this tool
+        tool_name:
+          type: string
+          minLength: 1
+          description: Tool name to be selected
+        parameters:
+          type: object
+          nullable: true
+          description: Expected parameter values (null = don't validate parameters)
+      example:
+        mcp_server_url: "http://localhost:3000"
+        tool_name: "get_weather"
+        parameters:
+          location: "San Francisco"
+
     TestCaseCreate:
       type: object
-      required: [name, query, expected_mcp_server_name, expected_tool_name]
+      required: [name, query, available_mcp_servers]
       properties:
         name:
           type: string
@@ -756,19 +778,28 @@ components:
         query:
           type: string
           minLength: 1
-        expected_mcp_server_name:
-          type: string
-          minLength: 1
-        expected_tool_name:
-          type: string
-          minLength: 1
-        expected_parameters:
-          type: object
+        expected_tool_calls:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExpectedToolCall'
           nullable: true
+          maxItems: 100
+          description: List of expected tool calls (null or empty = expect no tools)
+        order_dependent_matching:
+          type: boolean
+          default: false
+          description: If true, tool calls must match in exact order. If false (default), order-independent matching is used.
+        available_mcp_servers:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          minItems: 1
+          description: List of MCP server URLs to fetch tools from at test execution time
 
     TestCaseResponse:
       type: object
-      required: [id, name, query, expected_mcp_server_name, expected_tool_name, created_at, updated_at]
+      required: [id, name, query, order_dependent_matching, available_mcp_servers, created_at, updated_at]
       properties:
         id:
           type: string
@@ -777,13 +808,17 @@ components:
           type: string
         query:
           type: string
-        expected_mcp_server_name:
-          type: string
-        expected_tool_name:
-          type: string
-        expected_parameters:
-          type: object
+        expected_tool_calls:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExpectedToolCall'
           nullable: true
+        order_dependent_matching:
+          type: boolean
+        available_mcp_servers:
+          type: array
+          items:
+            type: string
         created_at:
           type: string
           format: date-time
@@ -875,16 +910,28 @@ components:
         status:
           type: string
           enum: [pending, running, completed, failed]
-        confidence_score:
+        llm_confidence:
+          type: string
+          enum: [high, low]
+          nullable: true
+          description: 'multiple-tool-evals: LLM-reported confidence level'
+        avg_parameter_correctness:
           type: number
           format: float
           nullable: true
           minimum: 0.0
-          maximum: 1.0
+          maximum: 10.0
+          description: 'multiple-tool-evals: Average parameter correctness score (0-10) across all TP matches'
+        confidence_score:
+          type: string
+          enum: ['robust description', 'needs clarity', 'misleading description']
+          nullable: true
+          description: 'Confidence category based on description quality'
         classification:
           type: string
           enum: [TP, FP, TN, FN]
           nullable: true
+          description: 'multiple-tool-evals: Overall classification, aggregated from tool_call_matches'
         execution_time_ms:
           type: integer
           nullable: true

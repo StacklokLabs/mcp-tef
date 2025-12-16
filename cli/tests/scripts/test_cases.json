@@ -3,7 +3,31 @@
     "name": "E2E Fetch Test - Positive",
     "query": "Fetch the content from https://example.com",
     "available_mcp_servers": ["${MCP_SERVER_URL}"],
-    "expected_mcp_server_url": "${MCP_SERVER_URL}",
-    "expected_tool_name": "fetch"
+    "expected_tool_calls": [
+      {
+        "mcp_server_url": "${MCP_SERVER_URL}",
+        "tool_name": "fetch",
+        "parameters": null
+      }
+    ],
+    "order_dependent_matching": false
+  },
+  {
+    "name": "Multi-Tool Example",
+    "query": "Fetch data and then analyze it",
+    "available_mcp_servers": ["${MCP_SERVER_URL}"],
+    "expected_tool_calls": [
+      {
+        "mcp_server_url": "${MCP_SERVER_URL}",
+        "tool_name": "fetch",
+        "parameters": {"url": "https://example.com"}
+      },
+      {
+        "mcp_server_url": "${MCP_SERVER_URL}",
+        "tool_name": "analyze",
+        "parameters": null
+      }
+    ],
+    "order_dependent_matching": true
   }
 ]

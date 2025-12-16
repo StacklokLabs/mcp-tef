@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 import httpx
 from mcp_tef_models.schemas import (
     DifferentiationRecommendationResponse,
+    ExpectedToolCall,
     MCPServerConfig,
     ModelSettingsCreate,
     OverlapMatrixResponse,
@@ -178,9 +179,8 @@ class TefClient:
         name: str,
         query: str,
         available_mcp_servers: list[MCPServerConfig],
-        expected_mcp_server_url: str | None = None,
-        expected_tool_name: str | None = None,
-        expected_parameters: dict | None = None,
+        expected_tool_calls: list[ExpectedToolCall] | None = None,
+        order_dependent_matching: bool = False,
     ) -> TestCaseResponse:
         """Create a new test case.
 
@@ -188,9 +188,8 @@ class TefClient:
             name: Descriptive name for the test case
             query: User query to evaluate
             available_mcp_servers: List of MCPServerConfig objects
-            expected_mcp_server_url: Expected MCP server URL (null for negative tests)
-            expected_tool_name: Expected tool name (null for negative tests)
-            expected_parameters: Expected parameters as dict
+            expected_tool_calls: List of expected tool calls (null/empty for negative tests)
+            order_dependent_matching: Whether tool calls must match in exact order
 
         Returns:
             TestCaseResponse with created test case
@@ -202,9 +201,8 @@ class TefClient:
             name=name,
             query=query,
             available_mcp_servers=available_mcp_servers,
-            expected_mcp_server_url=expected_mcp_server_url,
-            expected_tool_name=expected_tool_name,
-            expected_parameters=expected_parameters,
+            expected_tool_calls=expected_tool_calls,
+            order_dependent_matching=order_dependent_matching,
         )
 
         async with self._get_client() as client:

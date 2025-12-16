@@ -2,7 +2,7 @@
 
 import pytest
 from click import BadParameter
-from mcp_tef_models.schemas import TestCaseCreate
+from mcp_tef_models.schemas import ExpectedToolCall, TestCaseCreate
 from pydantic import ValidationError
 
 from mcp_tef_cli.commands.test_case import (
@@ -18,15 +18,21 @@ class TestCaseCreateValidation:
 
     def test_valid_test_case_with_expected_tool(self):
         """Valid test case with expected tool passes validation."""
+
         tc = TestCaseCreate(
             name="Test",
             query="What is the weather?",
             available_mcp_servers=["http://localhost:3000/sse"],
-            expected_mcp_server_url="http://localhost:3000/sse",
-            expected_tool_name="get_weather",
+            expected_tool_calls=[
+                ExpectedToolCall(
+                    mcp_server_url="http://localhost:3000/sse",
+                    tool_name="get_weather",
+                )
+            ],
         )
         assert tc.name == "Test"
-        assert tc.expected_tool_name == "get_weather"
+        assert len(tc.expected_tool_calls) == 1
+        assert tc.expected_tool_calls[0].tool_name == "get_weather"
 
     def test_valid_negative_test_case(self):
         """Valid negative test case (no expected tool) passes validation."""
@@ -35,51 +41,51 @@ class TestCaseCreateValidation:
             query="What is 2 + 2?",
             available_mcp_servers=["http://localhost:3000/sse"],
         )
-        assert tc.expected_tool_name is None
-        assert tc.expected_mcp_server_url is None
+        assert tc.expected_tool_calls is None or tc.expected_tool_calls == []
 
-    def test_only_server_provided_raises(self):
-        """Only server without tool raises ValidationError."""
-        with pytest.raises(ValidationError, match="both be null or both be non-null"):
-            TestCaseCreate(
-                name="Test",
-                query="Query",
-                available_mcp_servers=["http://localhost:3000/sse"],
-                expected_mcp_server_url="http://localhost:3000/sse",
-            )
+    def test_expected_tool_call_requires_both_fields(self):
+        """ExpectedToolCall requires both mcp_server_url and tool_name."""
 
-    def test_only_tool_provided_raises(self):
-        """Only tool without server raises ValidationError."""
-        with pytest.raises(ValidationError, match="both be null or both be non-null"):
-            TestCaseCreate(
-                name="Test",
-                query="Query",
-                available_mcp_servers=["http://localhost:3000/sse"],
-                expected_tool_name="get_weather",
-            )
+        # Missing tool_name should raise ValidationError
+        with pytest.raises(ValidationError):
+            ExpectedToolCall(mcp_server_url="http://localhost:3000/sse")
+
+        # Missing mcp_server_url should raise ValidationError
+        with pytest.raises(ValidationError):
+            ExpectedToolCall(tool_name="get_weather")
 
     def test_expected_server_not_in_available_servers_raises(self):
         """Expected server not in available servers raises ValidationError."""
+
         with pytest.raises(ValidationError, match="must be in available_mcp_servers"):
             TestCaseCreate(
                 name="Test",
                 query="Query",
                 available_mcp_servers=["http://localhost:3000/sse"],
-                expected_mcp_server_url="http://other-server:3000/sse",
-                expected_tool_name="get_weather",
+                expected_tool_calls=[
+                    ExpectedToolCall(
+                        mcp_server_url="http://other-server:3000/sse",
+                        tool_name="get_weather",
+                    )
+                ],
             )
 
-    def test_expected_params_without_tool_raises(self):
-        """Expected parameters without tool raises ValidationError."""
-        with pytest.raises(
-            ValidationError, match="expected_parameters requires expected_tool_name"
-        ):
-            TestCaseCreate(
-                name="Test",
-                query="Query",
-                available_mcp_servers=["http://localhost:3000/sse"],
-                expected_parameters={"location": "SF"},
-            )
+    def test_expected_tool_call_with_parameters(self):
+        """ExpectedToolCall can include optional parameters."""
+
+        tc = TestCaseCreate(
+            name="Test",
+            query="Query",
+            available_mcp_servers=["http://localhost:3000/sse"],
+            expected_tool_calls=[
+                ExpectedToolCall(
+                    mcp_server_url="http://localhost:3000/sse",
+                    tool_name="get_weather",
+                    parameters={"location": "SF"},
+                )
+            ],
+        )
+        assert tc.expected_tool_calls[0].parameters == {"location": "SF"}
 
     def test_empty_servers_list_raises(self):
         """Empty available servers list raises ValidationError."""
@@ -145,8 +151,10 @@ class TestLoadTestCasesFromFile:
             "name": "Weather test",
             "query": "What is the weather?",
             "available_mcp_servers": ["http://localhost:3000/sse"],
-            "expected_mcp_server_url": "http://localhost:3000/sse",
-            "expected_tool_name": "get_weather"
+            "expected_tool_calls": [{
+                "mcp_server_url": "http://localhost:3000/sse",
+                "tool_name": "get_weather"
+            }]
         }"""
         )
 
@@ -154,7 +162,8 @@ class TestLoadTestCasesFromFile:
 
         assert len(test_cases) == 1
         assert test_cases[0].name == "Weather test"
-        assert test_cases[0].expected_tool_name == "get_weather"
+        assert len(test_cases[0].expected_tool_calls) == 1
+        assert test_cases[0].expected_tool_calls[0].tool_name == "get_weather"
 
     def test_load_multiple_test_cases(self, tmp_path):
         """Load multiple test cases from JSON array."""
@@ -368,8 +377,10 @@ class TestLoadTestCasesWithEnvVars:
             "name": "Test",
             "query": "Query",
             "available_mcp_servers": ["${SERVER_URL}"],
-            "expected_mcp_server_url": "${SERVER_URL}",
-            "expected_tool_name": "tool"
+            "expected_tool_calls": [{
+                "mcp_server_url": "${SERVER_URL}",
+                "tool_name": "tool"
+            }]
         }"""
         )
 
@@ -380,7 +391,8 @@ class TestLoadTestCasesWithEnvVars:
         assert len(test_cases) == 1
         assert len(test_cases[0].available_mcp_servers) == 1
         assert test_cases[0].available_mcp_servers[0].url == "http://localhost:3000/sse"
-        assert test_cases[0].expected_mcp_server_url == "http://localhost:3000/sse"
+        assert len(test_cases[0].expected_tool_calls) == 1
+        assert test_cases[0].expected_tool_calls[0].mcp_server_url == "http://localhost:3000/sse"
 
     def test_load_multiple_with_env_vars(self, tmp_path):
         """Multiple test cases with same variable are all substituted."""

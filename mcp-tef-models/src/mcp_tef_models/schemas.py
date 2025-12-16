@@ -174,6 +174,28 @@ class MCPServerToolsResponse(BaseModel):
     count: int = Field(..., description="Number of tools")
 
 
+class ExpectedToolCall(BaseModel):
+    """Individual expected tool call in a test case."""
+
+    mcp_server_url: str = Field(
+        ..., min_length=1, description="MCP server URL that provides this tool"
+    )
+    tool_name: str = Field(..., min_length=1, description="Tool name to be selected")
+    parameters: dict[str, Any] | None = Field(
+        None, description="Expected parameter values (null = don't validate parameters)"
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "mcp_server_url": "http://localhost:3000",
+                "tool_name": "get_weather",
+                "parameters": {"location": "San Francisco"},
+            }
+        }
+    )
+
+
 # Test Case Models
 
 
@@ -182,18 +204,16 @@ class TestCaseCreate(BaseModel):
 
     name: str = Field(..., min_length=1, description="Test case name")
     query: str = Field(..., min_length=1, description="User query to evaluate")
-    expected_mcp_server_url: str | None = Field(
+    expected_tool_calls: list[ExpectedToolCall] | None = Field(
         None,
-        min_length=1,
-        description="Expected MCP server url (nullable if no tool expected)",
+        description="List of expected tool calls (null or empty list = expect no tools)",
     )
-    expected_tool_name: str | None = Field(
-        None,
-        min_length=1,
-        description="Expected tool name (nullable if no tool expected)",
-    )
-    expected_parameters: dict[str, Any] | None = Field(
-        None, description="Expected parameter values"
+    order_dependent_matching: bool = Field(
+        False,
+        description=(
+            "If true, tool calls must match in exact order. "
+            "If false (default), order-independent matching is used."
+        ),
     )
     available_mcp_servers: list[MCPServerConfig] = Field(
         ...,
@@ -222,25 +242,19 @@ class TestCaseCreate(BaseModel):
         return normalized
 
     @model_validator(mode="after")
-    def validate_expected_tool_fields(self) -> TestCaseCreate:
-        """Ensure expected_mcp_server_url and expected_tool_name are both null or both non-null."""
-        server_url = self.expected_mcp_server_url
-        tool = self.expected_tool_name
-        if (server_url is None) != (tool is None):
-            raise ValueError(
-                "expected_mcp_server_url and expected_tool_name must both be "
-                "null or both be non-null"
-            )
-        if server_url:
-            # Validate expected server URL exists in available_mcp_servers
-            available_urls = [server.url for server in self.available_mcp_servers]
-            if server_url not in available_urls:
-                raise ValueError(
-                    f"expected_mcp_server_url '{server_url}' must be in available_mcp_servers"
-                )
-        # Validate expected_parameters requires expected_tool_name
-        if self.expected_parameters and not self.expected_tool_name:
-            raise ValueError("expected_parameters requires expected_tool_name to be set")
+    def validate_expected_tool_calls(self) -> TestCaseCreate:
+        """Validate expected tool calls reference servers in available_mcp_servers."""
+        if self.expected_tool_calls:
+            available_urls = {server.url for server in self.available_mcp_servers}
+            for i, tool_call in enumerate(self.expected_tool_calls):
+                if tool_call.mcp_server_url not in available_urls:
+                    raise ValueError(
+                        f"expected_tool_calls[{i}].mcp_server_url '{tool_call.mcp_server_url}' "
+                        f"must be in available_mcp_servers"
+                    )
+            # Validate max 100 expected tool calls
+            if len(self.expected_tool_calls) > 100:
+                raise ValueError("Maximum 100 expected tool calls allowed per test case")
         return self
 
 
@@ -250,19 +264,17 @@ class TestCaseResponse(BaseModel):
     id: str = Field(..., description="Test case ID")
     name: str = Field(..., description="Test case name")
     query: str = Field(..., description="User query to evaluate")
-    expected_mcp_server_url: str | None = Field(None, description="Expected MCP server url")
-    expected_tool_name: str | None = Field(None, description="Expected tool name")
-    expected_parameters: dict[str, Any] | None = Field(None, description="Expected parameters")
+    expected_tool_calls: list[ExpectedToolCall] | None = Field(
+        None, description="List of expected tool calls"
+    )
+    order_dependent_matching: bool = Field(
+        False, description="Whether tool calls must match in exact order"
+    )
     available_mcp_servers: list[MCPServerConfig] = Field(
         ..., description="List of MCP server configurations"
     )
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
-
-    available_tools: dict[str, list[ToolDefinition]] | None = Field(
-        default=None,
-        description="Tools for the available MCP servers",
-    )
 
     @field_validator("available_mcp_servers", mode="before")
     @classmethod
@@ -312,6 +324,30 @@ class ToolEnrichedResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ToolCallMatch(BaseModel):
+    """Result of matching a single expected tool call against actual tool calls."""
+
+    expected_tool_call: ExpectedToolCall | None = Field(
+        None, description="Expected tool call (null for FP cases)"
+    )
+    actual_tool_call: ToolEnrichedResponse | None = Field(
+        None, description="Actual tool call selected by LLM (null for FN cases)"
+    )
+    match_type: str = Field(..., description="Match classification: TP, FP, FN, or TN")
+    parameter_correctness: float | None = Field(
+        None,
+        ge=0.0,
+        le=10.0,
+        description="Parameter correctness score for this match (0-10)",
+    )
+    actual_parameters: dict[str, Any] | None = Field(
+        None, description="Actual parameters used by LLM (null for FN/TN cases)"
+    )
+    parameter_justification: str | None = Field(
+        None, description="Explanation of parameter_correctness score"
+    )
+
+
 class TestRunResponse(BaseModel):
     """Response schema for test run."""
 
@@ -322,19 +358,13 @@ class TestRunResponse(BaseModel):
     )
     status: str = Field(..., description="Test run status (pending/running/completed/failed)")
     llm_response_raw: str | None = Field(None, description="Raw LLM response JSON")
-    selected_tool: ToolEnrichedResponse | None = Field(
-        None, description="Tool selected by LLM with MCP server info and parameters"
+    tool_call_matches: list[ToolCallMatch] = Field(
+        default_factory=list, description="Matched tool calls with classifications"
     )
-    expected_tool: ToolEnrichedResponse | None = Field(
-        None, description="Expected tool with MCP server info and parameters"
-    )
-    extracted_parameters: dict | None = Field(
-        None, description="Parameters extracted from LLM response (JSON)"
+    avg_parameter_correctness: float | None = Field(
+        None, description="Average parameter correctness across all matched tool calls"
     )
     llm_confidence: str | None = Field(None, description="LLM confidence level (high/low)")
-    parameter_correctness: float | None = Field(
-        None, description="Parameter correctness score (0-10)"
-    )
     confidence_score: str | None = Field(
         None,
         description=(

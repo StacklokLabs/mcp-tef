@@ -8,8 +8,10 @@ from uuid import uuid4
 import aiosqlite
 import structlog
 from mcp_tef_models.schemas import (
+    ExpectedToolCall,
     ModelSettingsResponse,
     TestRunResponse,
+    ToolCallMatch,
     ToolEnrichedResponse,
 )
 
@@ -284,10 +286,8 @@ SELECT
     tr.model_settings_id,
     tr.status,
     tr.llm_response_raw,
-    tr.selected_tool_id,
-    tr.extracted_parameters,
     tr.llm_confidence,
-    tr.parameter_correctness,
+    tr.avg_parameter_correctness,
     tr.confidence_score,
     tr.classification,
     tr.execution_time_ms,
@@ -304,10 +304,6 @@ SELECT
     ms.base_url,
     ms.system_prompt,
     ms.created_at,
-    -- Test case expected tool fields
-    tc.expected_mcp_server_url,
-    tc.expected_tool_name,
-    tc.expected_parameters,
     -- Aggregates
     json_group_array(COALESCE(td.id, '')) AS td_ids,
     json_group_array(COALESCE(td.name, '')) AS td_names,
@@ -318,7 +314,7 @@ LEFT JOIN {model_settings} ms ON tr.model_settings_id = ms.id
 {"INNER" if test_case_id else "LEFT"} JOIN {test_cases} tc ON tr.test_case_id = tc.id
 {"INNER" if tool_name else "LEFT"} JOIN {tools} td ON td.test_run_id = tr.id
 {join_test_case_mcp_servers}
-GROUP BY {", ".join([str(i) for i in range(1, 27)])}
+GROUP BY {", ".join([str(i) for i in range(1, 23)])}
 ORDER BY tr.created_at DESC
 LIMIT ? OFFSET ?
 """  # nosec: "B608" Safe: updates list is internally controlled, values parameterized
@@ -337,35 +333,29 @@ LIMIT ? OFFSET ?
         [2]  tr.model_settings_id
         [3]  tr.status
         [4]  tr.llm_response_raw
-        [5]  tr.selected_tool_id
-        [6]  tr.extracted_parameters
-        [7]  tr.llm_confidence
-        [8]  tr.parameter_correctness
-        [9]  tr.confidence_score
-        [10] tr.classification
-        [11] tr.execution_time_ms
-        [12] tr.error_message
-        [13] tr.created_at
-        [14] tr.completed_at
+        [5]  tr.llm_confidence
+        [6]  tr.avg_parameter_correctness
+        [7]  tr.confidence_score
+        [8]  tr.classification
+        [9]  tr.execution_time_ms
+        [10] tr.error_message
+        [11] tr.created_at
+        [12] tr.completed_at
         (model_settings)
-        [15] ms.id
-        [16] ms.provider
-        [17] ms.model
-        [18] ms.timeout
-        [19] ms.temperature
-        [20] ms.max_retries
-        [21] ms.base_url
-        [22] ms.system_prompt
-        [23] ms.created_at
-        (test case)
-        [24] tc.expected_mcp_server_url
-        [25] tc.expected_tool_name
-        [26] tc.expected_parameters
+        [13] ms.id
+        [14] ms.provider
+        [15] ms.model
+        [16] ms.timeout
+        [17] ms.temperature
+        [18] ms.max_retries
+        [19] ms.base_url
+        [20] ms.system_prompt
+        [21] ms.created_at
         (tools aggregate)
-        [27] td_ids
-        [28] td_names
-        [29] td_mcp_server_urls
-        [30] td_input_schemas
+        [22] td_ids
+        [23] td_names
+        [24] td_mcp_server_urls
+        [25] td_input_schemas
 
         Args:
             row: Database row from query
@@ -375,11 +365,11 @@ LIMIT ? OFFSET ?
         """
         # Parse basic test run fields
         tools: list[ToolEnrichedResponse] = []
-        if row[27] and row[27] != "None":
-            tool_ids = json.loads(row[27])
-            tool_names = json.loads(row[28])
-            tool_mcp_server_urls = json.loads(row[29])
-            tool_input_schemas = json.loads(row[30])
+        if row[22] and row[22] != "None":
+            tool_ids = json.loads(row[22])
+            tool_names = json.loads(row[23])
+            tool_mcp_server_urls = json.loads(row[24])
+            tool_input_schemas = json.loads(row[25])
             for (
                 tool_definition_id,
                 tool_name,
@@ -399,47 +389,74 @@ LIMIT ? OFFSET ?
 
         test_run_id = row[0]
         test_case_id = row[1]
-        extracted_parameters = json.loads(row[6]) if row[6] else None
 
         # Build model_settings if present (LEFT JOIN, so may be NULL)
         model_settings = None
-        if row[15]:  # ms.id is not NULL
+        if row[13]:  # ms.id is not NULL
             model_settings = ModelSettingsResponse(
-                id=row[15],
-                provider=row[16],
-                model=row[17],
-                timeout=row[18],
-                temperature=row[19],
-                max_retries=row[20],
-                base_url=row[21],
-                system_prompt=row[22],
-                created_at=datetime.fromisoformat(row[23]),
+                id=row[13],
+                provider=row[14],
+                model=row[15],
+                timeout=row[16],
+                temperature=row[17],
+                max_retries=row[18],
+                base_url=row[19],
+                system_prompt=row[20],
+                created_at=datetime.fromisoformat(row[21]),
             )
 
-        # Get selected_tool enriched data if present
-
-        selected_tool = None
-        if row[5]:  # selected_tool_id is not NULL
-            matching_tools = [t for t in tools if t.id == row[5]]
-            if not matching_tools:
-                logger.warn("Could not find selected_tool", selected_tool_name=row[5])
-            else:
-                selected_tool = ToolEnrichedResponse(
-                    id=matching_tools[0].id,
-                    name=matching_tools[0].name,
-                    mcp_server_url=matching_tools[0].mcp_server_url,
-                    parameters=json.loads(row[6]) if row[6] else {},
+        # Fetch tool_call_matches for this test run
+        tool_call_matches: list[ToolCallMatch] = []
+        matches_cursor = await self.db.execute(
+            """
+            SELECT
+                tcm.match_type,
+                tcm.parameter_correctness,
+                tcm.actual_parameters,
+                tcm.parameter_justification,
+                etc.mcp_server_url,
+                etc.tool_name,
+                etc.parameters,
+                td.id,
+                td.name,
+                td.mcp_server_url,
+                td.input_schema
+            FROM tool_call_matches tcm
+            LEFT JOIN expected_tool_calls etc ON tcm.expected_tool_call_id = etc.id
+            LEFT JOIN tool_definitions td ON tcm.actual_tool_id = td.id
+            WHERE tcm.test_run_id = ?
+            """,
+            (test_run_id,),
+        )
+        matches_rows = await matches_cursor.fetchall()
+        for match_row in matches_rows:
+            expected_tool_call = None
+            if match_row[4]:  # expected mcp_server_url is not NULL
+                expected_tool_call = ExpectedToolCall(
+                    mcp_server_url=match_row[4],
+                    tool_name=match_row[5],
+                    parameters=json.loads(match_row[6]) if match_row[6] else None,
                 )
 
-        # Get expected_tool enriched data (from test case)
-        expected_mcp_server_url = row[24]
-        expected_tool_name = row[25]
-        expected_parameters = json.loads(row[26]) if row[26] else None
-        expected_tool = ToolEnrichedResponse(
-            name=expected_tool_name,
-            mcp_server_url=expected_mcp_server_url,
-            parameters=expected_parameters,
-        )
+            actual_tool_call = None
+            if match_row[7]:  # actual tool id is not NULL
+                actual_tool_call = ToolEnrichedResponse(
+                    id=match_row[7],
+                    name=match_row[8],
+                    mcp_server_url=match_row[9],
+                    parameters=json.loads(match_row[10]) if match_row[10] else None,
+                )
+
+            tool_call_matches.append(
+                ToolCallMatch(
+                    expected_tool_call=expected_tool_call,
+                    actual_tool_call=actual_tool_call,
+                    match_type=match_row[0],
+                    parameter_correctness=match_row[1],
+                    actual_parameters=json.loads(match_row[2]) if match_row[2] else None,
+                    parameter_justification=match_row[3],
+                )
+            )
 
         return TestRunResponse(
             id=test_run_id,
@@ -447,18 +464,16 @@ LIMIT ? OFFSET ?
             model_settings=model_settings,
             status=row[3],
             llm_response_raw=row[4],
-            selected_tool=selected_tool,
-            expected_tool=expected_tool,
             tools=tools,
-            extracted_parameters=extracted_parameters,
-            llm_confidence=row[7],
-            parameter_correctness=row[8],
-            confidence_score=row[9],
-            classification=row[10],
-            execution_time_ms=row[11],
-            error_message=row[12],
-            created_at=datetime.fromisoformat(row[13]),
-            completed_at=datetime.fromisoformat(row[14]) if row[14] else None,
+            tool_call_matches=tool_call_matches,
+            avg_parameter_correctness=row[6],
+            llm_confidence=row[5],
+            confidence_score=row[7],
+            classification=row[8],
+            execution_time_ms=row[9],
+            error_message=row[10],
+            created_at=datetime.fromisoformat(row[11]),
+            completed_at=datetime.fromisoformat(row[12]) if row[12] else None,
         )
 
     async def update_status(
@@ -466,10 +481,8 @@ LIMIT ? OFFSET ?
         test_run_id: str,
         status: str,
         llm_response_raw: str | None = None,
-        selected_tool_id: str | None = None,
-        extracted_parameters: dict | None = None,
         llm_confidence: str | None = None,
-        parameter_correctness: float | None = None,
+        avg_parameter_correctness: float | None = None,
         confidence_score: str | None = None,
         classification: str | None = None,
         execution_time_ms: int | None = None,
@@ -481,10 +494,8 @@ LIMIT ? OFFSET ?
             test_run_id: Test run ID
             status: New status
             llm_response_raw: Raw LLM response JSON
-            selected_tool_id: Tool selected by LLM
-            extracted_parameters: Parameters extracted by LLM
             llm_confidence: LLM confidence level (high/low)
-            parameter_correctness: Parameter correctness score (0-10)
+            avg_parameter_correctness: Average parameter correctness across all tool call matches
             confidence_score: Confidence score description
             classification: Result classification (TP/FP/TN/FN)
             execution_time_ms: Execution time in milliseconds
@@ -509,21 +520,13 @@ LIMIT ? OFFSET ?
                 updates.append("llm_response_raw = ?")
                 values.append(llm_response_raw)
 
-            if selected_tool_id is not None:
-                updates.append("selected_tool_id = ?")
-                values.append(selected_tool_id)
-
-            if extracted_parameters is not None:
-                updates.append("extracted_parameters = ?")
-                values.append(json.dumps(extracted_parameters))
-
             if llm_confidence is not None:
                 updates.append("llm_confidence = ?")
                 values.append(llm_confidence)
 
-            if parameter_correctness is not None:
-                updates.append("parameter_correctness = ?")
-                values.append(parameter_correctness)
+            if avg_parameter_correctness is not None:
+                updates.append("avg_parameter_correctness = ?")
+                values.append(avg_parameter_correctness)
 
             if confidence_score is not None:
                 updates.append("confidence_score = ?")

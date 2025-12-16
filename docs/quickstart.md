@@ -1,6 +1,6 @@
 # Quickstart Guide: MCP Tool Evaluation System
 
-**Last Updated**: 2025-11-10
+**Last Updated**: 2025-12-16
 
 This guide shows you how to use mcp-tef to evaluate and improve your MCP tools. Follow the workflows below based on your use case.
 
@@ -102,8 +102,9 @@ Expected response:
 ### 1. Test Case
 A test scenario that defines:
 - **Query**: User's natural language request
-- **Expected Tool**: Which tool should be selected
-- **Expected Parameters**: What parameters should be extracted
+- **Expected Tool Calls**: Which tool(s) should be selected (supports 0-N tools)
+- **Expected Parameters**: What parameters should be extracted for each tool
+- **Order Dependent Matching**: Whether tool call sequence matters (default: false)
 - **Available Servers**: List of MCP server URLs to fetch tools from
 
 ### 2. Test Run
@@ -145,11 +146,16 @@ curl -k -X POST https://localhost:8000/test-cases \
   -d '{
     "name": "Weather query test",
     "query": "What is the weather in San Francisco?",
-    "expected_mcp_server_url": "https://my-mcp-server.com/sse",
-    "expected_tool_name": "get_weather",
-    "expected_parameters": {
-      "location": "San Francisco"
-    },
+    "expected_tool_calls": [
+      {
+        "mcp_server_url": "https://my-mcp-server.com/sse",
+        "tool_name": "get_weather",
+        "parameters": {
+          "location": "San Francisco"
+        }
+      }
+    ],
+    "order_dependent_matching": false,
     "available_mcp_servers": [
       "https://my-mcp-server.com/sse",
       "https://another-server.com/sse"
@@ -180,9 +186,14 @@ mtef test-case create \
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "name": "Weather query test",
   "query": "What is the weather in San Francisco?",
-  "expected_mcp_server_url": "https://my-mcp-server.com/sse",
-  "expected_tool_name": "get_weather",
-  "expected_parameters": {"location": "San Francisco"},
+  "expected_tool_calls": [
+    {
+      "mcp_server_url": "https://my-mcp-server.com/sse",
+      "tool_name": "get_weather",
+      "parameters": {"location": "San Francisco"}
+    }
+  ],
+  "order_dependent_matching": false,
   "available_mcp_servers": [
     "https://my-mcp-server.com/sse",
     "https://another-server.com/sse"
@@ -194,8 +205,10 @@ mtef test-case create \
 
 **💡 Key Points**:
 - `available_mcp_servers`: Tools will be fetched from these URLs at test execution time
-- `expected_mcp_server_url` + `expected_tool_name`: What you expect the LLM to select
-- `expected_parameters`: What parameters you expect to be extracted
+- `expected_tool_calls`: List of tool(s) you expect the LLM to select (supports multiple tools)
+- `order_dependent_matching`: Set to `true` if tool call sequence matters (default: `false` for order-independent matching)
+- Each expected tool call specifies: `mcp_server_url`, `tool_name`, and optional `parameters`
+- Empty `expected_tool_calls` array = expect no tools to be selected (True Negative test)
 
 ### Step 2: Run the Test
 

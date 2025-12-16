@@ -23,20 +23,27 @@ def mock_test_case_response(
     test_case_id: str = "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     name: str = "Weather test",
     query: str = "What is the weather in San Francisco?",
-    expected_mcp_server_url: str | None = "http://localhost:3000/sse",
-    expected_tool_name: str | None = "get_weather",
-    expected_parameters: dict | None = None,
+    expected_tool_calls: list[dict] | None = None,
+    order_dependent_matching: bool = False,
 ) -> dict:
     """Generate mock test case response."""
+    # Default: single tool call
+    if expected_tool_calls is None:
+        expected_tool_calls = [
+            {
+                "mcp_server_url": "http://localhost:3000/sse",
+                "tool_name": "get_weather",
+                "parameters": None,
+            }
+        ]
+
     return {
         "id": test_case_id,
         "name": name,
         "query": query,
-        "expected_mcp_server_url": expected_mcp_server_url,
-        "expected_tool_name": expected_tool_name,
-        "expected_parameters": expected_parameters,
+        "expected_tool_calls": expected_tool_calls,
+        "order_dependent_matching": order_dependent_matching,
         "available_mcp_servers": ["http://localhost:3000/sse"],
-        "available_tools": None,
         "created_at": "2025-01-15T10:30:00Z",
         "updated_at": "2025-01-15T10:30:00Z",
     }
@@ -81,10 +88,8 @@ class TestTestCaseCreateCommand:
                 "Weather test",
                 "--query",
                 "What is the weather in San Francisco?",
-                "--expected-server",
-                "http://localhost:3000/sse",
-                "--expected-tool",
-                "get_weather",
+                "--expected-tool-calls",
+                '[{"mcp_server_url":"http://localhost:3000/sse","tool_name":"get_weather"}]',
                 "--servers",
                 "http://localhost:3000/sse",
             ],
@@ -101,8 +106,7 @@ class TestTestCaseCreateCommand:
             return_value=httpx.Response(
                 201,
                 json=mock_test_case_response(
-                    expected_mcp_server_url=None,
-                    expected_tool_name=None,
+                    expected_tool_calls=None,
                 ),
             )
         )
@@ -125,32 +129,8 @@ class TestTestCaseCreateCommand:
 
         assert result.exit_code == EXIT_SUCCESS
 
-    def test_create_validation_error_mismatched_expected(self):
-        """Error when only expected-server is provided without expected-tool."""
-        runner = CliRunner()
-        result = runner.invoke(
-            test_case,
-            [
-                "create",
-                "--url",
-                "http://localhost:8000",
-                "--name",
-                "Invalid test",
-                "--query",
-                "Test query",
-                "--expected-server",
-                "http://localhost:3000/sse",
-                # Missing --expected-tool
-                "--servers",
-                "http://localhost:3000/sse",
-            ],
-        )
-
-        assert result.exit_code == EXIT_INVALID_ARGUMENTS
-        assert "both" in result.output.lower()
-
     def test_create_validation_error_server_not_in_servers(self):
-        """Error when expected-server not in servers list."""
+        """Error when expected tool call server not in servers list."""
         runner = CliRunner()
         result = runner.invoke(
             test_case,
@@ -162,10 +142,11 @@ class TestTestCaseCreateCommand:
                 "Invalid test",
                 "--query",
                 "Test query",
-                "--expected-server",
-                "http://localhost:9999/sse",  # Not in servers
-                "--expected-tool",
-                "get_weather",
+                "--expected-tool-calls",
+                (
+                    '[{"mcp_server_url":"http://localhost:9999/sse",'
+                    '"tool_name":"get_weather"}]'  # Not in servers
+                ),
                 "--servers",
                 "http://localhost:3000/sse",
             ],
@@ -192,10 +173,8 @@ class TestTestCaseCreateCommand:
                 "Weather test",
                 "--query",
                 "What is the weather?",
-                "--expected-server",
-                "http://localhost:3000/sse",
-                "--expected-tool",
-                "get_weather",
+                "--expected-tool-calls",
+                '[{"mcp_server_url":"http://localhost:3000/sse","tool_name":"get_weather"}]',
                 "--servers",
                 "http://localhost:3000/sse",
                 "--format",
@@ -211,15 +190,25 @@ class TestTestCaseCreateCommand:
     @respx.mock
     def test_create_with_expected_params(self):
         """Creation with expected parameters succeeds."""
-        expected_params = {"location": "San Francisco"}
+        expected_tool_calls = [
+            {
+                "mcp_server_url": "http://localhost:3000/sse",
+                "tool_name": "get_weather",
+                "parameters": {"location": "San Francisco"},
+            }
+        ]
         respx.post("http://localhost:8000/test-cases").mock(
             return_value=httpx.Response(
                 201,
-                json=mock_test_case_response(expected_parameters=expected_params),
+                json=mock_test_case_response(expected_tool_calls=expected_tool_calls),
             )
         )
 
         runner = CliRunner()
+        expected_tool_calls_json = (
+            '[{"mcp_server_url":"http://localhost:3000/sse",'
+            '"tool_name":"get_weather","parameters":{"location":"San Francisco"}}]'
+        )
         result = runner.invoke(
             test_case,
             [
@@ -230,40 +219,14 @@ class TestTestCaseCreateCommand:
                 "Weather test",
                 "--query",
                 "What is the weather?",
-                "--expected-server",
-                "http://localhost:3000/sse",
-                "--expected-tool",
-                "get_weather",
-                "--expected-params",
-                '{"location": "San Francisco"}',
+                "--expected-tool-calls",
+                expected_tool_calls_json,
                 "--servers",
                 "http://localhost:3000/sse",
             ],
         )
 
         assert result.exit_code == EXIT_SUCCESS
-
-    def test_create_params_without_tool_fails(self):
-        """Error when expected-params provided without expected-tool."""
-        runner = CliRunner()
-        result = runner.invoke(
-            test_case,
-            [
-                "create",
-                "--url",
-                "http://localhost:8000",
-                "--name",
-                "Invalid test",
-                "--query",
-                "Test query",
-                "--expected-params",
-                '{"location": "SF"}',
-                "--servers",
-                "http://localhost:3000/sse",
-            ],
-        )
-
-        assert result.exit_code == EXIT_INVALID_ARGUMENTS
 
     @respx.mock
     def test_create_timeout_error(self):
