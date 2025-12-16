@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.115.0",
-    "pydantic>=2.9.0",
+    "pydantic>=2.12.5",
     "pydantic-ai>=0.0.13",
     "pydantic-evals>=0.0.2",
     "aiosqlite>=0.20.0",
