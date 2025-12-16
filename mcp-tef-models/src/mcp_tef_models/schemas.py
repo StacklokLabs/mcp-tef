@@ -647,18 +647,6 @@ class ToolPair(BaseModel):
     similarity_score: float = Field(..., ge=0.0, le=1.0, description="Similarity score")
 
 
-class SimilarityMatrixResponse(BaseModel):
-    """Response schema for similarity matrix."""
-
-    tool_ids: list[str] = Field(..., description="Ordered list of tool IDs (matrix rows/columns)")
-    matrix: list[list[float]] = Field(
-        ..., description="2D similarity matrix (symmetric, diagonal = 1.0)"
-    )
-    threshold: float = Field(..., description="Threshold used for flagging")
-    flagged_pairs: list[ToolPair] = Field(..., description="Tool pairs exceeding threshold")
-    generated_at: str = Field(..., description="Timestamp of generation (ISO 8601)")
-
-
 class DifferentiationIssue(BaseModel):
     """Specific issue identified in tool pair analysis."""
 
@@ -723,9 +711,16 @@ class OverlapMatrixResponse(BaseModel):
     generated_at: str = Field(..., description="Generation timestamp (ISO 8601)")
 
 
-class SimilarityAnalysisResponse(SimilarityMatrixResponse):
+class SimilarityAnalysisResponse(BaseModel):
     """Response schema for full similarity analysis."""
 
+    tool_ids: list[str] = Field(..., description="Ordered list of tool IDs (matrix rows/columns)")
+    matrix: list[list[float]] = Field(
+        ..., description="2D similarity matrix (symmetric, diagonal = 1.0)"
+    )
+    threshold: float = Field(..., description="Threshold used for flagging")
+    flagged_pairs: list[ToolPair] = Field(..., description="Tool pairs exceeding threshold")
+    generated_at: str = Field(..., description="Timestamp of generation (ISO 8601)")
     recommendations: list[DifferentiationRecommendation] | None = Field(
         None, description="Differentiation recommendations (if requested)"
     )

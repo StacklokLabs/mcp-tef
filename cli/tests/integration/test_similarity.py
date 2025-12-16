@@ -17,8 +17,8 @@ from mcp_tef_cli.constants import (
 pytestmark = [pytest.mark.integration]
 
 
-def mock_matrix_response():
-    """Return a mock SimilarityMatrixResponse JSON."""
+def mock_analysis_response():
+    """Return a mock SimilarityAnalysisResponse JSON."""
     return {
         "tool_ids": ["tool-1", "tool-2", "tool-3"],
         "matrix": [
@@ -35,19 +35,13 @@ def mock_matrix_response():
             }
         ],
         "generated_at": "2025-01-15T10:30:00Z",
+        "recommendations": None,
     }
-
-
-def mock_analysis_response():
-    """Return a mock SimilarityAnalysisResponse JSON."""
-    response = mock_matrix_response()
-    response["recommendations"] = None
-    return response
 
 
 def mock_analysis_response_with_recommendations():
     """Return a mock SimilarityAnalysisResponse with recommendations."""
-    response = mock_matrix_response()
+    response = mock_analysis_response()
     response["recommendations"] = [
         {
             "tool_pair": ["tool-1", "tool-2"],
