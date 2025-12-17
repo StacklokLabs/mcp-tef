@@ -1,4 +1,9 @@
-"""FastAPI router for MCP server endpoints."""
+"""FastAPI router for tool quality evaluation endpoints.
+
+WARNING: This endpoint performs high-intensity LLM operations.
+A frontier model (e.g., GPT-4, Claude Opus/Sonnet) is strongly recommended.
+Using smaller models may produce unexpected or inaccurate results.
+"""
 
 import asyncio
 
@@ -6,7 +11,6 @@ import structlog
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.security import APIKeyHeader
 from mcp_tef_models.schemas import (
-    MCPServerToolsResponse,
     ToolQualityResponse,
     ToolQualityResult,
 )
@@ -36,49 +40,13 @@ def get_mcp_loader_service(request: Request) -> MCPLoaderService:
 
 
 @router.get(
-    "/tools",
-    response_model=MCPServerToolsResponse,
-    summary="Get MCP server tools",
-    description="List all tools from a specific MCP server",
-)
-async def get_mcp_server_tools(
-    server_url: str = Query(description="MCP server url to get tools from"),
-    transport: str = Query(
-        default="streamable-http", description="Transport protocol: 'sse' or 'streamable-http'"
-    ),
-    offset: int = 0,
-    limit: int = 100,
-    mcp_loader_service: MCPLoaderService = Depends(get_mcp_loader_service),
-) -> MCPServerToolsResponse:
-    """Get all tools from a specific MCP server.
-
-    Args:
-        server_url: MCP server url
-        transport: Transport protocol ('sse' or 'streamable-http')
-        offset: Number of tools to skip (default: 0)
-        limit: Maximum tools to return (default: 100)
-
-    Returns:
-        List of tools from this server
-
-    Raises:
-        ResourceNotFoundError: If server not found (404 status)
-    """
-    tools = await mcp_loader_service.load_tools_from_server(server_url, transport)
-    if offset >= len(tools):
-        return MCPServerToolsResponse(tools=[], count=0)
-    tools = tools[offset : min(offset + limit, len(tools))]
-    return MCPServerToolsResponse(
-        tools=tools,
-        count=len(tools),
-    )
-
-
-@router.get(
     "/tools/quality",
     response_model=ToolQualityResponse,
     summary="Get quality evaluation and suggestions for MCP server tools by server url(s) "
-    "(comma separated list).",
+    "(comma separated list). WARNING: High-intensity endpoint - frontier model recommended.",
+    description="Evaluates MCP tool quality using LLM analysis. This is a computationally "
+    "intensive operation that requires a frontier model (GPT-4, Claude Opus/Sonnet) "
+    "for accurate results. Smaller models may produce unexpected or incorrect evaluations.",
 )
 async def get_mcp_server_tool_quality_by_url(
     server_urls: str = Query(description="MCP server url to get tools from"),
@@ -91,6 +59,25 @@ async def get_mcp_server_tool_quality_by_url(
     api_key: str | None = Depends(APIKeyHeader(name="X-Model-API-Key", auto_error=False)),
     settings: Settings = Depends(get_settings),
 ) -> ToolQualityResponse:
+    """Evaluate tool quality for MCP servers.
+
+    WARNING: This is a high-intensity endpoint that performs complex LLM analysis.
+    A frontier model (GPT-4, Claude Opus/Sonnet) is strongly recommended for
+    accurate results. Using smaller models may produce unexpected or incorrect
+    evaluations.
+
+    Args:
+        server_urls: Comma-separated list of MCP server URLs
+        transport: Transport protocol ('sse' or 'streamable-http')
+        model_provider: LLM provider for quality evaluation
+        model_name: LLM model name for quality evaluation
+        mcp_loader_service: Service for loading MCP tools
+        api_key: API key for the LLM provider
+        settings: Application settings
+
+    Returns:
+        Quality evaluation results and suggestions for improvement
+    """
     server_urls_list: list[str] = [url for url in server_urls.split(",") if url.strip()]
     if not server_urls_list:
         raise BadRequestError("empty server_urls")

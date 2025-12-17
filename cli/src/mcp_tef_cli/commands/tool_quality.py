@@ -245,6 +245,11 @@ def tool_quality(
 ) -> None:
     """Evaluate tool description quality for MCP servers.
 
+    WARNING: This is a high-intensity endpoint that performs complex LLM analysis.
+    A frontier model (GPT-4, Claude Opus/Sonnet) is strongly recommended for
+    accurate results. Using smaller models may produce unexpected or incorrect
+    evaluations.
+
     This command connects to MCP servers, retrieves tool definitions, and uses
     an LLM to assess each tool's description quality across three dimensions:
     clarity, completeness, and conciseness.
@@ -292,6 +297,21 @@ def tool_quality(
 
     # Resolve API key
     resolved_api_key = resolve_api_key(api_key)
+
+    # Display warning about frontier model requirement
+    if output_format != "json":
+        console.print()
+        console.print(
+            "[yellow]⚠ WARNING: This operation performs high-intensity LLM analysis.[/yellow]"
+        )
+        console.print(
+            "[yellow]  A frontier model (GPT-4, Claude Opus/Sonnet) is strongly "
+            "recommended.[/yellow]"
+        )
+        console.print(
+            "[yellow]  Smaller models may produce unexpected or inaccurate results.[/yellow]"
+        )
+        console.print()
 
     try:
         response = asyncio.run(

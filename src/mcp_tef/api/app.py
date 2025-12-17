@@ -9,11 +9,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from mcp_tef_models.schemas import HealthResponse, ServerInfo
 
 from mcp_tef.api import (
-    mcp_servers,
     metrics,
     similarity,
     test_cases,
     test_runs,
+    tool_quality,
 )
 from mcp_tef.api.errors import (
     MCPEvalException,
@@ -89,7 +89,7 @@ app.add_exception_handler(MCPEvalException, mcp_eval_exception_handler)  # type:
 app.add_exception_handler(Exception, generic_exception_handler)  # type: ignore[arg-type]  # ty limitation with async handler types
 
 # Register routers
-app.include_router(mcp_servers.router, prefix="/mcp-servers", tags=["mcp-servers"])
+app.include_router(tool_quality.router, prefix="/mcp-servers", tags=["mcp-servers"])
 app.include_router(test_cases.router, prefix="/test-cases", tags=["test-cases"])
 app.include_router(test_runs.router, prefix="/test-runs", tags=["test-runs"])
 app.include_router(metrics.router, prefix="/metrics", tags=["metrics"])
