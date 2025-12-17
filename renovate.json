@@ -3,6 +3,8 @@
   "extends": [
     "config:recommended"
   ],
+  "recreateWhen": "never",
+  "dependencyDashboard": true,
   "lockFileMaintenance": {
     "enabled": true
   },
