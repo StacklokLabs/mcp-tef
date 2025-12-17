@@ -6,6 +6,7 @@ import os
 
 import click
 import httpx
+from mcp_tef_models.schemas import ToolQualityResponse, ToolQualityResult
 from rich.console import Console
 from rich.table import Table
 
@@ -18,7 +19,6 @@ from mcp_tef_cli.constants import (
     EXIT_TEF_SERVER_UNREACHABLE,
 )
 from mcp_tef_cli.docker_client import discover_tef_url
-from mcp_tef_cli.models import ToolQualityResponse, ToolQualityResult
 from mcp_tef_cli.output import print_error, print_info, print_success
 
 console = Console()

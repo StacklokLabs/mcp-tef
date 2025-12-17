@@ -27,7 +27,7 @@ def sample_server_list(test_data_dir):
 @pytest.fixture
 def sample_url_list():
     """Create sample MCP server config list for testing."""
-    from mcp_tef.models.schemas import MCPServerConfig
+    from mcp_tef_models.schemas import MCPServerConfig
 
     return [
         MCPServerConfig(url="http://example.com/mcp1", transport="streamable-http"),
@@ -40,7 +40,7 @@ def sample_url_list():
 def mock_mcp_loader_with_tools():
     """Mock MCP loader service to return sample tools."""
     with patch("mcp_tef.api.similarity.MCPLoaderService") as mock_loader_class:
-        from mcp_tef.models.schemas import ToolDefinition
+        from mcp_tef_models.schemas import ToolDefinition
 
         mock_loader = AsyncMock()
         mock_loader_class.return_value = mock_loader

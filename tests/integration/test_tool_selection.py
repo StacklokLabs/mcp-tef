@@ -4,9 +4,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from httpx import AsyncClient
+from mcp_tef_models.schemas import ToolDefinition
 from pydantic_ai import ToolCallPart, ToolReturnPart
-
-from mcp_tef.models.schemas import ToolDefinition
 
 
 @pytest.mark.asyncio

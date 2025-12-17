@@ -4,8 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from httpx import AsyncClient
-
-from mcp_tef.models.schemas import ToolDefinition
+from mcp_tef_models.schemas import ToolDefinition
 
 
 @pytest.fixture
@@ -25,7 +24,8 @@ async def test_runs_with_known_data(test_db):
     """
     from unittest.mock import AsyncMock
 
-    from mcp_tef.models.schemas import TestCaseCreate
+    from mcp_tef_models.schemas import TestCaseCreate
+
     from mcp_tef.services.mcp_loader import MCPLoaderService
     from mcp_tef.storage.test_case_repository import TestCaseRepository
     from mcp_tef.storage.test_run_repository import TestRunRepository
@@ -121,7 +121,7 @@ async def test_runs_with_known_data(test_db):
 
         # Create tool definition for selected tool (if any)
         if outcome["selected_tool"]:
-            from mcp_tef.models.schemas import ToolDefinitionCreate
+            from mcp_tef_models.schemas import ToolDefinitionCreate
 
             tool_def = ToolDefinitionCreate(
                 name=outcome["selected_tool"],
@@ -185,7 +185,8 @@ async def test_runs_for_filtering(test_db):
     """
     from unittest.mock import AsyncMock
 
-    from mcp_tef.models.schemas import TestCaseCreate, ToolDefinitionCreate
+    from mcp_tef_models.schemas import TestCaseCreate, ToolDefinitionCreate
+
     from mcp_tef.services.mcp_loader import MCPLoaderService
     from mcp_tef.storage.test_case_repository import TestCaseRepository
     from mcp_tef.storage.test_run_repository import TestRunRepository

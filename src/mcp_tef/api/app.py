@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from mcp_tef_models.schemas import HealthResponse, ServerInfo
 
 from mcp_tef.api import (
     mcp_servers,
@@ -95,17 +96,17 @@ app.include_router(metrics.router, prefix="/metrics", tags=["metrics"])
 app.include_router(similarity.router, prefix="/similarity", tags=["similarity"])
 
 
-@app.get("/")
-async def root():
+@app.get("/", response_model=ServerInfo)
+async def root() -> ServerInfo:
     """Root endpoint."""
-    return {
-        "name": "MCP Tool Evaluation System",
-        "version": "0.1.0",
-        "status": "healthy",
-    }
+    return ServerInfo(
+        name="MCP Tool Evaluation System",
+        version="0.1.0",
+        status="healthy",
+    )
 
 
-@app.get("/health")
-async def health_check():
+@app.get("/health", response_model=HealthResponse)
+async def health_check() -> HealthResponse:
     """Health check endpoint."""
-    return {"status": "healthy"}
+    return HealthResponse(status="healthy")

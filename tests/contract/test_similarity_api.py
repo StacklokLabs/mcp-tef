@@ -5,10 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from mcp_tef_models.schemas import ToolDefinition
 
 from mcp_tef.api.app import app
 from mcp_tef.config.settings import Settings
-from mcp_tef.models.schemas import ToolDefinition
 from mcp_tef.services.embedding_service import EmbeddingService
 
 

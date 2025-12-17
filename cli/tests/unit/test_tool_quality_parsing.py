@@ -1,15 +1,15 @@
 """Unit tests for tool-quality command parsing and formatting functions."""
 
 import pytest
+from mcp_tef_models.schemas import (
+    EvaluationDimensionResult,
+    EvaluationResult,
+    ToolQualityResult,
+)
 
 from mcp_tef_cli.commands.tool_quality import (
     parse_server_urls,
     resolve_api_key,
-)
-from mcp_tef_cli.models import (
-    EvaluationDimensionResult,
-    EvaluationResult,
-    ToolQualityResult,
 )
 
 

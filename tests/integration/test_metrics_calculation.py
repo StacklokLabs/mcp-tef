@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from httpx import AsyncClient
+from mcp_tef_models.schemas import ToolDefinition
 
-from mcp_tef.models.schemas import ToolDefinition
 from tests.conftest import wait_for_test_run_completion
 
 
