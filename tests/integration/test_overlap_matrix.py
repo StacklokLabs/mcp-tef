@@ -4,16 +4,16 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from mcp_tef_models.schemas import ToolDefinition
 
 from mcp_tef.api.app import app
 from mcp_tef.config.settings import Settings
-from mcp_tef.models.schemas import ToolDefinition
 
 
 @pytest.fixture
 def sample_url_list():
     """Create sample MCP server config list for testing."""
-    from mcp_tef.models.schemas import MCPServerConfig
+    from mcp_tef_models.schemas import MCPServerConfig
 
     return [
         MCPServerConfig(url="http://example.com/mcp1", transport="streamable-http"),

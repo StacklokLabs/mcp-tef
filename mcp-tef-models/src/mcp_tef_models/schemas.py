@@ -754,3 +754,70 @@ class SimilarityAnalysisResponse(BaseModel):
     recommendations: list[DifferentiationRecommendation] | None = Field(
         None, description="Differentiation recommendations (if requested)"
     )
+
+
+# Tool Quality Evaluation Models
+
+
+class EvaluationDimensionResult(BaseModel):
+    """
+    Model for the result of evaluation along a single dimension
+    (e.g. clarity, completeness, or conciseness).
+    """
+
+    score: int = Field(..., description="A score from 1 to 10 for this dimension.")
+    explanation: str = Field(
+        ..., description="An explanation of the reasoning for the given score."
+    )
+
+
+class EvaluationResult(BaseModel):
+    """Output model for the tool description evaluation."""
+
+    clarity: EvaluationDimensionResult = Field(
+        ..., description="Evaluation of the clarity of the tool description."
+    )
+    completeness: EvaluationDimensionResult = Field(
+        ..., description="Evaluation of the completeness of the tool description."
+    )
+    conciseness: EvaluationDimensionResult = Field(
+        ..., description="Evaluation of the conciseness of the tool description."
+    )
+    suggested_description: str | None = Field(
+        default=None,
+        description="Suggested tool description (optional).",
+    )
+
+
+class ToolQualityResult(BaseModel):
+    """Result of quality evaluation for a single tool."""
+
+    tool_name: str = Field(..., description="Tool name.")
+    tool_description: str = Field(..., description="Original tool description.")
+    evaluation_result: EvaluationResult = Field(..., description="Result of the tool evaluation.")
+
+
+class ToolQualityResponse(BaseModel):
+    """Response from the tool quality evaluation endpoint."""
+
+    results: list[ToolQualityResult] = Field(..., description="Tool quality results.")
+    errors: list[str] | None = Field(
+        default=None, description="Errors encountered during evaluation."
+    )
+
+
+# API Health and Info Models
+
+
+class HealthResponse(BaseModel):
+    """Response schema for health check endpoint."""
+
+    status: str = Field(..., description="Health status (healthy/unhealthy)")
+
+
+class ServerInfo(BaseModel):
+    """Response schema for server information endpoint."""
+
+    name: str = Field(..., description="Service name")
+    version: str = Field(..., description="Service version")
+    status: str = Field(..., description="Service status")

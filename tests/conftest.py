@@ -344,7 +344,8 @@ async def test_tool_id(client, test_mcp_server_url, test_run_id, test_db):
     Returns:
         Tool ID string
     """
-    from mcp_tef.models.schemas import ToolDefinitionCreate
+    from mcp_tef_models.schemas import ToolDefinitionCreate
+
     from mcp_tef.storage.tool_repository import ToolRepository
 
     tool_repo = ToolRepository(test_db)
@@ -378,7 +379,8 @@ def tool_factory(test_db):
             server_id, test_run_id, "get_weather", description="Get weather info"
         )
     """
-    from mcp_tef.models.schemas import ToolDefinitionCreate
+    from mcp_tef_models.schemas import ToolDefinitionCreate
+
     from mcp_tef.storage.tool_repository import ToolRepository
 
     async def _create_tool(

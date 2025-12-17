@@ -5,13 +5,13 @@ from datetime import datetime
 from unittest.mock import AsyncMock
 
 import pytest
-
-from mcp_tef.models.schemas import (
+from mcp_tef_models.schemas import (
     ModelSettingsCreate,
     TestCaseCreate,
     ToolDefinition,
     ToolDefinitionCreate,
 )
+
 from mcp_tef.storage.model_settings_repository import ModelSettingsRepository
 from mcp_tef.storage.test_case_repository import TestCaseRepository
 from mcp_tef.storage.test_run_repository import TestRunRepository

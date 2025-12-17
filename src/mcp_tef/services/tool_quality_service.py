@@ -2,56 +2,16 @@ import json
 from collections.abc import AsyncIterator
 
 import structlog
-from mcp_tef_models.schemas import ToolDefinition
-from pydantic import BaseModel, Field
+from mcp_tef_models.schemas import (
+    EvaluationResult,
+    ToolDefinition,
+    ToolQualityResult,
+)
 from pydantic_ai import Agent
 
 from mcp_tef.config.prompts import EVALUATE_TOOL_DESCRIPTION_PROMPT
 from mcp_tef.services.llm_service import LLMService
 from mcp_tef.services.mcp_loader import MCPLoaderService
-
-
-class EvaluationDimensionResult(BaseModel):
-    """
-    Model for the result of evaluation along a single dimension
-    (e.g. clarity, completeness, or conciseness).
-    """
-
-    score: int = Field(..., description="A score from 1 to 10 for this dimension.")
-    explanation: str = Field(
-        ..., description="An explanation of the reasoning for the given score."
-    )
-
-
-class EvaluationResult(BaseModel):
-    """Output model for the tool description evaluation."""
-
-    clarity: EvaluationDimensionResult = Field(
-        ..., description="Evaluation of the clarity of the tool description."
-    )
-    completeness: EvaluationDimensionResult = Field(
-        ..., description="Evaluation of the completeness of the tool description."
-    )
-    conciseness: EvaluationDimensionResult = Field(
-        ..., description="Evaluation of the conciseness of the tool description."
-    )
-    suggested_description: str | None = Field(
-        default=None,
-        description="Suggested tool description (optional).",
-    )
-
-
-class ToolQualityResult(BaseModel):
-    tool_name: str = Field(..., description="Tool name.")
-    tool_description: str = Field(..., description="Original tool description.")
-    evaluation_result: EvaluationResult = Field(..., description="Result of the tool evaluation.")
-
-
-class ToolQualityResponse(BaseModel):
-    results: list[ToolQualityResult] = Field(..., description="Tool quality results.")
-    errors: list[str] | None = Field(
-        default=None, description="Errors encountered during evaluation."
-    )
 
 
 class ToolQualityService:

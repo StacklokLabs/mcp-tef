@@ -9,24 +9,21 @@ import httpx
 from mcp_tef_models.schemas import (
     DifferentiationRecommendationResponse,
     ExpectedToolCall,
+    HealthResponse,
     MCPServerConfig,
     ModelSettingsCreate,
     OverlapMatrixResponse,
     PaginatedTestCaseResponse,
     PaginatedTestRunResponse,
+    ServerInfo,
     SimilarityAnalysisResponse,
     TestCaseCreate,
     TestCaseResponse,
     TestRunExecuteRequest,
     TestRunResponse,
-)
-from pydantic import BaseModel, Field
-
-from mcp_tef_cli.models import (
-    HealthResponse,
-    ServerInfo,
     ToolQualityResponse,
 )
+from pydantic import BaseModel, Field
 
 __all__ = [
     "ClientConfig",

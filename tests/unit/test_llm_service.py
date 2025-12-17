@@ -3,11 +3,11 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from mcp_tef_models.schemas import MCPServerConfig
 from pydantic_ai import ToolCallPart, ToolReturnPart
 
 from mcp_tef.api.errors import LLMProviderError
 from mcp_tef.models.llm_models import LLMResponse, LLMToolCall
-from mcp_tef.models.schemas import MCPServerConfig
 from mcp_tef.services.llm_service import LLMService
 
 

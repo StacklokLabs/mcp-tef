@@ -8,8 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import AsyncClient
-
-from mcp_tef.models.schemas import ToolDefinition
+from mcp_tef_models.schemas import ToolDefinition
 
 
 @pytest.mark.asyncio
@@ -156,7 +155,7 @@ async def test_concurrent_tool_ingestion_from_multiple_servers(client: AsyncClie
     import asyncio
 
     # Create URLs for multiple MCP servers
-    from mcp_tef.models.schemas import MCPServerConfig
+    from mcp_tef_models.schemas import MCPServerConfig
 
     server_urls = [
         MCPServerConfig(url=f"http://localhost:300{i}", transport="sse") for i in range(3)

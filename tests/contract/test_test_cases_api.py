@@ -4,8 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import AsyncClient
-
-from mcp_tef.models.schemas import ToolDefinition
+from mcp_tef_models.schemas import ToolDefinition
 
 
 @pytest.fixture

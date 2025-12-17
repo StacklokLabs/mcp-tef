@@ -4,8 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from httpx import AsyncClient
-
-from mcp_tef.models.schemas import ToolDefinition
+from mcp_tef_models.schemas import ToolDefinition
 
 
 @pytest.fixture
@@ -299,7 +298,7 @@ async def test_polling_for_test_completion(
     import asyncio
 
     # Configure the autouse mock to return tools for this test
-    from mcp_tef.models.schemas import ToolDefinition
+    from mcp_tef_models.schemas import ToolDefinition
 
     mock_mcp_loader_service.return_value = [
         ToolDefinition(
