@@ -3,7 +3,7 @@ name = "mcp-tef"
 version = "0.1.0"
 description = "MCP Tool Evaluation System - Validate tool selection effectiveness for Model Context Protocol tools"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14.2"
 dependencies = [
     "fastapi>=0.124.4",
     "pydantic>=2.12.5",

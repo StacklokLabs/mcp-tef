@@ -3,7 +3,7 @@ name = "mcp-tef-cli"
 dynamic = ["version"]
 description = "CLI tool for deploying and managing mcp-tef MCP Tool Evaluation System"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14.2"
 license = { text = "Apache-2.0" }
 authors = [
     { name = "Stacklok Labs", email = "info@stacklok.com" }
