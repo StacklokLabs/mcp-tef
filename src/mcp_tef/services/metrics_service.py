@@ -256,7 +256,7 @@ class MetricsService:
         params.append(limit)
 
         cursor = await self._test_run_repo.db.execute(query, tuple(params))
-        rows = await cursor.fetchall()
+        rows = list(await cursor.fetchall())
 
         # Initialize counters
         total_matches = len(rows)

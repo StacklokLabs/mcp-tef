@@ -391,7 +391,8 @@ class ToolRepository:
         try:
             # Get total count
             cursor = await self.db.execute("SELECT COUNT(*) FROM tool_definitions")
-            total = (await cursor.fetchone())[0]
+            result = await cursor.fetchone()
+            total = result[0] if result else 0
 
             # Get paginated results
             cursor = await self.db.execute(
@@ -451,7 +452,8 @@ class ToolRepository:
                 "SELECT COUNT(*) FROM tool_definitions WHERE test_run_id = ?",
                 (test_run_id,),
             )
-            total = (await cursor.fetchone())[0]
+            result = await cursor.fetchone()
+            total = result[0] if result else 0
 
             # Get paginated results for this server
             cursor = await self.db.execute(
