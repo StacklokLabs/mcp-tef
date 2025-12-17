@@ -9,7 +9,6 @@ from mcp_tef_models.schemas import (
     DifferentiationRecommendationResponse,
     OverlapMatrixResponse,
     SimilarityAnalysisResponse,
-    SimilarityMatrixResponse,
 )
 from rich.console import Console
 from rich.table import Table
@@ -96,7 +95,7 @@ def calculate_column_limits(console: Console, total_tools: int) -> tuple[int, in
 
 
 def format_matrix_table(
-    response: SimilarityMatrixResponse,
+    response: SimilarityAnalysisResponse,
     threshold: float,
 ) -> None:
     """Format and print similarity matrix as a table.
@@ -566,127 +565,6 @@ def analyze(
                 f"Analysis complete: {len(response.flagged_pairs)} pairs "
                 f"flagged above {threshold} threshold"
             )
-
-        raise SystemExit(EXIT_SUCCESS)
-
-
-@similarity.command(name="matrix")
-@click.option(
-    "--server-urls",
-    required=True,
-    help="Comma-separated MCP server URLs",
-)
-@click.option(
-    "--threshold",
-    type=float,
-    default=0.85,
-    help="Threshold for flagging similar pairs (0.0-1.0)",
-)
-@click.option(
-    "--url",
-    "tef_url",
-    default=None,
-    help="mcp-tef server URL (bypasses Docker container discovery)",
-)
-@click.option(
-    "--container-name",
-    default=None,
-    help=f"Docker container name for mcp-tef URL discovery (default: {DEFAULT_CONTAINER_NAME})",
-)
-@click.option(
-    "--format",
-    "output_format",
-    type=click.Choice(["table", "json"]),
-    default="table",
-    help="Output format",
-)
-@click.option(
-    "--timeout",
-    type=int,
-    default=DEFAULT_TIMEOUT,
-    help=f"Request timeout in seconds (default: {DEFAULT_TIMEOUT})",
-)
-@click.option(
-    "--insecure",
-    is_flag=True,
-    help="Skip SSL certificate verification",
-)
-def matrix(
-    server_urls: str,
-    threshold: float,
-    tef_url: str | None,
-    container_name: str | None,
-    output_format: str,
-    timeout: int,
-    insecure: bool,
-) -> None:
-    """Generate similarity matrix for tool pairs.
-
-    Generate a complete similarity matrix showing pairwise similarity
-    scores between all tools from the specified MCP servers.
-
-    Examples:
-
-      \b
-      # Generate similarity matrix
-      mtef similarity matrix \\
-        --server-urls http://localhost:3000/sse
-
-      \b
-      # With custom threshold
-      mtef similarity matrix \\
-        --server-urls http://localhost:3000/sse --threshold 0.90
-
-      \b
-      # Output as JSON
-      mtef similarity matrix \\
-        --server-urls http://localhost:3000/sse --format json
-    """
-    # Validate threshold
-    try:
-        validate_threshold(threshold)
-    except click.BadParameter as e:
-        print_error("Invalid threshold", str(e))
-        raise SystemExit(EXIT_INVALID_ARGUMENTS) from e
-
-    # Parse server URLs
-    try:
-        parsed_urls = parse_server_urls(server_urls)
-    except click.BadParameter as e:
-        print_error("Invalid server URLs", str(e))
-        raise SystemExit(EXIT_INVALID_ARGUMENTS) from e
-
-    # Resolve mcp-tef URL
-    url = resolve_tef_url(tef_url, container_name, output_format)
-
-    # Make API call
-    config = ClientConfig(
-        base_url=url,
-        timeout=float(timeout),
-        verify_ssl=not insecure,
-    )
-
-    async def _run():
-        client = TefClient(config)
-        try:
-            return await client.get_similarity_matrix(
-                server_urls=parsed_urls,
-                threshold=threshold,
-            )
-        finally:
-            await client.close()
-
-    with handle_api_errors(url):
-        response = asyncio.run(_run())
-
-        # Output results
-        if output_format == "json":
-            data = response.model_dump(mode="json")
-            click.echo(json.dumps(data, indent=2, default=str))
-        else:
-            format_matrix_table(response, threshold)
-            console.print()
-            print_success(f"Matrix generated for {len(response.tool_ids)} tools")
 
         raise SystemExit(EXIT_SUCCESS)
 

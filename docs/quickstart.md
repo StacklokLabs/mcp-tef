@@ -506,31 +506,6 @@ curl -k -X POST https://localhost:8000/similarity/analyze \
 
 ### Specialized Similarity Endpoints
 
-#### Generate Full Matrix
-
-For visualization or analysis of all pairwise similarities:
-
-**Using the REST API (curl)**
-
-```bash
-curl -k -X POST https://localhost:8000/similarity/matrix \
-  -H "Content-Type: application/json" \
-  -d '{
-    "url_list": ["https://my-server.com/sse"],
-    "similarity_threshold": 0.7
-  }'
-```
-
-**Using the CLI**
-
-```bash
-mtef similarity matrix \
-  --server-urls "https://my-server.com/sse" \
-  --threshold 0.7
-```
-
-> **Note**: The `--server-urls` flag accepts comma-separated URLs for multiple servers.
-
 #### Generate Overlap Matrix
 
 Multi-dimensional analysis (semantic + parameters + description):

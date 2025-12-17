@@ -156,48 +156,6 @@ fi
 log_success "similarity analyze (basic) passed"
 
 # ============================================================================
-# Test: similarity matrix
-# ============================================================================
-
-log_info "=== Test: similarity matrix ==="
-
-RESULT=$(mtef similarity matrix \
-    --container-name "${TEF_CONTAINER_NAME}" \
-    --server-urls "${MCP_SERVER_URL}" \
-    --threshold 0.80 \
-    --insecure \
-    --format json \
-    --timeout 120 2>&1) || EXIT_CODE=$?
-
-EXIT_CODE=${EXIT_CODE:-0}
-
-log_info "Raw similarity matrix result:"
-echo "${RESULT}"
-
-if [[ ${EXIT_CODE} -ne 0 ]]; then
-    log_error "similarity matrix command failed with exit code ${EXIT_CODE}"
-    exit 1
-fi
-
-# Validate JSON structure
-if ! echo "${RESULT}" | jq -e '.tool_ids' > /dev/null 2>&1; then
-    log_error "Invalid response: missing 'tool_ids' field"
-    exit 1
-fi
-
-if ! echo "${RESULT}" | jq -e '.threshold' > /dev/null 2>&1; then
-    log_error "Invalid response: missing 'threshold' field"
-    exit 1
-fi
-
-THRESHOLD=$(echo "${RESULT}" | jq '.threshold')
-if [[ $(echo "${THRESHOLD} != 0.80" | bc -l) -eq 1 ]]; then
-    log_warn "Threshold in response (${THRESHOLD}) differs from requested (0.80)"
-fi
-
-log_success "similarity matrix passed"
-
-# ============================================================================
 # Test: similarity overlap
 # ============================================================================
 

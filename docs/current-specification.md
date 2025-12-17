@@ -570,8 +570,7 @@
 - `GET /metrics/summary` - Aggregate metrics across test runs
 
 ### Similarity Analysis
-- `POST /similarity/analyze` - Full similarity analysis
-- `POST /similarity/matrix` - Generate similarity matrix
+- `POST /similarity/analyze` - Full similarity analysis (includes matrix data)
 - `POST /similarity/overlap-matrix` - Generate overlap matrix
 - `POST /similarity/recommendations` - Get differentiation recommendations
 

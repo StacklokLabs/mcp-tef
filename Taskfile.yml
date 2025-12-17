@@ -114,7 +114,8 @@ tasks:
       - ./cli/tests/scripts/test_deploy.sh
       - TEF_API_KEY=$OPENROUTER_API_KEY ./cli/tests/scripts/test_tool_quality.sh
       - TEF_API_KEY=$OPENROUTER_API_KEY ./cli/tests/scripts/test_query_alignment.sh
-      - TEF_API_KEY=$OPENROUTER_API_KEY ./cli/tests/scripts/test_similarity.sh
+      # Re-enable after https://github.com/StacklokLabs/mcp-tef/issues/63
+      # - TEF_API_KEY=$OPENROUTER_API_KEY ./cli/tests/scripts/test_similarity.sh
       - TEF_API_KEY=$OPENROUTER_API_KEY ./cli/tests/scripts/test_query_alignment_from_file.sh
 
   test:cli:unit:

@@ -12,7 +12,6 @@ from mcp_tef_models.schemas import (
     OverlapMatrixResponse,
     SimilarityAnalysisRequest,
     SimilarityAnalysisResponse,
-    SimilarityMatrixResponse,
 )
 
 from mcp_tef.config.settings import Settings, get_settings
@@ -285,55 +284,6 @@ async def analyze_similarity(
     logger.info(f"Analysis complete: {flagged_count} pairs flagged above threshold {threshold}")
 
     return SimilarityAnalysisResponse.model_validate(response_data)  # type: ignore[arg-type]
-
-
-@router.post(
-    "/matrix",
-    response_model=SimilarityMatrixResponse,
-    summary="Generate similarity matrix",
-    description="Generate a complete similarity matrix for all tool pairs",
-)
-async def generate_similarity_matrix(
-    request: SimilarityAnalysisRequest,
-    similarity_service: SimilarityService = Depends(get_similarity_service),
-) -> SimilarityMatrixResponse:
-    """Generate similarity matrix for tool pairs.
-
-    Args:
-        request: Similarity analysis request
-        req: FastAPI request (for database access)
-        similarity_service: Similarity analysis service
-
-    Returns:
-        Similarity matrix response
-
-    Raises:
-        ValidationError: If input is invalid
-    """
-    logger.info("Generating similarity matrix")
-
-    # Extract and normalize tools
-    tools = await similarity_service.extract_and_normalize_tools(
-        server_configs=request.mcp_servers,
-        tool_names=request.tool_names,
-    )
-
-    logger.info(f"Generating matrix for {len(tools)} tools")
-
-    # Calculate embedding-based similarity (description-only)
-    desc_matrix, _ = await similarity_service.calculate_embedding_similarity(
-        tools=tools,
-        compute_full_similarity=False,
-    )
-
-    # Build matrix response
-    matrix_data = similarity_service.build_similarity_matrix(
-        tools=tools,
-        embedding_matrix=desc_matrix,
-        threshold=request.similarity_threshold,
-    )
-
-    return SimilarityMatrixResponse(**matrix_data)
 
 
 @router.post(

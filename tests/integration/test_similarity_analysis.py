@@ -203,33 +203,3 @@ async def test_analyze_similarity_with_compute_full(client, sample_url_list):
     # Full similarity should be computed but not exposed in matrix response
     # (it would be in detailed pair responses if we added that endpoint)
     assert "matrix" in data
-
-
-@pytest.mark.asyncio
-async def test_generate_similarity_matrix(client, sample_url_list):
-    """Test similarity matrix generation endpoint."""
-    response = await client.post(
-        "/similarity/matrix",
-        json={
-            "mcp_servers": [
-                {"url": s.url, "transport": s.transport}
-                if hasattr(s, "url")
-                else {"url": s, "transport": "streamable-http"}
-                for s in sample_url_list
-            ],
-            "similarity_threshold": 0.85,
-        },
-    )
-
-    assert response.status_code == 200
-    data = response.json()
-
-    # Verify response structure
-    assert "tool_ids" in data
-    assert "matrix" in data
-    assert "threshold" in data
-    assert "flagged_pairs" in data
-    assert "generated_at" in data
-
-    # Verify threshold is correct
-    assert data["threshold"] == 0.85
