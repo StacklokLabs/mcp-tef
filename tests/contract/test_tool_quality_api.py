@@ -107,7 +107,7 @@ async def test_get_mcp_server_tool_quality_missing_api_key(
     This is because the endpoint uses asyncio.gather with return_exceptions=True.
     """
     # Import the dependencies
-    from mcp_tef.api.mcp_servers import get_mcp_loader_service
+    from mcp_tef.api.tool_quality import get_mcp_loader_service
     from mcp_tef.config.settings import Settings, get_settings
 
     # Create mock loader
@@ -225,7 +225,7 @@ async def test_get_mcp_server_tool_quality_by_url_multiple_urls(
     Requires ANTHROPIC_API_KEY in .env file.
     """
     # Import the dependencies
-    from mcp_tef.api.mcp_servers import get_mcp_loader_service
+    from mcp_tef.api.tool_quality import get_mcp_loader_service
 
     # Create mock loader
     mock_loader = AsyncMock()

@@ -23,7 +23,7 @@ async def test_fresh_tools_per_test_run(client: AsyncClient):
     # Mock MCPLoaderService for test case creation, test execution, and tools endpoint
     with (
         patch("mcp_tef.api.test_cases.MCPLoaderService") as mock_loader_api,
-        patch("mcp_tef.api.mcp_servers.MCPLoaderService") as mock_loader_mcp_servers,
+        patch("mcp_tef.api.tool_quality.MCPLoaderService") as mock_loader_tool_quality,
         patch("mcp_tef.services.evaluation_service.MCPLoaderService") as mock_loader_eval,
     ):
         call_count = 0
@@ -69,8 +69,8 @@ async def test_fresh_tools_per_test_run(client: AsyncClient):
             side_effect=mock_load_side_effect
         )
 
-        mock_loader_mcp_servers_instance = mock_loader_mcp_servers.return_value
-        mock_loader_mcp_servers_instance.load_tools_from_server = AsyncMock(
+        mock_loader_tool_quality_instance = mock_loader_tool_quality.return_value
+        mock_loader_tool_quality_instance.load_tools_from_server = AsyncMock(
             side_effect=mock_load_side_effect
         )
 
@@ -93,12 +93,6 @@ async def test_fresh_tools_per_test_run(client: AsyncClient):
         )
         assert test_case_response.status_code == 201
         test_case_id = test_case_response.json()["id"]
-
-        # Verify tools can be fetched directly from URL
-        tools_response = await client.get(f"/mcp-servers/tools?server_url={server_url}")
-        assert tools_response.status_code == 200
-        tools_data = tools_response.json()
-        assert tools_data["count"] > 0, "Tools should be fetchable from MCP server URL"
 
         # Execute first test run
         run1_response = await client.post(
@@ -164,7 +158,7 @@ async def test_concurrent_tool_ingestion_from_multiple_servers(client: AsyncClie
     # Mock MCPLoaderService for test case creation, test execution, and tools endpoint
     with (
         patch("mcp_tef.api.test_cases.MCPLoaderService") as mock_loader_api,
-        patch("mcp_tef.api.mcp_servers.MCPLoaderService") as mock_loader_mcp_servers,
+        patch("mcp_tef.api.tool_quality.MCPLoaderService") as mock_loader_tool_quality,
         patch("mcp_tef.services.evaluation_service.MCPLoaderService") as mock_loader_eval,
     ):
         call_times = []
@@ -200,8 +194,8 @@ async def test_concurrent_tool_ingestion_from_multiple_servers(client: AsyncClie
             side_effect=mock_load_with_timing
         )
 
-        mock_loader_mcp_servers_instance = mock_loader_mcp_servers.return_value
-        mock_loader_mcp_servers_instance.load_tools_from_server = AsyncMock(
+        mock_loader_tool_quality_instance = mock_loader_tool_quality.return_value
+        mock_loader_tool_quality_instance.load_tools_from_server = AsyncMock(
             side_effect=mock_load_with_timing
         )
 
