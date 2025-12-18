@@ -285,7 +285,8 @@ class TestCaseRepository:
         try:
             # Get total count
             cursor = await self.db.execute("SELECT COUNT(*) FROM test_cases")
-            total = (await cursor.fetchone())[0]
+            result = await cursor.fetchone()
+            total = result[0] if result else 0
 
             # Get paginated results
             cursor = await self.db.execute(
