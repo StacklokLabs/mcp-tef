@@ -1499,7 +1499,7 @@ requires-dist = [
     { name = "mcp", extras = ["cli"], specifier = ">=1.25.0" },
     { name = "mcp-tef-models", editable = "mcp-tef-models" },
     { name = "pydantic", specifier = ">=2.12.5" },
-    { name = "pydantic-ai", specifier = ">=1.40.0" },
+    { name = "pydantic-ai", specifier = ">=1.41.0" },
     { name = "python-dotenv", specifier = ">=1.2.1" },
     { name = "scikit-learn", specifier = ">=1.8.0" },
     { name = "structlog", specifier = ">=25.5.0" },
