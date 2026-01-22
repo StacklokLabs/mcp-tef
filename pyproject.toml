@@ -36,7 +36,7 @@ dev = [
     "ty>=0.0.12",
 ]
 security = [
-    "bandit[toml]>=1.9.2",
+    "bandit[toml]>=1.9.3",
     "pip-audit>=2.10.0",
 ]
 
