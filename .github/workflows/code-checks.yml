@@ -13,8 +13,8 @@ jobs:
   code_quality_cli:
     name: Code Quality CLI
     uses: ./.github/workflows/code-quality-cli.yml
-  trivy_security:
-    name: TrivySecurity Scan
+  grype_security:
+    name: Grype Security Scan
     uses: ./.github/workflows/security.yml
   image_build:
     name: Build Docker Image

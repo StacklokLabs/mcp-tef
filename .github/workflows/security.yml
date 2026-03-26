@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   filesystem-scan:
-    name: Trivy Filesystem Scan
+    name: Grype Filesystem Scan
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -19,29 +19,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-    - name: Run Trivy vulnerability scanner in fs mode
-      uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # 0.33.1
+    - name: Run Grype vulnerability scanner
+      id: grype-scan
+      uses: anchore/scan-action@7037fa011853d5a11690026fb85feee79f4c946c # v7.3.2
       with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        format: 'table'
-        severity: 'CRITICAL,HIGH,MEDIUM'
-        exit-code: '1'
-
-  config-scan:
-    name: Trivy Config Scan
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-    - name: Run Trivy configuration scanner
-      uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # 0.33.1
-      with:
-        scan-type: 'config'
-        scan-ref: '.'
-        format: 'table'
-        severity: 'CRITICAL,HIGH,MEDIUM'
-        exit-code: '1'
+        path: "."
+        output-format: "table"
+        severity-cutoff: "medium"
+        only-fixed: true
+        fail-build: true
