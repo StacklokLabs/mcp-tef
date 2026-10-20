@@ -44,8 +44,9 @@ class ModelSettingsRepository:
             await self.db.execute(
                 """
                 INSERT INTO model_settings
-                (id, provider, model, timeout, temperature, max_retries, base_url, system_prompt)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (id, provider, model, timeout, temperature, max_retries, base_url, system_prompt,
+                 request_limit, tool_calls_limit)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     settings_id,
@@ -56,6 +57,8 @@ class ModelSettingsRepository:
                     model_settings.max_retries,
                     model_settings.base_url,
                     model_settings.system_prompt,
+                    model_settings.request_limit,
+                    model_settings.tool_calls_limit,
                 ),
             )
             await self.db.commit()
@@ -90,7 +93,7 @@ class ModelSettingsRepository:
                 """
                 SELECT
                     id, provider, model, timeout, temperature, max_retries,
-                    base_url, system_prompt, created_at
+                    base_url, system_prompt, request_limit, tool_calls_limit, created_at
                 FROM model_settings
                 WHERE id = ?
                 """,
@@ -110,7 +113,9 @@ class ModelSettingsRepository:
                 max_retries=row[5],
                 base_url=row[6],
                 system_prompt=row[7],
-                created_at=datetime.fromisoformat(row[8]),
+                request_limit=row[8],
+                tool_calls_limit=row[9],
+                created_at=datetime.fromisoformat(row[10]),
             )
 
         except ResourceNotFoundError:

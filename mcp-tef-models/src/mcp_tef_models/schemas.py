@@ -64,6 +64,19 @@ class ModelSettingsCreate(BaseModel):
         description="Base URL for API endpoint (required for ollama, openrouter, etc.)",
     )
     system_prompt: str | None = Field(None, description="System prompt for the LLM")
+    request_limit: int | None = Field(
+        None,
+        ge=1,
+        le=200,
+        description="Max model requests for this evaluation; falls back to the agent default "
+        "(50) when unset",
+    )
+    tool_calls_limit: int | None = Field(
+        None,
+        ge=1,
+        le=200,
+        description="Max tool calls for this evaluation; unlimited when unset",
+    )
 
 
 class ModelSettingsResponse(BaseModel):
@@ -77,6 +90,8 @@ class ModelSettingsResponse(BaseModel):
     max_retries: int = Field(..., description="Maximum retry attempts")
     base_url: str | None = Field(None, description="Base URL for API endpoint")
     system_prompt: str | None = Field(None, description="System prompt for the LLM")
+    request_limit: int | None = Field(None, description="Max model requests for this evaluation")
+    tool_calls_limit: int | None = Field(None, description="Max tool calls for this evaluation")
     created_at: datetime = Field(..., description="Creation timestamp")
 
     model_config = ConfigDict(from_attributes=True)

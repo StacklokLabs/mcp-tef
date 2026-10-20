@@ -147,9 +147,12 @@ class EvaluationService:
                 model=model_settings.model,
                 api_key=api_key,
                 timeout=model_settings.timeout,
+                temperature=model_settings.temperature,
                 max_retries=model_settings.max_retries,
                 base_url=model_settings.base_url,
                 settings=self.settings,
+                request_limit=model_settings.request_limit,
+                tool_calls_limit=model_settings.tool_calls_limit,
             )
 
             # Connect to MCP servers with system prompt
