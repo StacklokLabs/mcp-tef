@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from mcp_tef_models.schemas import MCPServerConfig
-from pydantic_ai import ToolCallPart, ToolReturnPart
+from pydantic_ai import TextPart, ToolCallPart, ToolReturnPart
 
 from mcp_tef.api.errors import LLMProviderError
 from mcp_tef.models.llm_models import LLMResponse, LLMToolCall
@@ -341,6 +341,194 @@ class TestSelectToolErrorHandling:
         # Assert - should return valid response even with empty messages
         assert isinstance(response, LLMResponse)
         assert len(response.tool_calls) == 0
+
+
+class TestModelSettingsReachModelClient:
+    """Regression tests: timeout/temperature/max_retries must reach the real model client,
+    not just be recorded on LLMService. See docs/phase-zero-findings.md: these settings were
+    previously stored but silently dropped before make_agent() built the pydantic_ai Agent."""
+
+    @pytest.mark.asyncio
+    @patch("mcp_tef.services.llm_service.Agent")
+    @patch("mcp_tef.services.llm_service.AsyncOpenAI")
+    async def test_openrouter_client_gets_timeout_and_retries(
+        self, mock_openai_client_class, mock_agent_class, sample_mcp_server_urls
+    ):
+        service = LLMService(
+            provider="openrouter",
+            model="anthropic/claude-3.5-sonnet",
+            api_key="test-key",
+            timeout=12,
+            temperature=0.9,
+            max_retries=5,
+        )
+
+        await service.connect_to_mcp_servers(sample_mcp_server_urls, "")
+
+        mock_openai_client_class.assert_called_once()
+        _, kwargs = mock_openai_client_class.call_args
+        assert kwargs["timeout"] == 12
+        assert kwargs["max_retries"] == 5
+        assert kwargs["api_key"] == "test-key"
+
+        _, agent_kwargs = mock_agent_class.call_args
+        assert agent_kwargs["model_settings"]["temperature"] == 0.9
+        assert agent_kwargs["model_settings"]["timeout"] == 12
+
+    @pytest.mark.asyncio
+    @patch("mcp_tef.services.llm_service.Agent")
+    @patch("mcp_tef.services.llm_service.AsyncAnthropic")
+    async def test_anthropic_client_gets_timeout_and_retries(
+        self, mock_anthropic_client_class, mock_agent_class, sample_mcp_server_urls
+    ):
+        service = LLMService(
+            provider="anthropic",
+            model="claude-3-5-sonnet-20241022",
+            api_key="test-key",
+            timeout=20,
+            temperature=0.1,
+            max_retries=2,
+        )
+
+        await service.connect_to_mcp_servers(sample_mcp_server_urls, "")
+
+        mock_anthropic_client_class.assert_called_once()
+        _, kwargs = mock_anthropic_client_class.call_args
+        assert kwargs["timeout"] == 20
+        assert kwargs["max_retries"] == 2
+
+        _, agent_kwargs = mock_agent_class.call_args
+        assert agent_kwargs["model_settings"]["temperature"] == 0.1
+        assert agent_kwargs["model_settings"]["timeout"] == 20
+
+    @pytest.mark.asyncio
+    @patch("mcp_tef.services.llm_service.Agent")
+    @patch("mcp_tef.services.llm_service.AsyncOpenAI")
+    async def test_ollama_client_gets_timeout_and_retries(
+        self, mock_openai_client_class, mock_agent_class, sample_mcp_server_urls
+    ):
+        service = LLMService(
+            provider="ollama",
+            model="llama3.1",
+            api_key=None,
+            timeout=45,
+            temperature=0.5,
+            max_retries=1,
+            base_url="http://localhost:11434/v1",
+        )
+
+        await service.connect_to_mcp_servers(sample_mcp_server_urls, "")
+
+        mock_openai_client_class.assert_called_once()
+        _, kwargs = mock_openai_client_class.call_args
+        assert kwargs["timeout"] == 45
+        assert kwargs["max_retries"] == 1
+        assert kwargs["base_url"] == "http://localhost:11434/v1"
+
+
+class TestUsageLimitsAppliedPerEvaluation:
+    """Regression tests: request/tool-call limits must reach agent.run() so a runaway agent
+    loop can't burn unbounded live-model calls during a single evaluation."""
+
+    @pytest.mark.asyncio
+    @patch("mcp_tef.services.llm_service.MCPServerStreamableHTTP")
+    @patch("mcp_tef.services.llm_service.Agent")
+    async def test_explicit_limits_reach_agent_run(
+        self, mock_agent_class, mock_mcp_server_class, sample_mcp_server_urls
+    ):
+        mock_agent = MagicMock()
+        mock_agent_class.return_value = mock_agent
+        mock_result = MagicMock()
+        mock_result.all_messages = MagicMock(return_value=[])
+        mock_agent.run = AsyncMock(return_value=mock_result)
+
+        service = LLMService(
+            provider="openrouter",
+            model="test-model",
+            api_key="key",
+            request_limit=4,
+            tool_calls_limit=2,
+        )
+        await service.connect_to_mcp_servers(sample_mcp_server_urls, "")
+
+        await service.select_tool(query="Test query")
+
+        _, kwargs = mock_agent.run.call_args
+        assert kwargs["usage_limits"].request_limit == 4
+        assert kwargs["usage_limits"].tool_calls_limit == 2
+
+    @pytest.mark.asyncio
+    @patch("mcp_tef.services.llm_service.MCPServerStreamableHTTP")
+    @patch("mcp_tef.services.llm_service.Agent")
+    async def test_unset_limits_keep_agent_defaults(
+        self, mock_agent_class, mock_mcp_server_class, sample_mcp_server_urls
+    ):
+        """An unconfigured limit must keep pydantic_ai's own default (request_limit=50,
+        tool_calls_limit=None), not be coerced to unlimited by passing None explicitly."""
+        mock_agent = MagicMock()
+        mock_agent_class.return_value = mock_agent
+        mock_result = MagicMock()
+        mock_result.all_messages = MagicMock(return_value=[])
+        mock_agent.run = AsyncMock(return_value=mock_result)
+
+        service = LLMService(provider="openrouter", model="test-model", api_key="key")
+        await service.connect_to_mcp_servers(sample_mcp_server_urls, "")
+
+        await service.select_tool(query="Test query")
+
+        _, kwargs = mock_agent.run.call_args
+        assert kwargs["usage_limits"].request_limit == 50
+        assert kwargs["usage_limits"].tool_calls_limit is None
+
+
+class TestOutputTypeAllowsPlainText:
+    """Regression test: the agent's output_type must allow a plain string, not just
+    ToolSelectionResult, so the no-call/clarify path can capture the model's actual
+    clarifying question or decline message instead of a bare confidence value. See
+    docs/scoring.md / phase-zero-findings.md: live 2026-10-20 run found zero response
+    text was captured for any clarify/no-call case before this fix."""
+
+    @pytest.mark.asyncio
+    @patch("mcp_tef.services.llm_service.MCPServerStreamableHTTP")
+    @patch("mcp_tef.services.llm_service.Agent")
+    async def test_output_type_includes_str_alongside_tool_selection_result(
+        self, mock_agent_class, mock_mcp_server_class, sample_mcp_server_urls
+    ):
+        service = LLMService(provider="openrouter", model="test-model", api_key="key")
+        await service.connect_to_mcp_servers(sample_mcp_server_urls, "")
+
+        _, agent_kwargs = mock_agent_class.call_args
+        output_type = agent_kwargs["output_type"]
+        assert str in output_type
+        from mcp_tef.services.llm_service import ToolSelectionResult
+
+        assert ToolSelectionResult in output_type
+
+    @pytest.mark.asyncio
+    @patch("mcp_tef.services.llm_service.MCPServerStreamableHTTP")
+    @patch("mcp_tef.services.llm_service.Agent")
+    async def test_plain_string_output_does_not_crash_confidence_extraction(
+        self, mock_agent_class, mock_mcp_server_class, sample_mcp_server_urls
+    ):
+        mock_agent = MagicMock()
+        mock_agent_class.return_value = mock_agent
+        mock_text_part = MagicMock(spec=TextPart)
+        mock_text_part.content = "Could you share your player hash?"
+        mock_text_part.timestamp = None
+        mock_message = MagicMock()
+        mock_message.parts = [mock_text_part]
+        mock_result = MagicMock()
+        mock_result.all_messages = MagicMock(return_value=[mock_message])
+        mock_result.output = "Could you share your player hash?"
+        mock_agent.run = AsyncMock(return_value=mock_result)
+
+        service = LLMService(provider="openrouter", model="test-model", api_key="key")
+        await service.connect_to_mcp_servers(sample_mcp_server_urls, "")
+
+        response = await service.select_tool(query="What is my VPIP?")
+
+        assert response.confidence_level is None
+        assert "Could you share your player hash?" in response.raw_response
 
 
 class TestSelectToolResponseStructure:

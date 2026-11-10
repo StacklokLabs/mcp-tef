@@ -5,7 +5,9 @@ from collections.abc import Sequence
 from typing import Any
 
 import structlog
+from anthropic import AsyncAnthropic
 from mcp_tef_models.schemas import MCPServerConfig
+from openai import AsyncOpenAI
 from pydantic import BaseModel, Field
 from pydantic_ai import (
     Agent,
@@ -23,17 +25,25 @@ from pydantic_ai.mcp import MCPServerSSE, MCPServerStreamableHTTP
 from pydantic_ai.models import Model
 from pydantic_ai.models.anthropic import AnthropicModel
 from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.output import OutputSpec
 from pydantic_ai.providers.anthropic import AnthropicProvider
 from pydantic_ai.providers.openai import OpenAIProvider
 from pydantic_ai.providers.openrouter import OpenRouterProvider
+from pydantic_ai.settings import ModelSettings
 from pydantic_ai.tools import Tool
 from pydantic_ai.toolsets.abstract import AbstractToolset
+from pydantic_ai.usage import UsageLimits
 
 from mcp_tef.api.errors import LLMProviderAPIKeyError, LLMProviderError
 from mcp_tef.config.settings import DEFAULT_OLLAMA_BASE_URL, Settings
 from mcp_tef.models.llm_models import ConfidenceLevel, LLMResponse, LLMToolCall
 
 logger = structlog.get_logger(__name__)
+
+# Mirrors pydantic_ai.providers.openrouter.OpenRouterProvider.base_url; duplicated here because
+# building our own AsyncOpenAI client (to apply timeout/max_retries) bypasses that provider's
+# internal client construction.
+_OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 
 class ToolSelectionResult(BaseModel):
@@ -58,9 +68,12 @@ class LLMService:
         model: str,
         api_key: str | None,
         timeout: int = 30,
+        temperature: float = 0.4,
         max_retries: int = 3,
         base_url: str | None = None,
         settings: Settings | None = None,
+        request_limit: int | None = None,
+        tool_calls_limit: int | None = None,
     ):
         """Initialize LLM service.
 
@@ -69,17 +82,24 @@ class LLMService:
             model: Model identifier
             api_key: API key
             timeout: Request timeout
+            temperature: Sampling temperature
             max_retries: Maximum retry attempts
             base_url: Base URL for API endpoint (required for ollama, openrouter, etc.)
             settings: Application settings (optional, for fallback API keys)
+            request_limit: Max model requests for one select_tool() call; falls back to the
+                pydantic_ai agent default (50) when unset
+            tool_calls_limit: Max tool calls for one select_tool() call; unlimited when unset
         """
         self.provider = provider
         self.model = model
         self.api_key = api_key
         self.timeout = timeout
+        self.temperature = temperature
         self.max_retries = max_retries
         self.base_url = base_url
         self.settings = settings
+        self.request_limit = request_limit
+        self.tool_calls_limit = tool_calls_limit
         self.agent = None  # Will be initialized when connecting to MCP servers
 
     async def connect_to_mcp_servers(
@@ -106,9 +126,15 @@ class LLMService:
                     mcp_server = MCPServerStreamableHTTP(server.url)
                     toolsets.append(mcp_server)
 
-            # Initialize agent with all MCP server toolsets and structured output for confidence
+            # Initialize agent with all MCP server toolsets. Allow either the structured
+            # confidence output (ToolSelectionResult) or a plain string: forcing
+            # ToolSelectionResult alone means the no-call/clarification path can only ever
+            # emit a bare confidence value, never the actual clarifying question or decline
+            # text a human would need to review.
             self.agent = self.make_agent(
-                system_prompt=system_prompt, toolsets=toolsets, output_type=ToolSelectionResult
+                system_prompt=system_prompt,
+                toolsets=toolsets,
+                output_type=[ToolSelectionResult, str],
             )
 
             logger.info(f"Initialized agent with {len(toolsets)} MCP server toolsets")
@@ -252,8 +278,16 @@ class LLMService:
         logger.info("Querying LLM with MCP server tools")
 
         try:
-            # The agent will automatically have access to all tools from connected MCP servers
-            result = await self.agent.run(query)
+            # The agent will automatically have access to all tools from connected MCP servers.
+            # UsageLimits.request_limit defaults to 50 when unset; an unconfigured
+            # self.request_limit must fall back to that same default rather than being coerced
+            # to "unlimited" by passing `None` through explicitly. tool_calls_limit's own default
+            # is already None, so self.tool_calls_limit can be passed through unchanged.
+            usage_limits = UsageLimits(
+                request_limit=self.request_limit if self.request_limit is not None else 50,
+                tool_calls_limit=self.tool_calls_limit,
+            )
+            result = await self.agent.run(query, usage_limits=usage_limits)
 
             # Parse messages to extract tool calls and raw response
             tool_calls, raw_response = self._parse_agent_messages(result)
@@ -279,7 +313,7 @@ class LLMService:
         tools: Sequence[Tool] = (),
         builtin_tools: Sequence[AbstractBuiltinTool] = (),
         toolsets: Sequence[AbstractToolset] | None = None,
-        output_type: type[BaseModel] | None = None,
+        output_type: OutputSpec | None = None,
     ) -> Agent:
         """
         Initializes a pydantic_ai Agent with the specified system prompt and tools.
@@ -308,7 +342,10 @@ class LLMService:
                             "ANTHROPIC_API_KEY environment variable, or configure in settings."
                         ),
                     )
-                provider = AnthropicProvider(api_key=api_key)
+                anthropic_client = AsyncAnthropic(
+                    api_key=api_key, timeout=self.timeout, max_retries=self.max_retries
+                )
+                provider = AnthropicProvider(anthropic_client=anthropic_client)
                 model = AnthropicModel(self.model, provider=provider)
             elif self.provider.lower() == "openai":
                 api_key = self.api_key or os.getenv("OPENAI_API_KEY")
@@ -323,7 +360,13 @@ class LLMService:
                             "OPENAI_API_KEY environment variable, or configure in settings."
                         ),
                     )
-                provider = OpenAIProvider(api_key=api_key, base_url=self.base_url)
+                openai_client = AsyncOpenAI(
+                    api_key=api_key,
+                    base_url=self.base_url,
+                    timeout=self.timeout,
+                    max_retries=self.max_retries,
+                )
+                provider = OpenAIProvider(openai_client=openai_client)
                 model = OpenAIChatModel(self.model, provider=provider)
             elif self.provider.lower() == "openrouter":
                 # OpenRouter has built-in support in Pydantic AI - no base_url needed
@@ -339,7 +382,13 @@ class LLMService:
                             "OPENROUTER_API_KEY environment variable, or configure in settings."
                         ),
                     )
-                provider = OpenRouterProvider(api_key=api_key)
+                openrouter_client = AsyncOpenAI(
+                    base_url=_OPENROUTER_BASE_URL,
+                    api_key=api_key,
+                    timeout=self.timeout,
+                    max_retries=self.max_retries,
+                )
+                provider = OpenRouterProvider(openai_client=openrouter_client)
                 model = OpenAIChatModel(self.model, provider=provider)
             elif self.provider.lower() == "ollama":
                 # Ollama uses OpenAIProvider with custom base_url
@@ -350,7 +399,13 @@ class LLMService:
                 # Ensure base_url is set for Ollama - required!
                 ollama_base_url = self.base_url or DEFAULT_OLLAMA_BASE_URL
                 logger.info(f"Using Ollama with base_url: {ollama_base_url}, model: {self.model}")
-                provider = OpenAIProvider(api_key=api_key, base_url=ollama_base_url)
+                ollama_client = AsyncOpenAI(
+                    api_key=api_key,
+                    base_url=ollama_base_url,
+                    timeout=self.timeout,
+                    max_retries=self.max_retries,
+                )
+                provider = OpenAIProvider(openai_client=ollama_client)
                 model = OpenAIChatModel(self.model, provider=provider)
             else:
                 raise LLMProviderError(self.provider, "Unsupported provider")
@@ -362,6 +417,7 @@ class LLMService:
                 tools=tools,
                 builtin_tools=builtin_tools,
                 toolsets=toolsets,
+                model_settings=ModelSettings(temperature=self.temperature, timeout=self.timeout),
             )
         except UserError as e:
             # Catch Pydantic AI UserError and convert to our error type

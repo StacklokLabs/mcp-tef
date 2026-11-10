@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS model_settings (
     max_retries INTEGER NOT NULL CHECK (max_retries >= 0 AND max_retries <= 10),
     base_url TEXT,
     system_prompt TEXT,
+    request_limit INTEGER CHECK (request_limit IS NULL OR (request_limit >= 1 AND request_limit <= 200)),
+    tool_calls_limit INTEGER CHECK (tool_calls_limit IS NULL OR (tool_calls_limit >= 1 AND tool_calls_limit <= 200)),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
